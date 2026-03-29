@@ -1,0 +1,1414 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>NoorStyle AI | Premium Luxury Pakistani Couture</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <meta name="description" content="Discover the pinnacle of Pakistani luxury fashion. NoorStyle AI combines traditional craftsmanship with AI-powered personal styling for the modern woman.">
+    
+    <!-- Fonts -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Montserrat:wght@300;400;500;600;700&family=Playfair+Display:ital,wght@0,400;0,700;0,900;1,400&display=swap" rel="stylesheet">
+    
+    <!-- Icons -->
+    <script src="https://unpkg.com/lucide@latest"></script>
+    <!-- Font Awesome for Brand Icons -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
+    
+    <link rel="stylesheet" href="style.css">
+    <link rel="stylesheet" href="tryon.css">
+    
+    <!-- 3D Engine Dependencies -->
+    <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/three@0.128.0/examples/js/loaders/GLTFLoader.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/three@0.128.0/examples/js/controls/OrbitControls.js"></script>
+</head>
+<body>
+
+    <!-- Top Bar -->
+    <div class="top-bar">
+        <div class="container top-bar-content">
+            <div class="top-bar-left">
+                <span>Free Shipping on Orders Over PKR 50,000</span>
+            </div>
+            <div class="top-bar-right">
+                <a href="tel:+923001234567"><i data-lucide="phone" style="width: 14px;"></i> +92 300 1234567</a>
+                <div class="header-tools">
+                    <i data-lucide="search" title="Search"></i>
+                    <i data-lucide="user" title="Account"></i>
+                    <div style="position: relative; cursor: pointer;" id="cart-trigger-top">
+                        <i data-lucide="shopping-bag" title="Cart"></i>
+                        <span class="cart-count">0</span>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Navbar -->
+    <nav id="navbar">
+        <div class="container nav-content">
+            <a href="#" class="logo">NOORSTYLE<span>AI</span></a>
+            <ul class="nav-links">
+                <li><a href="#home">Home</a></li>
+                <li class="has-megamenu">
+                    <a href="#shop">Shop</a>
+                    <div class="megamenu">
+                        <div class="container">
+                            <div class="megamenu-grid">
+                                <div class="megamenu-column">
+                                    <h4>Casual</h4>
+                                    <ul>
+                                        <li><a href="#shop" class="megamenu-filter" data-filter="occasion" data-value="casual">Co-ord Sets</a></li>
+                                        <li><a href="#shop" class="megamenu-filter" data-filter="occasion" data-value="casual">Cotton Kurtas</a></li>
+                                        <li><a href="#shop" class="megamenu-filter" data-filter="occasion" data-value="casual">Linen Trousers</a></li>
+                                        <li><a href="#shop" class="megamenu-filter" data-filter="occasion" data-value="casual">Fusion Tunics</a></li>
+                                    </ul>
+                                </div>
+                                <div class="megamenu-column">
+                                    <h4>Formal</h4>
+                                    <ul>
+                                        <li><a href="#shop" class="megamenu-filter" data-filter="occasion" data-value="party">Silk Ensembles</a></li>
+                                        <li><a href="#shop" class="megamenu-filter" data-filter="occasion" data-value="party">Embroidered Chiffon</a></li>
+                                        <li><a href="#shop" class="megamenu-filter" data-filter="occasion" data-value="party">Velvet Luxury</a></li>
+                                        <li><a href="#shop" class="megamenu-filter" data-filter="occasion" data-value="party">Organza Wraps</a></li>
+                                    </ul>
+                                </div>
+                                <div class="megamenu-column">
+                                    <h4>Bridal</h4>
+                                    <ul>
+                                        <li><a href="#shop" class="megamenu-filter" data-filter="occasion" data-value="wedding">Heavy Lehenghas</a></li>
+                                        <li><a href="#shop" class="megamenu-filter" data-filter="occasion" data-value="wedding">Nikah Peshwas</a></li>
+                                        <li><a href="#shop" class="megamenu-filter" data-filter="occasion" data-value="wedding">Zardozi Abayas</a></li>
+                                        <li><a href="#shop" class="megamenu-filter" data-filter="occasion" data-value="wedding">Bridal Dupattas</a></li>
+                                    </ul>
+                                </div>
+                                <div class="megamenu-column">
+                                    <h4>Season</h4>
+                                    <ul>
+                                        <li><a href="#shop" class="megamenu-filter" data-filter="season" data-value="summer">Summer Edit</a></li>
+                                        <li><a href="#shop" class="megamenu-filter" data-filter="season" data-value="winter">Winter Glow</a></li>
+                                        <li><a href="#shop" class="megamenu-filter" data-filter="season" data-value="spring">Spring Blooms</a></li>
+                                        <li><a href="#shop" class="megamenu-filter" data-filter="season" data-value="summer">Autumn Hues</a></li>
+                                    </ul>
+                                </div>
+                                <div class="megamenu-column">
+                                    <h4>Age</h4>
+                                    <ul>
+                                        <li><a href="#shop" class="megamenu-filter" data-filter="age" data-value="18-25">Young Hearts (18-25)</a></li>
+                                        <li><a href="#shop" class="megamenu-filter" data-filter="age" data-value="26-35">Sophisticated (26-35)</a></li>
+                                        <li><a href="#shop" class="megamenu-filter" data-filter="age" data-value="36+">Timeless (30+)</a></li>
+                                    </ul>
+                                </div>
+                                <div class="megamenu-column">
+                                    <h4>Help</h4>
+                                    <ul>
+                                        <li><a href="#" class="megamenu-info" data-info="size">Size Guide</a></li>
+                                        <li><a href="#" class="megamenu-info" data-info="shipping">Shipping Policy</a></li>
+                                        <li><a href="#" class="megamenu-info" data-info="track">Track Order</a></li>
+                                        <li><a href="#" class="megamenu-info" data-info="contact">Contact Support</a></li>
+                                    </ul>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </li>
+                <li><a href="#ai-stylist">Style Advisor</a></li>
+                <li><a href="#" class="tryon-trigger">Virtual Try-On</a></li>
+                <li><a href="#about">About Us</a></li>
+            </ul>
+            <div class="nav-icons">
+                <i data-lucide="menu" class="mobile-menu-btn" style="display: none;"></i>
+            </div>
+        </div>
+    </nav>
+
+    <!-- Hero Section -->
+    <section class="hero" id="home">
+        <img src="assets/hero.png" alt="Luxury Bridal Couture" class="hero-bg">
+        <div class="hero-overlay"></div>
+        <div class="container">
+            <div class="hero-content">
+                <span>The New Collection</span>
+                <h1 class="serif">Elegance <br>Redefined.</h1>
+                <p>Immerse yourself in a world where Pakistani heritage meets the future of intelligence. Bespoke luxury, curated by AI, crafted by masters.</p>
+                <div style="display: flex; gap: 40px; margin-top: 40px; justify-content: center;">
+                    <button class="btn-primary" onclick="window.scrollTo({top: document.getElementById('shop').offsetTop - 80, behavior: 'smooth'})">Shop Now <i data-lucide="arrow-right"></i></button>
+                    <button class="btn-outline tryon-trigger" style="border-color: white; color: white;">Virtual Fitting</button>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- AI Stylist Section -->
+    <section class="ai-stylist-section section-padding" id="ai-stylist">
+        <div class="container">
+            <div class="ai-grid">
+                <div class="stylist-visual reveal">
+                    <img src="assets/pret.png" alt="AI Stylist Personalized Selection" id="stylist-main-img">
+                    <div style="display: none;">
+                        <span id="stylist-product-name">Emerald Summer Gala</span>
+                        <span id="stylist-product-price">PKR 45,000</span>
+                    </div>
+                    <div class="ai-badge">
+                        <i data-lucide="sparkles"></i>
+                        <span>AI Active</span>
+                    </div>
+                </div>
+                    <div class="advisor-panel" id="main-advisor-panel">
+                        <div class="section-title" style="text-align: center; margin-bottom: 40px;">
+                            <span>Personalized Experience</span>
+                            <h2 class="serif">The Intelligence of Style</h2>
+                        </div>
+                        <p style="margin-bottom: 40px; color: rgba(255,255,255,0.7); font-size: 1.1rem;">Our proprietary AI Stylist doesn't just suggest clothes; it understands your aura. By analyzing your preferences and body silhouette, it curates a wardrobe that is uniquely yours.</p>
+                        
+                        <div class="ai-features" style="margin-bottom: 30px;">
+                            <div class="ai-feature-item">
+                                <i data-lucide="camera"></i>
+                                <div>
+                                    <h4 class="serif">Vision Recognition</h4>
+                                    <p>Upload a photo or use your camera to get instant silhouette analysis and fit recommendations.</p>
+                                </div>
+                            </div>
+                        </div>
+                        
+                        <div style="display: flex; justify-content: center; margin-top: 40px;">
+                            <button class="btn-gold tryon-trigger" id="launch-ai">Consult AI Stylist</button>
+                        </div>
+                        <p style="margin-top: 20px; font-size: 13px; font-style: italic; color: var(--gold);">“Designed For You, Not Just A Model.”</p>
+                    </div>
+            </div>
+        </div>
+    </section>
+
+
+
+    <!-- Product Grid -->
+            <div class="shop-layout">
+                <aside class="shop-sidebar">
+                    <div class="filter-group">
+                        <h4 class="serif">Season</h4>
+                        <div class="filter-options">
+                            <label><input type="checkbox" data-filter="season" value="summer"> Summer</label>
+                            <label><input type="checkbox" data-filter="season" value="winter"> Winter</label>
+                            <label><input type="checkbox" data-filter="season" value="spring"> Spring</label>
+                            <label><input type="checkbox" data-filter="season" value="monsoon"> Monsoon</label>
+
+                        </div>
+                    </div>
+
+                    <div class="filter-group">
+                        <h4 class="serif">Age Group</h4>
+                        <div class="filter-options">
+                            <label><input type="checkbox" data-filter="age" value="18-25"> 18-25</label>
+                            <label><input type="checkbox" data-filter="age" value="26-35"> 26-35</label>
+                            <label><input type="checkbox" data-filter="age" value="36+"> 30+</label>
+                        </div>
+                    </div>
+                    
+                    <div class="filter-group">
+                        <h4 class="serif">Occasion</h4>
+                        <div class="filter-options">
+                            <label><input type="checkbox" data-filter="occasion" value="wedding"> Wedding</label>
+                            <label><input type="checkbox" data-filter="occasion" value="party"> Party Wear</label>
+                            <label><input type="checkbox" data-filter="occasion" value="casual"> Casual</label>
+                        </div>
+                    </div>
+
+                    <div class="filter-group">
+                        <h4 class="serif">Color</h4>
+                        <div class="filter-options color-filters">
+                            <label><input type="checkbox" data-filter="color" value="emerald"> <span class="color-dot" style="background: #006D5B;"></span> Emerald</label>
+                            <label><input type="checkbox" data-filter="color" value="gold"> <span class="color-dot" style="background: #D4AF37;"></span> Gold</label>
+                            <label><input type="checkbox" data-filter="color" value="rose-gold"> <span class="color-dot" style="background: #E0BFB8;"></span> Rose Gold</label>
+                            <label><input type="checkbox" data-filter="color" value="navy"> <span class="color-dot" style="background: #000080;"></span> Navy Blue</label>
+                            <label><input type="checkbox" data-filter="color" value="azure"> <span class="color-dot" style="background: #007FFF;"></span> Azure Blue</label>
+                            <label><input type="checkbox" data-filter="color" value="ruby"> <span class="color-dot" style="background: #9B111E;"></span> Ruby</label>
+
+                        </div>
+                    </div>
+
+                    <div class="filter-group">
+                        <h4 class="serif">Price Range</h4>
+                        <input type="range" min="10000" max="100000" step="5000" id="price-range" value="100000">
+                        <div style="font-size: 11px; margin-top: 5px; color: white;">Up to PKR <span id="price-max">100,000</span></div>
+                    </div>
+
+                    <button id="clear-filters" class="btn-outline" style="width: 100%; padding: 10px; font-size: 10px; border-color: rgba(255,255,255,0.2); color: rgba(255,255,255,0.6);">Clear Selection</button>
+                </aside>
+
+                <div class="product-grid" id="main-product-grid">
+                <!-- PRODUCT CATALOG: Ruby Color (Occasion, Season, Age Categorized) -->
+                <!-- Ruby Wedding (Winter, 36+) -->
+                <div class="product-card reveal" data-season="winter" data-occasion="wedding" data-price="95000" data-age="36+" data-color="ruby" data-dress-id="Ruby">
+                    <span class="luxury-tag">Masterpiece</span>
+                    <div class="product-img-wrapper">
+                        <img src="assets/products/ruby_wedding.png" alt="Ruby Wedding" class="zoom-img">
+                        <div class="product-actions">
+                            <button class="btn-primary quick-view">Quick View</button>
+                            <button class="btn-gold add-to-cart" data-name="Ruby Mughal Couture" data-price="95000">Add to Cart</button>
+                        </div>
+                    </div>
+                    <div class="product-details">
+                        <h3 class="serif"><a href="javascript:void(0)" class="product-link">Ruby Mughal Couture</a></h3>
+                        <p class="product-price">PKR 95,000</p>
+                    </div>
+                </div>
+
+                <!-- Ruby Party (Spring, 26-35) -->
+                <div class="product-card reveal" data-season="spring" data-occasion="party" data-price="55000" data-age="26-35" data-color="ruby" data-dress-id="Ruby">
+                    <span class="luxury-tag">Vibrant</span>
+                    <div class="product-img-wrapper">
+                        <img src="assets/products/ruby_party.png" alt="Ruby Party" class="zoom-img">
+                        <div class="product-actions">
+                            <button class="btn-primary quick-view">Quick View</button>
+                            <button class="btn-gold add-to-cart" data-name="Ruby Velvet Glow" data-price="55000">Add to Cart</button>
+                        </div>
+                    </div>
+                    <div class="product-details">
+                        <h3 class="serif"><a href="javascript:void(0)" class="product-link">Ruby Velvet Glow</a></h3>
+                        <p class="product-price">PKR 55,000</p>
+                    </div>
+                </div>
+
+                <!-- Ruby Casual (Summer, 18-25) -->
+                <div class="product-card reveal" data-season="summer" data-occasion="casual" data-price="28000" data-age="18-25" data-color="ruby" data-dress-id="Ruby">
+                    <span class="luxury-tag">Chic</span>
+                    <div class="product-img-wrapper">
+                        <img src="assets/products/ruby_casual.png" alt="Ruby Daily Grace" class="zoom-img">
+                        <div class="product-actions">
+                            <button class="btn-primary quick-view">Quick View</button>
+                            <button class="btn-gold add-to-cart" data-name="Ruby Daily Grace" data-price="28000">Add to Cart</button>
+                        </div>
+                    </div>
+                    <div class="product-details">
+                        <h3 class="serif"><a href="javascript:void(0)" class="product-link">Ruby Daily Grace</a></h3>
+                        <p class="product-price">PKR 28,000</p>
+                    </div>
+                </div>
+
+                <!-- Azure Casual (Summer, 18-25) -->
+                <div class="product-card reveal" data-season="summer" data-occasion="casual" data-price="25000" data-age="18-25" data-color="azure" data-dress-id="Azure">
+                    <span class="luxury-tag">New</span>
+                    <div class="product-img-wrapper">
+                        <img src="assets/products/casual/azure_18_25.png" alt="Azure Day Charm" class="zoom-img">
+                        <div class="product-actions">
+                            <button class="btn-primary quick-view">Quick View</button>
+                            <button class="btn-gold add-to-cart" data-name="Azure Day Charm" data-price="25000">Add to Cart</button>
+                        </div>
+                    </div>
+                    <div class="product-details">
+                        <h3 class="serif"><a href="javascript:void(0)" class="product-link">Azure Day Charm</a></h3>
+                        <p class="product-price">PKR 25,000</p>
+                    </div>
+                </div>
+
+                <!-- Azure Wedding (Winter, 36+) -->
+                <div class="product-card reveal" data-season="winter" data-occasion="wedding" data-price="75000" data-age="36+" data-color="azure" data-dress-id="Azure">
+                    <span class="luxury-tag">Regal</span>
+                    <div class="product-img-wrapper">
+                        <img src="assets/products/azure_wedding.png" alt="Azure Wedding" class="zoom-img">
+                        <div class="product-actions">
+                            <button class="btn-primary quick-view">Quick View</button>
+                            <button class="btn-gold add-to-cart" data-name="Azure Empress Gown" data-price="75000">Add to Cart</button>
+                        </div>
+                    </div>
+                    <div class="product-details">
+                        <h3 class="serif"><a href="javascript:void(0)" class="product-link">Azure Empress Gown</a></h3>
+                        <p class="product-price">PKR 75,000</p>
+                    </div>
+                </div>
+
+                <!-- Emerald Wedding (Winter, 26-35) -->
+                <div class="product-card reveal" data-season="winter" data-occasion="wedding" data-price="65000" data-age="26-35" data-color="emerald" data-dress-id="Emerald">
+                    <span class="luxury-tag">Exclusive</span>
+                    <div class="product-img-wrapper">
+                        <img src="assets/products/emerald_wedding.png" alt="Emerald Wedding" class="zoom-img">
+                        <div class="product-actions">
+                            <button class="btn-primary quick-view">Quick View</button>
+                            <button class="btn-gold add-to-cart" data-name="Emerald Heritage Jora" data-price="65000">Add to Cart</button>
+                        </div>
+                    </div>
+                    <div class="product-details">
+                        <h3 class="serif"><a href="javascript:void(0)" class="product-link">Emerald Heritage Jora</a></h3>
+                        <p class="product-price">PKR 65,000</p>
+                    </div>
+                </div>
+
+                <!-- Navy Party (Spring, 36+) -->
+                <div class="product-card reveal" data-season="spring" data-occasion="party" data-price="38000" data-age="36+" data-color="navy" data-dress-id="Navy">
+                    <span class="luxury-tag">Graceful</span>
+                    <div class="product-img-wrapper">
+                        <img src="assets/products/navy_party.png" alt="Navy Party" class="zoom-img">
+                        <div class="product-actions">
+                            <button class="btn-primary quick-view">Quick View</button>
+                            <button class="btn-gold add-to-cart" data-name="Navy Elegance Suite" data-price="38000">Add to Cart</button>
+                        </div>
+                    </div>
+                    <div class="product-details">
+                        <h3 class="serif"><a href="javascript:void(0)" class="product-link">Navy Elegance Suite</a></h3>
+                        <p class="product-price">PKR 38,000</p>
+                    </div>
+                </div>
+
+                <!-- Gold Party (Spring, 18-25) -->
+                <div class="product-card reveal" data-season="spring" data-occasion="party" data-price="45000" data-age="18-25" data-color="gold">
+                    <span class="luxury-tag">Vibrant</span>
+                    <div class="product-img-wrapper">
+                        <img src="assets/products/gold_party.png" alt="Gold Party" class="zoom-img">
+                        <div class="product-actions">
+                            <button class="btn-primary quick-view">Quick View</button>
+                            <button class="btn-gold add-to-cart" data-name="Gilded Youth Glow" data-price="45000">Add to Cart</button>
+                        </div>
+                    </div>
+                    <div class="product-details">
+                        <h3 class="serif"><a href="javascript:void(0)" class="product-link">Gilded Youth Glow</a></h3>
+                        <p class="product-price">PKR 45,000</p>
+                    </div>
+                </div>
+
+                <!-- Rose Gold Wedding (Winter, 26-35) -->
+                <div class="product-card reveal" data-season="winter" data-occasion="wedding" data-price="85000" data-age="26-35" data-color="rose-gold">
+                    <span class="luxury-tag">Limited</span>
+                    <div class="product-img-wrapper">
+                        <img src="assets/products/rosegold_wedding.png" alt="Rose Gold Wedding" class="zoom-img">
+                        <div class="product-actions">
+                            <button class="btn-primary quick-view">Quick View</button>
+                            <button class="btn-gold add-to-cart" data-name="Blush Bridal Silk" data-price="85000">Add to Cart</button>
+                        </div>
+                    </div>
+                    <div class="product-details">
+                        <h3 class="serif"><a href="javascript:void(0)" class="product-link">Blush Bridal Silk</a></h3>
+                        <p class="product-price">PKR 85,000</p>
+                    </div>
+                </div>
+
+                <!-- Emerald Casual (Summer, 36+) -->
+                <div class="product-card reveal" data-season="summer" data-occasion="casual" data-price="18000" data-age="36+" data-color="emerald" data-dress-id="Emerald">
+                    <span class="luxury-tag">Classic</span>
+                    <div class="product-img-wrapper">
+                        <img src="assets/products/casual/emerald_36_plus.png" alt="Emerald Lawn Classic" class="zoom-img">
+                        <div class="product-actions">
+                            <button class="btn-primary quick-view">Quick View</button>
+                            <button class="btn-gold add-to-cart" data-name="Emerald Lawn Classic" data-price="18000">Add to Cart</button>
+                        </div>
+                    </div>
+                    <div class="product-details">
+                        <h3 class="serif"><a href="javascript:void(0)" class="product-link">Emerald Lawn Classic</a></h3>
+                        <p class="product-price">PKR 18,000</p>
+                    </div>
+                </div>
+
+                <!-- Navy Casual (Summer, 18-25) -->
+                <div class="product-card reveal" data-season="summer" data-occasion="casual" data-price="22000" data-age="18-25" data-color="navy">
+                    <span class="luxury-tag">Trendy</span>
+                    <div class="product-img-wrapper">
+                        <img src="assets/products/casual/navy_18_25.png" alt="Ocean Chic Tunic" class="zoom-img">
+                        <div class="product-actions">
+                            <button class="btn-primary quick-view">Quick View</button>
+                            <button class="btn-gold add-to-cart" data-name="Ocean Chic Tunic" data-price="22000">Add to Cart</button>
+                        </div>
+                    </div>
+                    <div class="product-details">
+                        <h3 class="serif"><a href="javascript:void(0)" class="product-link">Ocean Chic Tunic</a></h3>
+                        <p class="product-price">PKR 22,000</p>
+                    </div>
+                </div>
+
+                <!-- Gold Casual (Winter, 26-35) -->
+                <div class="product-card reveal" data-season="winter" data-occasion="casual" data-price="29000" data-age="26-35" data-color="gold">
+                    <span class="luxury-tag">Sophisticated</span>
+                    <div class="product-img-wrapper">
+                        <img src="assets/products/casual/gold_26_35.png" alt="Golden Hour Fusion" class="zoom-img">
+                        <div class="product-actions">
+                            <button class="btn-primary quick-view">Quick View</button>
+                            <button class="btn-gold add-to-cart" data-name="Golden Hour Fusion" data-price="29000">Add to Cart</button>
+                        </div>
+                    </div>
+                    <div class="product-details">
+                        <h3 class="serif"><a href="javascript:void(0)" class="product-link">Golden Hour Fusion</a></h3>
+                        <p class="product-price">PKR 29,000</p>
+                    </div>
+                </div>
+
+                <!-- Azure Summer Wedding (Summer, 26-35) -->
+                <div class="product-card reveal" data-season="summer" data-occasion="wedding" data-price="95000" data-age="26-35" data-color="azure">
+                    <span class="luxury-tag">Exclusive</span>
+                    <div class="product-img-wrapper">
+                        <img src="assets/products/azure_summer_wedding.png" alt="Azure Summer Wedding" class="zoom-img">
+                        <div class="product-actions">
+                            <button class="btn-primary quick-view">Quick View</button>
+                            <button class="btn-gold add-to-cart" data-name="Azure Summer Nikkah" data-price="95000">Add to Cart</button>
+                        </div>
+                    </div>
+                    <div class="product-details">
+                        <h3 class="serif"><a href="javascript:void(0)" class="product-link">Azure Summer Nikkah</a></h3>
+                        <p class="product-price">PKR 95,000</p>
+                    </div>
+                </div>
+
+                <!-- Emerald Spring Party (Spring, 18-25) -->
+                <div class="product-card reveal" data-season="spring" data-occasion="party" data-price="42000" data-age="18-25" data-color="emerald">
+                    <span class="luxury-tag">Festive</span>
+                    <div class="product-img-wrapper">
+                        <img src="assets/products/emerald_spring_party.png" alt="Emerald Spring Party" class="zoom-img">
+                        <div class="product-actions">
+                            <button class="btn-primary quick-view">Quick View</button>
+                            <button class="btn-gold add-to-cart" data-name="Emerald Spring Glow" data-price="42000">Add to Cart</button>
+                        </div>
+                    </div>
+                    <div class="product-details">
+                        <h3 class="serif"><a href="javascript:void(0)" class="product-link">Emerald Spring Glow</a></h3>
+                        <p class="product-price">PKR 42,000</p>
+                    </div>
+                </div>
+
+                <!-- Gold Spring Casual (Spring, 18-25) -->
+                <div class="product-card reveal" data-season="spring" data-occasion="casual" data-price="31000" data-age="18-25" data-color="gold">
+                    <span class="luxury-tag">Modern</span>
+                    <div class="product-img-wrapper">
+                        <img src="assets/products/casual/gold_18_25.png" alt="Gold Flare Co-ord" class="zoom-img">
+                        <div class="product-actions">
+                            <button class="btn-primary quick-view">Quick View</button>
+                            <button class="btn-gold add-to-cart" data-name="Gold Flare Co-ord" data-price="31000">Add to Cart</button>
+                        </div>
+                    </div>
+                    <div class="product-details">
+                        <h3 class="serif"><a href="javascript:void(0)" class="product-link">Gold Flare Co-ord</a></h3>
+                        <p class="product-price">PKR 31,000</p>
+                    </div>
+                </div>
+
+
+                <!-- Gold Summer Wedding (Summer, 26-35) -->
+                <div class="product-card reveal" data-season="summer" data-occasion="wedding" data-price="88000" data-age="26-35" data-color="gold">
+                    <span class="luxury-tag">Radiant</span>
+                    <div class="product-img-wrapper">
+                        <img src="assets/products/gold_summer_party.png" alt="Gold Summer Wedding" class="zoom-img">
+                        <div class="product-actions">
+                            <button class="btn-primary quick-view">Quick View</button>
+                            <button class="btn-gold add-to-cart" data-name="Solar Flare Bridal" data-price="88000">Add to Cart</button>
+                        </div>
+                    </div>
+                    <div class="product-details">
+                        <h3 class="serif"><a href="javascript:void(0)" class="product-link">Solar Flare Bridal</a></h3>
+                        <p class="product-price">PKR 88,000</p>
+                    </div>
+                </div>
+
+                <!-- Navy Spring Casual (Spring, 26-35) -->
+                <div class="product-card reveal" data-season="spring" data-occasion="casual" data-price="27000" data-age="26-35" data-color="navy">
+                    <span class="luxury-tag">Chic</span>
+                    <div class="product-img-wrapper">
+                        <img src="assets/products/navy_spring_casual.png" alt="Navy Spring Azure" class="zoom-img">
+                        <div class="product-actions">
+                            <button class="btn-primary quick-view">Quick View</button>
+                            <button class="btn-gold add-to-cart" data-name="Navy Spring Azure" data-price="27000">Add to Cart</button>
+                        </div>
+                    </div>
+                    <div class="product-details">
+                        <h3 class="serif"><a href="javascript:void(0)" class="product-link">Navy Spring Azure</a></h3>
+                        <p class="product-price">PKR 27,000</p>
+                    </div>
+                </div>
+
+                <!-- Navy Winter Party (Winter, 26-35) -->
+                <div class="product-card reveal" data-season="winter" data-occasion="party" data-price="48000" data-age="26-35" data-color="navy" data-dress-id="Navy">
+                    <span class="luxury-tag">Couture</span>
+                    <div class="product-img-wrapper">
+                        <img src="assets/products/navy_winter_party.png" alt="Navy Winter Party" class="zoom-img">
+                        <div class="product-actions">
+                            <button class="btn-primary quick-view">Quick View</button>
+                            <button class="btn-gold add-to-cart" data-name="Midnight Velvet Suite" data-price="48000">Add to Cart</button>
+                        </div>
+                    </div>
+                    <div class="product-details">
+                        <h3 class="serif"><a href="javascript:void(0)" class="product-link">Midnight Velvet Suite</a></h3>
+                        <p class="product-price">PKR 48,000</p>
+                    </div>
+                </div>
+
+                <!-- Rose Gold Winter Casual (Winter, 36+) -->
+                <div class="product-card reveal" data-season="winter" data-occasion="casual" data-price="34000" data-age="36+" data-color="rose-gold">
+                    <span class="luxury-tag">Luxe</span>
+                    <div class="product-img-wrapper">
+                        <img src="assets/products/rosegold_winter_casual.png" alt="Rosé Winter Lounge" class="zoom-img">
+                        <div class="product-actions">
+                            <button class="btn-primary quick-view">Quick View</button>
+                            <button class="btn-gold add-to-cart" data-name="Rosé Winter Lounge" data-price="34000">Add to Cart</button>
+                        </div>
+                    </div>
+                    <div class="product-details">
+                        <h3 class="serif"><a href="javascript:void(0)" class="product-link">Rosé Winter Lounge</a></h3>
+                        <p class="product-price">PKR 34,000</p>
+                    </div>
+                </div>
+
+                <!-- Emerald Glamour (Spring, 26-35) -->
+                <div class="product-card reveal" data-season="spring" data-occasion="party" data-price="55000" data-age="26-35" data-color="emerald" data-dress-id="Winter-Emerald">
+                    <span class="luxury-tag">New Season</span>
+                    <div class="product-img-wrapper">
+                        <img src="assets/products/emerald_casual.png" alt="Emerald Glamour" class="zoom-img">
+                        <div class="product-actions">
+                            <button class="btn-primary quick-view">Quick View</button>
+                            <button class="btn-gold add-to-cart" data-name="Emerald Glamour" data-price="55000">Add to Cart</button>
+                        </div>
+                    </div>
+                    <div class="product-details">
+                        <h3 class="serif">Emerald Glamour</h3>
+                        <p class="product-price">PKR 55,000</p>
+                    </div>
+                </div>
+                <!-- Gold Dusk Velvet (Party, Winter, 36+) -->
+                <div class="product-card reveal" data-season="winter" data-occasion="party" data-price="55000" data-age="36+" data-color="gold" data-dress-id="Spring-Gold">
+                    <span class="luxury-tag">Limited</span>
+                    <div class="product-img-wrapper">
+                        <img src="assets/products/casual/gold_36_plus.png" alt="Gold Dusk Velvet" class="zoom-img">
+                        <div class="product-actions">
+                            <button class="btn-primary quick-view">Quick View</button>
+                            <button class="btn-gold add-to-cart" data-name="Gold Dusk Velvet" data-price="55000">Add to Cart</button>
+                        </div>
+                    </div>
+                    <div class="product-details">
+                        <h3 class="serif"><a href="javascript:void(0)" class="product-link">Gold Dusk Velvet</a></h3>
+                        <p class="product-price">PKR 55,000</p>
+                    </div>
+                </div>
+
+                <!-- Navy Royal Peshwas (Wedding, Winter, 26-35) -->
+                <div class="product-card reveal" data-season="winter" data-occasion="wedding" data-price="92000" data-age="26-35" data-color="navy">
+                    <span class="luxury-tag">Regal</span>
+                    <div class="product-img-wrapper">
+                        <img src="assets/products/navy_casual.png" alt="Navy Royal Peshwas" class="zoom-img">
+                        <div class="product-actions">
+                            <button class="btn-primary quick-view">Quick View</button>
+                            <button class="btn-gold add-to-cart" data-name="Navy Royal Peshwas" data-price="92000">Add to Cart</button>
+                        </div>
+                    </div>
+                    <div class="product-details">
+                        <h3 class="serif"><a href="javascript:void(0)" class="product-link">Navy Royal Peshwas</a></h3>
+                        <p class="product-price">PKR 92,000</p>
+                    </div>
+                </div>
+
+                <!-- Emerald Silk Tunic (Casual, Summer, 18-25) -->
+                <div class="product-card reveal" data-season="summer" data-occasion="casual" data-price="15000" data-age="18-25" data-color="emerald">
+                    <span class="luxury-tag">Exclusive</span>
+                    <div class="product-img-wrapper">
+                        <img src="assets/products/casual/emerald_18_25.png" alt="Emerald Silk Tunic" class="zoom-img">
+                        <div class="product-actions">
+                            <button class="btn-primary quick-view">Quick View</button>
+                            <button class="btn-gold add-to-cart" data-name="Emerald Silk Tunic" data-price="15000">Add to Cart</button>
+                        </div>
+                    </div>
+                    <div class="product-details">
+                        <h3 class="serif"><a href="javascript:void(0)" class="product-link">Emerald Silk Tunic</a></h3>
+                        <p class="product-price">PKR 15,000</p>
+                    </div>
+                </div>
+
+                <!-- Gold Silk Ensemble (Party, Spring, 18-25) -->
+                <div class="product-card reveal" data-season="spring" data-occasion="party" data-price="45000" data-age="18-25" data-color="gold" data-dress-id="Gold">
+                    <span class="luxury-tag">Popular</span>
+                    <div class="product-img-wrapper">
+                        <img src="assets/products/gold_silk_ensemble.png" alt="Gold Silk Ensemble" class="zoom-img">
+                        <div class="product-actions">
+                            <button class="btn-primary quick-view">Quick View</button>
+                            <button class="btn-gold add-to-cart" data-name="Gold Silk Ensemble" data-price="45000">Add to Cart</button>
+                        </div>
+                    </div>
+                    <div class="product-details">
+                        <h3 class="serif"><a href="javascript:void(0)" class="product-link">Gold Silk Ensemble</a></h3>
+                        <p class="product-price">PKR 45,000</p>
+                    </div>
+                </div>
+
+                <!-- NEW ROW 7 -->
+                <!-- Rose Gold Casual (Summer, 18-25) -->
+                <div class="product-card reveal" data-season="summer" data-occasion="casual" data-price="26000" data-age="18-25" data-color="rose-gold" data-dress-id="Rose-Gold">
+                    <span class="luxury-tag">New</span>
+                    <div class="product-img-wrapper">
+                        <img src="assets/products/casual/rosegold_18_25.png" alt="Blush Teen Grace" class="zoom-img">
+                        <div class="product-actions">
+                            <button class="btn-primary quick-view">Quick View</button>
+                            <button class="btn-gold add-to-cart" data-name="Blush Teen Grace" data-price="26000">Add to Cart</button>
+                        </div>
+                    </div>
+                    <div class="product-details">
+                        <h3 class="serif"><a href="javascript:void(0)" class="product-link">Blush Teen Grace</a></h3>
+                        <p class="product-price">PKR 26,000</p>
+                    </div>
+                </div>
+
+                <!-- Navy Monsoon Casual (Monsoon, 30+) -->
+                <div class="product-card reveal" data-season="monsoon" data-occasion="casual" data-price="32000" data-age="36+" data-color="navy" data-dress-id="Navy">
+                    <span class="luxury-tag">Essential</span>
+                    <div class="product-img-wrapper">
+                        <img src="assets/products/casual/navy_26_35.png" alt="Monsoon Midnight Lawn" class="zoom-img">
+                        <div class="product-actions">
+                            <button class="btn-primary quick-view">Quick View</button>
+                            <button class="btn-gold add-to-cart" data-name="Monsoon Midnight Lawn" data-price="32000">Add to Cart</button>
+                        </div>
+                    </div>
+                    <div class="product-details">
+                        <h3 class="serif"><a href="javascript:void(0)" class="product-link">Monsoon Midnight Lawn</a></h3>
+                        <p class="product-price">PKR 32,000</p>
+                    </div>
+                </div>
+
+                <!-- Azure Monsoon Party (Monsoon, 26-35) -->
+                <div class="product-card reveal" data-season="monsoon" data-occasion="party" data-price="49000" data-age="26-35" data-color="azure" data-dress-id="Azure">
+                    <span class="luxury-tag">Festive</span>
+                    <div class="product-img-wrapper">
+                        <img src="assets/products/azure_casual.png" alt="Azure Monsoon Glow" class="zoom-img">
+                        <div class="product-actions">
+                            <button class="btn-primary quick-view">Quick View</button>
+                            <button class="btn-gold add-to-cart" data-name="Azure Monsoon Glow" data-price="49000">Add to Cart</button>
+                        </div>
+                    </div>
+                    <div class="product-details">
+                        <h3 class="serif"><a href="javascript:void(0)" class="product-link">Azure Monsoon Glow</a></h3>
+                        <p class="product-price">PKR 49,000</p>
+                    </div>
+                </div>
+
+                <!-- Ruby Summer Casual (Summer, 30+) -->
+                <div class="product-card reveal" data-season="summer" data-occasion="casual" data-price="24000" data-age="36+" data-color="ruby" data-dress-id="Ruby">
+                    <span class="luxury-tag">Classy</span>
+                    <div class="product-img-wrapper">
+                        <img src="assets/products/casual/ruby_36_plus.png" alt="Ruby Summer Matriarch" class="zoom-img">
+                        <div class="product-actions">
+                            <button class="btn-primary quick-view">Quick View</button>
+                            <button class="btn-gold add-to-cart" data-name="Ruby Summer Matriarch" data-price="24000">Add to Cart</button>
+                        </div>
+                    </div>
+                    <div class="product-details">
+                        <h3 class="serif"><a href="javascript:void(0)" class="product-link">Ruby Summer Matriarch</a></h3>
+                        <p class="product-price">PKR 24,000</p>
+                    </div>
+                </div>
+
+                <!-- NEW ROW 8 -->
+                <!-- Gold Winter Wedding (Winter, 30+) -->
+                <div class="product-card reveal" data-season="winter" data-occasion="wedding" data-price="98000" data-age="36+" data-color="gold" data-dress-id="Spring-Gold">
+                    <span class="luxury-tag">Prestige</span>
+                    <div class="product-img-wrapper">
+                        <img src="assets/products/gold_casual.png" alt="Gilded Winter Nikah" class="zoom-img">
+                        <div class="product-actions">
+                            <button class="btn-primary quick-view">Quick View</button>
+                            <button class="btn-gold add-to-cart" data-name="Gilded Winter Nikah" data-price="98000">Add to Cart</button>
+                        </div>
+                    </div>
+                    <div class="product-details">
+                        <h3 class="serif"><a href="javascript:void(0)" class="product-link">Gilded Winter Nikah</a></h3>
+                        <p class="product-price">PKR 98,000</p>
+                    </div>
+                </div>
+
+                <!-- Emerald Spring Wedding (Spring, 18-25) -->
+                <div class="product-card reveal" data-season="spring" data-occasion="wedding" data-price="82000" data-age="18-25" data-color="emerald" data-dress-id="Emerald">
+                    <span class="luxury-tag">Bridal</span>
+                    <div class="product-img-wrapper">
+                        <img src="assets/products/casual/emerald_26_35.png" alt="Emerald Bud Bridal" class="zoom-img">
+                        <div class="product-actions">
+                            <button class="btn-primary quick-view">Quick View</button>
+                            <button class="btn-gold add-to-cart" data-name="Emerald Bud Bridal" data-price="82000">Add to Cart</button>
+                        </div>
+                    </div>
+                    <div class="product-details">
+                        <h3 class="serif"><a href="javascript:void(0)" class="product-link">Emerald Bud Bridal</a></h3>
+                        <p class="product-price">PKR 82,000</p>
+                    </div>
+                </div>
+
+                <!-- Ruby Monsoon Party (Monsoon, 18-25) -->
+                <div class="product-card reveal" data-season="monsoon" data-occasion="party" data-price="39000" data-age="18-25" data-color="ruby" data-dress-id="Ruby">
+                    <span class="luxury-tag">Fun</span>
+                    <div class="product-img-wrapper">
+                        <img src="assets/products/casual/ruby_18_25.png" alt="Ruby Rain Gala" class="zoom-img">
+                        <div class="product-actions">
+                            <button class="btn-primary quick-view">Quick View</button>
+                            <button class="btn-gold add-to-cart" data-name="Ruby Rain Gala" data-price="39000">Add to Cart</button>
+                        </div>
+                    </div>
+                    <div class="product-details">
+                        <h3 class="serif"><a href="javascript:void(0)" class="product-link">Ruby Rain Gala</a></h3>
+                        <p class="product-price">PKR 39,000</p>
+                    </div>
+                </div>
+
+                <!-- Rose Gold Spring Party (Spring, 26-35) -->
+                <div class="product-card reveal" data-season="spring" data-occasion="party" data-price="52000" data-age="26-35" data-color="rose-gold" data-dress-id="Rose-Gold">
+                    <span class="luxury-tag">Grace</span>
+                    <div class="product-img-wrapper">
+                        <img src="assets/products/casual/rosegold_26_35.png" alt="Rosé Petal Soirée" class="zoom-img">
+                        <div class="product-actions">
+                            <button class="btn-primary quick-view">Quick View</button>
+                            <button class="btn-gold add-to-cart" data-name="Rosé Petal Soirée" data-price="52000">Add to Cart</button>
+                        </div>
+                    </div>
+                    <div class="product-details">
+                        <h3 class="serif"><a href="javascript:void(0)" class="product-link">Rosé Petal Soirée</a></h3>
+                        <p class="product-price">PKR 52,000</p>
+                    </div>
+                </div>
+
+                <!-- NEW ROW 9: Missing Matrix Points -->
+                <!-- Ruby Winter Casual (Winter, 30+) - SPECIFIC USER REQUEST -->
+                <div class="product-card reveal" data-season="winter" data-occasion="casual" data-price="29000" data-age="36+" data-color="ruby" data-dress-id="Ruby">
+                    <span class="luxury-tag">Essential</span>
+                    <div class="product-img-wrapper">
+                        <img src="assets/products/casual/ruby_26_35.png" alt="Ruby Winter Lounge" class="zoom-img">
+                        <div class="product-actions">
+                            <button class="btn-primary quick-view">Quick View</button>
+                            <button class="btn-gold add-to-cart" data-name="Ruby Winter Lounge" data-price="29000">Add to Cart</button>
+                        </div>
+                    </div>
+                    <div class="product-details">
+                        <h3 class="serif"><a href="javascript:void(0)" class="product-link">Ruby Winter Lounge</a></h3>
+                        <p class="product-price">PKR 29,000</p>
+                    </div>
+                </div>
+
+                <!-- Emerald Summer Party (Summer, 30+) -->
+                <div class="product-card reveal" data-season="summer" data-occasion="party" data-price="58000" data-age="36+" data-color="emerald" data-dress-id="Emerald">
+                    <span class="luxury-tag">Exclusive</span>
+                    <div class="product-img-wrapper">
+                        <img src="assets/pret.png" alt="Emerald Summer Gala" class="zoom-img">
+                        <div class="product-actions">
+                            <button class="btn-primary quick-view">Quick View</button>
+                            <button class="btn-gold add-to-cart" data-name="Emerald Summer Gala" data-price="58000">Add to Cart</button>
+                        </div>
+                    </div>
+                    <div class="product-details">
+                        <h3 class="serif"><a href="javascript:void(0)" class="product-link">Emerald Summer Gala</a></h3>
+                        <p class="product-price">PKR 58,000</p>
+                    </div>
+                </div>
+
+                <!-- Azure Winter Casual (Winter, 26-35) -->
+                <div class="product-card reveal" data-season="winter" data-occasion="casual" data-price="31000" data-age="26-35" data-color="azure" data-dress-id="Azure">
+                    <span class="luxury-tag">Chic</span>
+                    <div class="product-img-wrapper">
+                        <img src="assets/products/casual/azure_26_35.png" alt="Azure Winter Day" class="zoom-img">
+                        <div class="product-actions">
+                            <button class="btn-primary quick-view">Quick View</button>
+                            <button class="btn-gold add-to-cart" data-name="Azure Winter Day" data-price="31000">Add to Cart</button>
+                        </div>
+                    </div>
+                    <div class="product-details">
+                        <h3 class="serif"><a href="javascript:void(0)" class="product-link">Azure Winter Day</a></h3>
+                        <p class="product-price">PKR 31,000</p>
+                    </div>
+                </div>
+
+                <!-- Gold Monsoon Wedding (Monsoon, 30+) -->
+                <div class="product-card reveal" data-season="monsoon" data-occasion="wedding" data-price="89000" data-age="36+" data-color="gold" data-dress-id="Spring-Gold">
+                    <span class="luxury-tag">Special</span>
+                    <div class="product-img-wrapper">
+                        <img src="assets/products/gold_spring_casual.png" alt="Monsoon Gilded Nikah" class="zoom-img">
+                        <div class="product-actions">
+                            <button class="btn-primary quick-view">Quick View</button>
+                            <button class="btn-gold add-to-cart" data-name="Monsoon Gilded Nikah" data-price="89000">Add to Cart</button>
+                        </div>
+                    </div>
+                    <div class="product-details">
+                        <h3 class="serif"><a href="javascript:void(0)" class="product-link">Monsoon Gilded Nikah</a></h3>
+                        <p class="product-price">PKR 89,000</p>
+                    </div>
+                </div>
+            </div><!-- end product grid -->
+        </div><!-- end shop layout -->
+    </div><!-- end container -->
+</section>
+
+<!-- Product Detail Modal -->
+<div class="product-modal" id="product-modal" style="display:none;">
+    <div class="product-modal-container">
+        <i data-lucide="x" class="close-modal" id="close-product-modal"></i>
+        <div class="product-modal-content">
+            <div class="product-visual">
+                <div class="v360-container" id="360-view">
+                    <img src="assets/p1.png" alt="360 view" id="product-detail-img">
+                    <div class="v360-badge"><i data-lucide="rotate-ccw"></i> 360° View</div>
+                </div>
+            </div>
+            <div class="product-info-panel">
+                <span class="luxury-tag">Luxury Formal</span>
+                <h2 class="serif" id="modal-product-name">Product Name</h2>
+                <p class="product-price" id="modal-product-price">PKR 0</p>
+                
+                <div class="detail-group">
+                    <h4 class="serif">Fabric Details</h4>
+                    <p id="modal-fabric-info">Pure Katan Silk with hand-applied Zardozi and Crystal embellishments.</p>
+                </div>
+
+                <div class="detail-group">
+                    <h4 class="serif">Select Size</h4>
+                    <div class="size-picker">
+                        <button class="size-btn">S</button>
+                        <button class="size-btn active">M</button>
+                        <button class="size-btn">L</button>
+                        <button class="size-btn">XL</button>
+                    </div>
+                </div>
+
+                <div class="modal-actions">
+                    <button class="btn-primary add-to-cart" id="modal-add-to-cart-btn">Add to Cart</button>
+                    <button class="btn-gold tryon-trigger">AI Virtual Try-On</button>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+    <!-- Cart Drawer -->
+    <div class="cart-drawer" id="cart-drawer">
+        <div class="cart-header">
+            <h2 class="serif">Your Wardrobe</h2>
+            <i data-lucide="x" class="close-cart" id="close-cart"></i>
+        </div>
+        <div style="flex: 1; overflow-y: auto; min-height: 0; padding-bottom: 20px;">
+            <div class="cart-items" id="cart-items" style="padding: 25px 35px 0;">
+                <!-- Items appear here -->
+                <p style="text-align: center; margin-top: 50px; opacity: 0.5;">Your luxurious selection is empty.</p>
+            </div>
+            
+            <!-- Glam Reward Section (Hidden by default) -->
+            <div id="glam-reward-section" style="display: none; padding: 0 35px;">
+                <!-- Content will be injected by JS -->
+            </div>
+        </div>
+
+        <div class="cart-footer" style="padding: 20px 35px 30px; border-top: 1px solid rgba(212,175,55,0.15); background: #0a0a0a; flex-shrink: 0; box-shadow: 0 -10px 20px rgba(0,0,0,0.5); z-index: 10;">
+            <div id="smart-billing-invoice" class="premium-invoice" style="margin-top: 0;">
+                <div class="invoice-row">
+                    <span>Products Total</span>
+                    <span id="invoice-products-total">PKR 0</span>
+                </div>
+                <div id="beauty-service-rows" style="display: none;">
+                    <div class="invoice-row beauty-value">
+                        <span>Beauty Service Value</span>
+                        <span id="invoice-beauty-value">PKR 15,000</span>
+                    </div>
+                    <div class="invoice-row partner-discount">
+                        <span>Partner Discount</span>
+                        <span id="invoice-partner-discount">-PKR 10,000</span>
+                    </div>
+                    <div class="invoice-row beauty-fee">
+                        <span>Beauty Service Fee</span>
+                        <span id="invoice-beauty-fee">PKR 5,000</span>
+                    </div>
+                </div>
+                <div class="invoice-row">
+                    <span>Shipping</span>
+                    <span id="invoice-shipping">PKR 500</span>
+                </div>
+                <div class="invoice-total">
+                    <span>Grand Total</span>
+                    <span id="invoice-grand-total">PKR 0</span>
+                </div>
+                <div id="savings-indicator" class="savings-badge" style="display: none;">
+                    <i data-lucide="sparkles"></i> You Saved <span id="savings-amount">PKR 10,000</span>
+                </div>
+            </div>
+            <button class="btn-primary" id="checkout-btn" style="width: 100%; justify-content: center; margin-top: 20px;">Proceed to Checkout</button>
+        </div>
+    </div>
+
+    <!-- Checkout Modal -->
+    <div class="checkout-modal" id="checkout-modal">
+        <div class="checkout-container">
+            <div class="checkout-header">
+                <h2 class="serif">Secure Checkout</h2>
+                <i data-lucide="x" class="close-checkout" id="close-checkout"></i>
+            </div>
+            
+            <div class="checkout-grid">
+                <!-- Left: Form -->
+                <div class="checkout-form-section">
+                    <form id="checkout-form">
+                        <div class="form-row">
+                            <div class="form-group">
+                                <label>Full Name</label>
+                                <input type="text" placeholder="Noor Fatima" required>
+                            </div>
+                            <div class="form-group">
+                                <label>Email Address</label>
+                                <input type="email" placeholder="noor@example.com" required>
+                            </div>
+                        </div>
+                        
+                        <div class="form-group">
+                            <label>Contact Number</label>
+                            <input type="tel" placeholder="+92 3XX XXXXXXX" required>
+                        </div>
+                        
+                        <div class="form-group">
+                            <label>Shipping Address</label>
+                            <textarea placeholder="House #, Street, Area" rows="3" required></textarea>
+                        </div>
+                        
+                        <div class="form-row">
+                            <div class="form-group">
+                                <label>City</label>
+                                <select required>
+                                    <option value="lahore">Lahore</option>
+                                    <option value="karachi">Karachi</option>
+                                    <option value="islamabad">Islamabad</option>
+                                    <option value="peshawar">Peshawar</option>
+                                    <option value="quetta">Quetta</option>
+                                    <option value="other">Other</option>
+                                </select>
+                            </div>
+                            <div class="form-group">
+                                <label>Postal Code</label>
+                                <input type="text" placeholder="54000">
+                            </div>
+                        </div>
+
+                        <div class="payment-methods">
+                            <h4 class="serif">Payment Method</h4>
+                            <div class="payment-options">
+                                <label class="payment-option active">
+                                    <input type="radio" name="payment" value="cod" checked>
+                                    <div class="option-content">
+                                        <i data-lucide="truck"></i>
+                                        <span>Cash on Delivery</span>
+                                    </div>
+                                </label>
+                                <label class="payment-option">
+                                    <input type="radio" name="payment" value="bank">
+                                    <div class="option-content">
+                                        <i data-lucide="landmark"></i>
+                                        <span>Bank Transfer</span>
+                                    </div>
+                                </label>
+                            </div>
+
+                            <div id="bank-details" class="bank-details-info" style="display: none;">
+                                <div class="detail-row">
+                                    <span>Bank Name:</span>
+                                    <strong>Noor Islamic Bank</strong>
+                                </div>
+                                <div class="detail-row">
+                                    <span>Account Title:</span>
+                                    <strong>NOORSTYLE AI LTD</strong>
+                                </div>
+                                <div class="detail-row">
+                                    <span>IBAN:</span>
+                                    <strong>PK00 NOOR 1234 5678 9012</strong>
+                                </div>
+                                <p class="bank-note">*Please email your transaction screenshot to payments@noorstyleai.com with Order ID as subject.</p>
+                            </div>
+                        </div>
+                    </form>
+                </div>
+
+                <!-- Right: Summary Overlay -->
+                <div class="checkout-summary-section">
+                    <div class="order-summary-card">
+                        <h4 class="serif">Order Summary</h4>
+                        <div class="checkout-items-list" id="checkout-items-list">
+                            <!-- Items will be mirrored here -->
+                        </div>
+                        <div class="summary-totals">
+                            <div class="summary-total-row">
+                                <span>Total</span>
+                                <span id="checkout-grand-total">PKR 0</span>
+                            </div>
+                        </div>
+                        <a href="javascript:void(0)" class="btn-gold place-order-btn" onclick="document.getElementById('checkout-form').requestSubmit()" style="text-decoration: none; display: flex; justify-content: center;">Confirm My Selection</a>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Success Modal -->
+    <div class="success-overlay" id="success-overlay">
+        <div class="success-card">
+            <div class="success-icon">
+                <i data-lucide="check-circle-2"></i>
+            </div>
+            <h2 class="serif">Order Placed</h2>
+            <p>Your luxurious ensemble is being prepared. An AI consultant will contact you shortly for final measurements.</p>
+            <div class="order-id-badge">Order ID: #NS-${Math.floor(Math.random() * 90000) + 10000}</div>
+            <button class="btn-primary" onclick="closeSuccess()">Explore More Collections</button>
+        </div>
+    </div>
+
+
+
+    <!-- Footer -->
+    <!-- AI Virtual Try-On Studio -->
+    <div class="tryon-modal" id="tryon-modal">
+        <div class="tryon-container">
+            <i data-lucide="x" class="tryon-close" id="close-tryon"></i>
+            
+            <!-- Left Sidebar: Configuration -->
+            <aside class="tryon-sidebar">
+                <div class="tryon-tabs">
+                    <span class="tryon-tab active" data-tab="profile">My Profile</span>
+                    <span class="tryon-tab" data-tab="advisor">AI Advisor</span>
+                </div>
+
+                <div id="tryon-profile-panel">
+                    <div class="selected-dress-card" style="display: flex; gap: 20px; background: rgba(255,255,255,0.03); border: 1px solid rgba(212, 175, 55, 0.3); padding: 20px; border-radius: 15px; margin-bottom: 30px; align-items: center; box-shadow: inset 0 0 20px rgba(0,0,0,0.5);">
+                        <img src="assets/pret.png" class="tryon-selected-img" style="width: 70px; height: 100px; object-fit: cover; border-radius: 10px; border: 1px solid rgba(212,175,55,0.3);">
+                        <div style="flex: 1; display: flex; flex-direction: column; justify-content: center;">
+                            <h4 class="tryon-selected-name serif" style="font-size: 18px; margin-bottom: 5px; color: var(--gold); font-weight: 700;">Emerald Summer Gala</h4>
+                            <p style="font-size: 10px; opacity: 0.8; text-transform: uppercase; letter-spacing: 2px; color: white;">Permanent Selection</p>
+                        </div>
+                    </div>
+                    <span class="section-subtitle">Persona Analysis</span>
+                    
+                    <div class="control-group">
+                        <label class="control-label">Skin Tone</label>
+                        <div class="complexion-picker" id="profile-skin-picker">
+                            <div class="complexion-circle active" style="background: #FAD4B2;" data-tone="fair" title="Fair"></div>
+                            <div class="complexion-circle" style="background: #E6B98D;" data-tone="medium" title="Medium"></div>
+                            <div class="complexion-circle" style="background: #C68E5A;" data-tone="tan" title="Tan"></div>
+                            <div class="complexion-circle" style="background: #8D5524;" data-tone="deep" title="Deep"></div>
+                        </div>
+                    </div>
+
+                    <div class="control-group">
+                        <label class="control-label">Height & Weight</label>
+                        <div style="display: flex; gap: 10px;">
+                            <input type="number" id="height-val" value="170" placeholder="170" style="width: 50%; padding: 15px; border-radius: 10px; border: 1px solid rgba(212,175,55,0.2); background: #0a0a0a; color: white; font-size: 14px;">
+                            <input type="number" id="weight-val" value="65" placeholder="65" style="width: 50%; padding: 15px; border-radius: 10px; border: 1px solid rgba(212,175,55,0.2); background: #0a0a0a; color: white; font-size: 14px;">
+                        </div>
+                    </div>
+
+                    <button class="btn-gold" style="width: 100%; margin-top: 25px; text-transform: uppercase; font-size: 13px; letter-spacing: 2px; padding: 18px; border-radius: 10px;" id="apply-profile-btn">Save Profile & Select</button>
+                </div>
+
+
+                <div id="tryon-advisor-panel" style="display: none;">
+                    <div class="selected-dress-card" style="display: flex; gap: 20px; background: rgba(255,255,255,0.03); border: 1px solid rgba(212, 175, 55, 0.3); padding: 20px; border-radius: 15px; margin-bottom: 30px; align-items: center; box-shadow: inset 0 0 20px rgba(0,0,0,0.5);">
+                        <img src="assets/pret.png" class="tryon-selected-img" style="width: 70px; height: 100px; object-fit: cover; border-radius: 10px; border: 1px solid rgba(212,175,55,0.3);">
+                        <div style="flex: 1; display: flex; flex-direction: column; justify-content: center;">
+                            <h4 class="tryon-selected-name serif" style="font-size: 18px; margin-bottom: 5px; color: var(--gold); font-weight: 700;">Emerald Summer Gala</h4>
+                            <p style="font-size: 10px; opacity: 0.8; text-transform: uppercase; letter-spacing: 2px; color: white;">Permanent Selection</p>
+                        </div>
+                    </div>
+                    <span class="section-subtitle">AI Style Engineering</span>
+                    <div class="control-group">
+                        <label class="control-label">Seasonal Adaptation</label>
+                        <div class="body-shape-grid">
+                            <button class="shape-btn active">Spring</button>
+                            <button class="shape-btn">Summer</button>
+                        </div>
+                    </div>
+                    
+                    <div class="trend-card" data-dress="Summer-Ruby" data-desc="The AI recommends this hue to complement your selected skin tone and environment.">
+                        <div style="display: flex; gap: 10px; align-items: center;">
+                            <div class="trend-color" style="background: #9B111E;"></div>
+                            <span style="font-size: 11px;">Ruby Red Enhancement</span>
+                        </div>
+                        <span class="trend-status status-high">98% Match</span>
+                    </div>
+                    <div class="trend-card" data-dress="Spring-Gold" data-desc="A radiant choice that captures the spring essence, perfectly tailored for your silhouette.">
+                        <div style="display: flex; gap: 10px; align-items: center;">
+                            <div class="trend-color" style="background: #D4AF37;"></div>
+                            <span style="font-size: 11px;">Gilded Gold Flow</span>
+                        </div>
+                        <span class="trend-status status-high">95% Match</span>
+                    </div>
+
+                    <button class="btn-gold" style="width: 100%; margin-top: 25px; padding: 18px; border-radius: 10px;" id="ai-choose">Analyze Best Fit</button>
+                </div>
+            </aside>
+
+            <!-- Center Viewport: Avatar & Live Camera -->
+            <main class="tryon-viewport">
+                <div class="tryon-mode-toggle">
+                    <button class="mode-btn active" id="mode-avatar">Standard Avatar</button>
+                    <button class="mode-btn" id="mode-live">Live Mirror</button>
+                </div>
+                
+                <div class="avatar-container" style="flex: 1; min-height: 400px; display: flex; align-items: center; justify-content: center;">
+                    <!-- 3D Engine Viewport -->
+                    <div id="avatar-view" style="width: 100%; height: 100%; min-height: 400px; position: relative;">
+                        <div id="canvas-container" style="width: 100%; height: 100%; min-height: 400px; z-index: 5;"></div>
+
+
+                        <!-- Phase 2: Drafting Outfit Loading Spinner -->
+                        <div id="loading-overlay" style="display:none; position: absolute; inset: 0; background: rgba(0,0,0,0.85); flex-direction: column; align-items: center; justify-content: center; z-index: 100;">
+                            <i class="fa-solid fa-wand-magic-sparkles fa-beat" style="font-size: 50px; color: #D4AF37;"></i>
+                            <h2 style="margin-top: 15px; letter-spacing: 3px; color: #D4AF37; font-size: 14px; font-family:'Playfair Display',serif;">DRAFTING YOUR ENSEMBLE...</h2>
+                        </div>
+                    </div>
+                </div>
+                
+                <div class="viewport-controls" style="margin-top: 20px;">
+                    <div style="display: flex; gap: 15px; background: white; padding: 10px 20px; border-radius: 30px; box-shadow: var(--shadow-sm);">
+                        <i data-lucide="rotate-ccw" id="rotate-overlay" title="Rotate View"></i>
+                        <i data-lucide="zoom-in" id="zoom-in-overlay" title="Zoom In"></i>
+                        <i data-lucide="zoom-out" id="zoom-out-overlay" title="Zoom Out"></i>
+                        <i data-lucide="palette" id="color-swap-overlay" title="Swap Color"></i>
+                    </div>
+                </div>
+            </main>
+
+            <!-- Right Sidebar: Enhancements -->
+            <aside class="tryon-sidebar-right">
+                <span class="section-subtitle">Glam Studio</span>
+                
+                <div class="glam-viewer">
+                    <img src="assets/avatar_fair.png" class="glam-image glam-before">
+                    <img src="assets/glam_after.png" class="glam-image glam-after" id="glam-after-img">
+                    <input type="range" class="glam-slider" id="glam-slider" value="50">
+                </div>
+                <p style="text-align: center; font-size: 11px; margin-top: 10px; font-weight: 600;">Glam Makeup & Jewelry</p>
+
+                <div class="control-group" style="margin-top: 40px;">
+                    <label class="control-label">Mood Selection</label>
+                    <div class="mood-grid">
+                        <div class="mood-item active" data-mood="happy">
+                            <i data-lucide="smile"></i>
+                            <span>Happy</span>
+                        </div>
+                        <div class="mood-item" data-mood="romantic">
+                            <i data-lucide="heart"></i>
+                            <span>Romantic</span>
+                        </div>
+                        <div class="mood-item" data-mood="confident">
+                            <i data-lucide="shield-check"></i>
+                            <span>Confident</span>
+                        </div>
+                        <div class="mood-item" data-mood="party">
+                            <i data-lucide="music"></i>
+                            <span>Party</span>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="control-group">
+                    <label class="control-label">Outfit Fitting</label>
+                    <p id="virtual-fitting-info" style="font-size: 11px; color: #666;">Please select a style from the AI Advisor for personalized fitting analysis.</p>
+                </div>
+
+                <button class="btn-primary add-to-cart" id="tryon-order-btn" data-name="Emerald Summer Gala" data-price="45000" style="width: 100%; border-radius: 8px;">Order This Look</button>
+            </aside>
+        </div>
+    </div>
+
+    <!-- About Us Section -->
+    <section class="about-section section-padding" id="about">
+        <div class="container about-grid" style="display: grid; grid-template-columns: 1fr 1fr; gap: 80px; align-items: center;">
+            <div class="about-content reveal">
+                <div class="section-title" style="text-align: left; margin-bottom: 30px;">
+                    <span>Our Story</span>
+                    <h2 class="serif" style="font-size: 3rem;">Crafting Perfection, Curated by Intelligence</h2>
+                </div>
+                <p style="font-size: 1.1rem; color: rgba(255,255,255,0.7); margin-bottom: 20px;">Welcome to <strong>NoorStyle AI</strong>, where the rich heritage of Pakistani couture meets the precision of artificial intelligence. We believe that luxury is not just a status; it’s a form of personal expression that should be as unique as your own fingerprint.</p>
+                <p style="font-size: 1.1rem; color: rgba(255,255,255,0.7); margin-bottom: 30px;">Founded on the principle of the "Intelligence of Style," we use cutting-edge algorithms to understand your aesthetic soul, matching master-crafted fabrics with your individual silhouette for a perfect, personalized fit every single time.</p>
+                
+                <div class="about-stats" style="display: flex; gap: 40px; margin-top: 50px;">
+                    <div class="stat-item">
+                        <h4 class="serif" style="font-size: 32px; color: var(--gold); margin-bottom: 5px;">5k+</h4>
+                        <p style="font-size: 11px; text-transform: uppercase; letter-spacing: 2px; color: var(--gold);">Unique Designs</p>
+                    </div>
+                    <div class="stat-item">
+                        <h4 class="serif" style="font-size: 32px; color: var(--gold); margin-bottom: 5px;">99.2%</h4>
+                        <p style="font-size: 11px; text-transform: uppercase; letter-spacing: 2px; color: var(--gold);">AI Recommendation Accuracy</p>
+                    </div>
+                    <div class="stat-item">
+                        <h4 class="serif" style="font-size: 32px; color: var(--gold); margin-bottom: 5px;">12+</h4>
+                        <p style="font-size: 11px; text-transform: uppercase; letter-spacing: 2px; color: var(--gold);">Bespoke Masters</p>
+                    </div>
+                </div>
+            </div>
+            <div class="about-visuals reveal">
+                <div class="team-grid" style="display: grid; grid-template-columns: 1fr 1fr; gap: 30px;">
+                    <div class="team-card" style="position: relative; overflow: hidden; border-radius: 20px; box-shadow: var(--shadow-md);">
+                        <img src="assets/farhana_aamir.png" alt="Creative Director" class="zoom-img" style="width: 100%; height: 400px; object-fit: cover;">
+                        <div class="team-overlay" style="position: absolute; bottom: 0; left: 0; width: 100%; padding: 30px; background: linear-gradient(to top, rgba(0,0,0,0.8), transparent); color: white;">
+                            <h5 class="serif" style="font-size: 18px; margin-bottom: 5px;">Farhana Aamir</h5>
+                            <p style="font-size: 10px; text-transform: uppercase; letter-spacing: 2px; opacity: 0.8;">Creative Director & Founder</p>
+                        </div>
+                    </div>
+                    <div class="team-card" style="position: relative; overflow: hidden; border-radius: 20px; box-shadow: var(--shadow-md); margin-top: 50px;">
+                        <img src="assets/zoya_hussain.png" alt="AI Specialist" class="zoom-img" style="width: 100%; height: 400px; object-fit: cover;">
+                        <div class="team-overlay" style="position: absolute; bottom: 0; left: 0; width: 100%; padding: 30px; background: linear-gradient(to top, rgba(0,0,0,0.8), transparent); color: white;">
+                            <h5 class="serif" style="font-size: 18px; margin-bottom: 5px;">Zoya Hussain</h5>
+                            <p style="font-size: 10px; text-transform: uppercase; letter-spacing: 2px; opacity: 0.8;">AI Styling Lead</p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- AI Chatbot Stylist Widget -->
+    <div id="ai-chatbot" class="chatbot-widget" style="position: fixed; bottom: 30px; right: 30px; z-index: 9999;">
+        <button id="chatbot-toggle" class="chatbot-btn" style="background: var(--gold); color: white; width: 65px; height: 65px; border-radius: 50%; border: none; box-shadow: 0 10px 30px rgba(212, 175, 55, 0.4); cursor: pointer; display: flex; align-items: center; justify-content: center; transition: var(--transition); position: relative;">
+            <i data-lucide="message-circle" id="chat-icon-main" style="width: 28px; height: 28px;"></i>
+            <i data-lucide="x" id="chat-close-icon" style="width: 28px; height: 28px; display: none;"></i>
+            <span class="chatbot-badge" style="position: absolute; top: 0; right: 0; background: #ff3b30; width: 15px; height: 15px; border-radius: 50%; border: 3px solid white;"></span>
+        </button>
+        <div id="chat-window" class="chat-window" style="position: absolute; bottom: 85px; right: 0; width: 350px; height: 500px; background: #0a0a0a; border-radius: 20px; box-shadow: 0 20px 60px rgba(0,0,0,0.5); display: none; flex-direction: column; overflow: hidden; border: 1px solid rgba(212, 175, 55, 0.2);">
+            <div class="chat-header" style="background: linear-gradient(135deg, #1a0f00, #2d1f00); padding: 25px; color: white; border-bottom: 1px solid rgba(212,175,55,0.3); display: flex; justify-content: space-between; align-items: center;">
+                <div>
+                    <div class="chat-title serif" style="font-size: 18px; margin-bottom: 5px; color: #D4AF37;">Noor AI Stylist</div>
+                    <div class="chat-status" style="font-size: 10px; display: flex; align-items: center; gap: 8px; opacity: 0.9; color: white;">
+                        <span style="width: 8px; height: 8px; background: #4cd964; border-radius: 50%; display:inline-block;"></span> Online | Serving you with AI
+                    </div>
+                </div>
+                <i data-lucide="x" id="close-chat-window" style="cursor: pointer; color: white; width: 22px; height: 22px; opacity: 0.8; transition: 0.3s;" onmouseover="this.style.opacity='1'; this.style.color='#D4AF37'" onmouseout="this.style.opacity='0.8'; this.style.color='white'" onclick="document.getElementById('chatbot-toggle').click()" title="Close Chat"></i>
+            </div>
+            <div id="chat-messages" class="chat-messages" style="flex: 1; padding: 20px; overflow-y: auto; background: #0d0d0d; display: flex; flex-direction: column; gap: 15px;">
+                <div class="message ai" style="background: #111; color: white; padding: 15px; border-radius: 15px 15px 15px 0; max-width: 85%; align-self: flex-start; box-shadow: 0 5px 15px rgba(0,0,0,0.2); font-size: 14px; line-height: 1.5;">Assalam-o-Alaikum! I am your personal AI Stylist at NoorStyle. Tell me your mood or occasion, and I'll curate a perfect look for you!</div>
+            </div>
+            <div class="chat-input-area" style="padding: 15px; background: #0a0a0a; border-top: 1px solid rgba(212, 175, 55, 0.1); display: flex; gap: 10px; align-items: center;">
+                <input type="text" id="chat-input" placeholder="Ask about mood-based outfits..." style="flex: 1; border: none; padding: 12px 15px; background: #151515; color: white; border-radius: 25px; font-size: 14px; outline: none;">
+                <button id="chat-btn-send" style="background: var(--gold); color: white; border: none; width: 40px; height: 40px; border-radius: 50%; cursor: pointer; display: flex; align-items: center; justify-content: center; transition: var(--transition);"><i data-lucide="send" style="width: 18px; height: 18px;"></i></button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Admin Dashboard (Floating Button) -->
+    <div id="admin-entrance" style="position: fixed; bottom: 30px; left: 30px; z-index: 1000;">
+        <button id="admin-btn" title="Admin Dashboard" style="background: var(--charcoal); color: white; width: 45px; height: 45px; border-radius: 50%; border: 1px solid var(--gold); cursor: pointer; display: flex; align-items: center; justify-content: center; opacity: 0.8; transition: var(--transition); box-shadow: 0 5px 15px rgba(0,0,0,0.3);">
+            <i data-lucide="lock" style="width: 16px; color: var(--gold);"></i>
+        </button>
+    </div>
+
+    <!-- Admin Overlay (Simulated Dashboard) -->
+    <div id="admin-panel" style="position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.95); z-index: 10000; display: none; align-items: center; justify-content: center; backdrop-filter: blur(15px);">
+        <div style="background: #0a0a0a; border: 1px solid rgba(212, 175, 55, 0.3); padding: 50px; border-radius: 20px; width: 500px; max-width: 90%; color: white;">
+            <h3 class="serif" style="margin-bottom: 20px; font-size: 24px;">Inventory Control Center</h3>
+            <p style="font-size: 13px; color: rgba(255,255,255,0.7); margin-bottom: 30px;">Update product catalogs and training models for Noor AI.</p>
+            
+            <form id="admin-add-product-form">
+                <div style="margin-bottom: 20px;">
+                    <label style="display: block; font-size: 11px; text-transform: uppercase; margin-bottom: 8px;">Product Name</label>
+                    <input type="text" placeholder="e.g. Ivory Silk Peshwas" style="width: 100%; padding: 12px; border: 1px solid #eee; border-radius: 8px;" required>
+                </div>
+                <div style="margin-bottom: 20px;">
+                    <label style="display: block; font-size: 11px; text-transform: uppercase; margin-bottom: 8px;">Price (PKR)</label>
+                    <input type="number" placeholder="e.g. 45000" style="width: 100%; padding: 12px; border: 1px solid #eee; border-radius: 8px;" required>
+                </div>
+                <div style="margin-bottom: 20px;">
+                    <label style="display: block; font-size: 11px; text-transform: uppercase; margin-bottom: 8px;">Category</label>
+                    <select style="width: 100%; padding: 12px; border: 1px solid #eee; border-radius: 8px;">
+                        <option>Bridal</option>
+                        <option>Formal</option>
+                        <option>Casual</option>
+                    </select>
+                </div>
+                <button type="submit" class="btn-gold" style="width: 100%; border-radius: 8px; padding: 15px;">Update Global Catalog</button>
+            </form>
+            <button id="admin-close-panel" style="margin-top: 20px; text-align: center; width: 100%; background: transparent; border: none; color: #888; font-size: 11px; text-transform: uppercase; cursor: pointer; letter-spacing: 2px;">Return to Boutique</button>
+        </div>
+    </div>
+
+    <!-- Footer -->
+    <footer>
+        <div class="container footer-top">
+            <div class="footer-column about-brand">
+                <a href="javascript:void(0)" class="logo footer-logo" onclick="window.scrollTo({top:0,behavior:'smooth'})">Noor<span>Style</span></a>
+                <p>NoorStyle AI is where Pakistani heritage meets the future of intelligence. We believe in the "Art of Dressing You" — using cutting-edge AI to curate luxury that resonates with your unique soul.</p>
+                <div class="social-links">
+                    <a href="https://www.instagram.com/explore/tags/pakistanifashion/" target="_blank" rel="noopener" title="Follow on Instagram">
+                        <i class="fa-brands fa-instagram"></i>
+                    </a>
+                    <a href="https://www.facebook.com/groups/pakistanifashiondesigner/" target="_blank" rel="noopener" title="Facebook Page">
+                        <i class="fa-brands fa-facebook-f"></i>
+                    </a>
+                    <a href="https://x.com/search?q=pakistanifashion" target="_blank" rel="noopener" title="Follow on X (Twitter)">
+                        <i class="fa-brands fa-x-twitter"></i>
+                    </a>
+                    <a href="https://www.youtube.com/results?search_query=pakistani+fashion+dresses+2024" target="_blank" rel="noopener" title="Watch Pakistani Fashion on YouTube">
+                        <i class="fa-brands fa-youtube"></i>
+                    </a>
+                </div>
+            </div>
+            <div class="footer-column footer-links">
+                <h4>Quick Links</h4>
+                <ul>
+                    <li><a href="#" class="footer-info-link" data-footer="privacy">Privacy Policy</a></li>
+                    <li><a href="#" class="footer-info-link" data-footer="terms">Terms &amp; Conditions</a></li>
+                    <li><a href="#" class="footer-info-link" data-footer="refund">Refund Policy</a></li>
+                    <li><a href="#" class="footer-info-link" data-footer="size">Size Guide</a></li>
+                    <li><a href="#" class="footer-info-link" data-footer="shipping">Shipping Info</a></li>
+                </ul>
+            </div>
+            <div class="footer-column footer-links">
+                <h4>Customer Support</h4>
+                <ul>
+                    <li><a href="#" class="footer-info-link" data-footer="contact">Contact Us</a></li>
+                    <li><a href="#" class="footer-info-link" data-footer="tracking">Order Tracking</a></li>
+                    <li><a href="#" class="footer-info-link" data-footer="faq">FAQ</a></li>
+                    <li><a href="#" class="footer-info-link" data-footer="store">Store Locator</a></li>
+                    <li><a href="#" class="footer-info-link" data-footer="wholesale">Wholesale</a></li>
+                </ul>
+            </div>
+            <div class="footer-column newsletter-col">
+                <h4>Newsletter</h4>
+                <p>Subscribe to receive trend alerts and exclusive AI-curated collection previews.</p>
+                <form class="newsletter-form" id="newsletter-form">
+                    <input type="email" placeholder="Your Email Address" required>
+                    <button type="submit" class="btn-gold">Subscribe</button>
+                </form>
+                <div class="payment-methods">
+                    <img src="https://img.icons8.com/color/48/000000/visa.png" alt="Visa">
+                    <img src="https://img.icons8.com/color/48/000000/mastercard.png" alt="Mastercard">
+                    <img src="https://img.icons8.com/color/48/000000/google-pay.png" alt="GPay">
+                    <img src="https://img.icons8.com/ios-filled/50/ffffff/delivery.png" alt="COD" style="filter: brightness(0) invert(1); width: 24px; height: 24px;">
+                </div>
+            </div>
+        </div>
+        <div class="footer-bottom">
+            <div class="container footer-bottom-content">
+                <p>&copy; 2026 NoorStyle AI. All Rights Reserved.</p>
+                <div class="designer-credit">
+                    <i class="fa-solid fa-wand-magic-sparkles"></i>
+                    <div>
+                        <span class="credit-label">Designed &amp; Crafted by</span>
+                        <span class="credit-name">Farhana Aamir</span>
+                        <span class="credit-title">Creative Director · NoorStyle AI</span>
+                    </div>
+                </div>
+                <div class="footer-legal">
+                    <a href="javascript:void(0)" class="footer-info-link" data-footer="legal">Legal</a>
+                    <a href="javascript:void(0)" class="footer-info-link" data-footer="cookies">Cookies</a>
+                </div>
+            </div>
+        </div>
+    </footer>
+
+    <!-- Info Modal -->
+    <div id="info-notice-modal" class="checkout-modal">
+        <div class="checkout-container" style="max-width: 600px; max-height: 80vh; margin: auto;">
+            <div class="checkout-header">
+                <h2 class="serif" id="info-notice-title">Notice</h2>
+                <i data-lucide="x" class="close-info-notice" style="cursor: pointer;"></i>
+            </div>
+            <div id="info-notice-body" style="padding: 40px; color: white; opacity: 0.8; line-height: 1.8; font-size: 14px; overflow-y: auto;">
+                <!-- Content will be injected -->
+            </div>
+            <div style="padding: 20px 40px 30px; text-align: center;">
+                <button class="btn-gold close-info-notice" style="width: 100%;">Close</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Scroll to Top -->
+    <button id="scroll-top" class="scroll-top-btn" onclick="window.scrollTo({top:0,behavior:'smooth'})">
+        <i data-lucide="arrow-up"></i>
+    </button>
+
+    <script src="script.js"></script>
+    <script src="libaas_ai/engine.js"></script>
+    <script>
+        lucide.createIcons();
+    </script>
+</body>
+</html>
+

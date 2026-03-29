@@ -1,0 +1,46 @@
+/* Phase 4: Premium UI Framework */
+* { margin: 0; padding: 0; box-sizing: border-box; font-family: 'Segoe UI', Tahoma, Verdana, sans-serif; }
+body { background: #0a0a0a; color: #ffffff; height: 100vh; overflow: hidden; display: flex; flex-direction: column; }
+
+/* Visual Feedback: Loading Spinner (Phase 2 completely implemented) */
+#loading-overlay { 
+    position: fixed; top: 0; left: 0; width: 100%; height: 100%; 
+    background: rgba(0, 0, 0, 0.85); 
+    backdrop-filter: blur(10px); 
+    -webkit-backdrop-filter: blur(10px);
+    z-index: 9999; 
+    display: flex; flex-direction: column; 
+    justify-content: center; align-items: center; 
+}
+.fa-beat { animation: fa-beat 1.2s ease-in-out infinite; }
+
+/* Grid Layout */
+.main-layout { display: flex; height: calc(100vh - 45px); padding: 25px; gap: 30px; }
+
+/* Left Sidebar UI */
+.left-sidebar { width: 350px; display: flex; flex-direction: column; gap: 15px; z-index: 10; }
+.gold-title { color: #D4AF37; font-size: 16px; text-transform: uppercase; letter-spacing: 3px; border-bottom: 1px solid rgba(212,175,55,0.2); padding-bottom: 10px; }
+
+/* Glass Panel Architecture */
+.panel { background: rgba(20, 20, 20, 0.6); border: 1px solid rgba(255, 255, 255, 0.05); border-radius: 12px; padding: 20px; box-shadow: 0 10px 30px rgba(0,0,0,0.5); backdrop-filter: blur(15px); }
+
+/* Inputs & Profile Metrics */
+.metric-input { margin-bottom: 15px; }
+.metric-input label { display: block; font-size: 11px; text-transform: uppercase; color: #aaa; margin-bottom: 6px; letter-spacing: 1px; }
+.metric-input input { width: 100%; padding: 12px; background: rgba(0,0,0,0.5); border: 1px solid rgba(212,175,55,0.2); color: #fff; font-size: 14px; border-radius: 8px; outline: none; transition: 0.3s; }
+.metric-input input:focus { border-color: #D4AF37; box-shadow: 0 0 10px rgba(212,175,55,0.2); }
+.hint-text { font-size: 10px; color: #777; font-style: italic; margin-bottom: 15px; line-height: 1.4; display: block; }
+
+/* AI Advisor Buttons (Click events hooked in engine.js) */
+.dress-list { display: flex; flex-direction: column; gap: 10px; }
+.advisor-dress-btn { padding: 14px; background: transparent; border: 1px solid rgba(212,175,55,0.3); border-radius: 8px; color: #fff; text-align: left; font-size: 13px; font-weight: bold; cursor: pointer; transition: 0.3s; text-transform: uppercase; letter-spacing: 1px;}
+.advisor-dress-btn:hover { background: rgba(212,175,55,0.1); transform: translateX(5px); border-color: #D4AF37; }
+.advisor-dress-btn.active { background: linear-gradient(135deg, #D4AF37, #b8941f); color: #000; border-color: #D4AF37; box-shadow: 0 5px 15px rgba(212,175,55,0.4); transform: translateX(5px); }
+
+/* Three.js Engine Viewport */
+.viewport { flex-grow: 1; position: relative; border-radius: 20px; overflow: hidden; background: radial-gradient(circle at center, #1a1a1a 0%, #000 100%); border: 1px solid rgba(255,255,255,0.03); box-shadow: inset 0 0 50px rgba(0,0,0,0.8); }
+#canvas-container { width: 100%; height: 100%; position: absolute; top: 0; left: 0; outline: none; }
+.hint-overlay { position: absolute; bottom: 20px; left: 50%; transform: translateX(-50%); background: rgba(0,0,0,0.7); padding: 8px 20px; border-radius: 20px; font-size: 11px; color: #888; text-transform: uppercase; letter-spacing: 2px; pointer-events: none; border: 1px solid rgba(255,255,255,0.05); }
+
+/* Mandatory Branding Requirement */
+.fixed-footer { position: fixed; bottom: 0; width: 100%; padding: 12px; background: #050505; color: #D4AF37; font-size: 11px; text-transform: uppercase; letter-spacing: 5px; text-align: center; border-top: 1px solid rgba(212,175,55,0.2); font-weight: bold; z-index: 100; }
