@@ -118,12 +118,12 @@ function loadBaseAvatar() {
     
     gltfLoader.load(avatarPath, (gltf) => {
         avatarObject = gltf.scene;
-     
-     avatarObject.rotation.x = -Math.PI / 2;
-        avatarObject.visible = true; 
- let box = new THREE.Box3().setFromObject(avatarObject);
-let size = box.getSize(new THREE.Vector3()).length();
-avatarObject.scale.setScalar(2 / size); // Ye model ko 2 units ke barabar chota kar dega
+   
+  
+ avatarObject.scale.set(0.000001, 0.0000001, 0.0000001); 
+avatarObject.position.set(0, -1.0, 0);
+avatarObject.rotation.x = -Math.PI / 2;
+avatarObject.visible = true;
         
         // Success: Hide Fallback
         if (fallbackModel) fallbackModel.visible = false;
