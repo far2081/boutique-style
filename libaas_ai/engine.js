@@ -120,14 +120,9 @@ function loadBaseAvatar() {
         avatarObject = gltf.scene;
    
   
-const box = new THREE.Box3().setFromObject(avatarObject);
-const size = box.getSize(new THREE.Vector3());
-const maxDim = Math.max(size.x, size.y, size.z);
-const scale = 1.5 / maxDim; // Ye model ko stage ke barabar kar dega
-avatarObject.scale.setScalar(scale);
-avatarObject.position.set(0, -1.0, 0);
+avatarObject.scale.set(0.0000000001, 0.0000000001, 0.0000000001); 
 avatarObject.rotation.x = -Math.PI / 2;
-avatarObject.visible = true;
+avatarObject.position.set(0, -1.0, 0);
         
         // Success: Hide Fallback
         if (fallbackModel) fallbackModel.visible = false;
