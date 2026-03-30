@@ -118,10 +118,10 @@ function loadBaseAvatar() {
     
     gltfLoader.load(avatarPath, (gltf) => {
         avatarObject = gltf.scene;
-       avatarObject.position.set(0, -1.5, 0);
-      avatarObject.rotation.x = -Math.PI / 2;
+      avatarObject.position.set(0, -1.0, 0);
+      avatarObject.rotation.x = 0;
         avatarObject.visible = true; 
-      avatarObject.scale.set(0.0000005, 0.0000005, 0.0000005);
+   avatarObject.scale.set(0.00000001, 0.00000001, 0.00000001);
         
         // Success: Hide Fallback
         if (fallbackModel) fallbackModel.visible = false;
