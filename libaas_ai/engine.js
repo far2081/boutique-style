@@ -121,7 +121,7 @@ function loadBaseAvatar() {
        avatarObject.position.set(0, -1.5, 0);
       avatarObject.rotation.x = -Math.PI / 2;
         avatarObject.visible = true; 
-      avatarObject.scale.set(0.00005, 0.00005, 0.00005);
+      avatarObject.scale.set(0.0000005, 0.0000005, 0.0000005);
         
         // Success: Hide Fallback
         if (fallbackModel) fallbackModel.visible = false;
