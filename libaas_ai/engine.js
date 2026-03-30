@@ -32,7 +32,7 @@ function init() {
     const height = container.clientHeight || 500;
 
     camera = new THREE.PerspectiveCamera(45, width / height, 1, 5000);
-   camera.position.set(0, 0.8, 4);
+  camera.position.set(0, 0.5, 4);
 
     renderer = new THREE.WebGLRenderer({ antialias: true, alpha: false, preserveDrawingBuffer: true });
     renderer.setPixelRatio(window.devicePixelRatio);
