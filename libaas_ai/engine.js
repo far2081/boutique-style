@@ -9,7 +9,7 @@ let profileHeight = 170;
 let profileWeight = 65;
 
 let gltfLoader = null;
-const avatarPath = './assets/models/avatar.glb'; // Path Verification
+const avatarPath = 'assets/models/avatar.glb'; // Path Verification
 const avatarGroup = new THREE.Group();
 let fallbackModel; 
 
