@@ -31,8 +31,8 @@ function init() {
     const width = container.clientWidth || 600;
     const height = container.clientHeight || 500;
 
-    camera = new THREE.PerspectiveCamera(45, width / height, 0.1, 100);
-    camera.position.set(0, 5, 12);
+    camera = new THREE.PerspectiveCamera(45, width / height, 1, 5000);
+   camera.position.set(0, 10, 100);
 
     renderer = new THREE.WebGLRenderer({ antialias: true, alpha: false, preserveDrawingBuffer: true });
     renderer.setPixelRatio(window.devicePixelRatio);
@@ -120,13 +120,16 @@ function loadBaseAvatar() {
         avatarObject = gltf.scene;
    
   
-avatarObject.scale.set(0.0000000001, 0.0000000001, 0.0000000001); 
+// Force Center and Scale
+avatarObject.traverse(child => {
+    if (child.isMesh) {
+        child.geometry.center(); // Model ko center mein lao
+        child.geometry.scale(0.00001, 0.00001, 0.00001); // Yahin chota karo
+    }
+});
+avatarObject.position.set(0, 0, 0); 
 avatarObject.rotation.x = -Math.PI / 2;
-avatarObject.position.set(0, -1.0, 0);
-
-// Success: Hide Fallback
 if (fallbackModel) fallbackModel.visible = false;
-
 avatarGroup.add(avatarObject);
         console.log("3D Engine SUCCESS: Avatar Model Object Injected.");
         
