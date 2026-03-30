@@ -32,8 +32,7 @@ function init() {
     const height = container.clientHeight || 500;
 
     camera = new THREE.PerspectiveCamera(45, width / height, 1, 5000);
-  camera.position.set(0, 0.5, 4);
-
+ camera.position.set(0, 1.2, 5);
     renderer = new THREE.WebGLRenderer({ antialias: true, alpha: false, preserveDrawingBuffer: true });
     renderer.setPixelRatio(window.devicePixelRatio);
     renderer.setSize(width, height);
@@ -127,7 +126,7 @@ avatarObject.traverse(child => {
         child.geometry.scale(0.00001, 0.00001, 0.00001); // Yahin chota karo
     }
 });
-avatarObject.position.set(0, 0, 0); 
+avatarObject.position.set(0, -1.0, 0);
 avatarObject.rotation.x = 0;
 if (fallbackModel) fallbackModel.visible = false;
 avatarGroup.add(avatarObject);
