@@ -14,7 +14,7 @@ const avatarGroup = new THREE.Group();
 let fallbackModel; 
 
 function getResponsiveScale() {
-    return window.innerWidth < 768 ? 2.5 : 5.0; // Scaled up per user request for full presence
+  return window.innerWidth < 768 ? 0.5 : 1.0; // Scaled up per user request for full presence
 }
 
 function init() {
