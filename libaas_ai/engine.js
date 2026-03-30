@@ -123,11 +123,11 @@ function loadBaseAvatar() {
 avatarObject.scale.set(0.0000000001, 0.0000000001, 0.0000000001); 
 avatarObject.rotation.x = -Math.PI / 2;
 avatarObject.position.set(0, -1.0, 0);
-        
-        // Success: Hide Fallback
-        if (fallbackModel) fallbackModel.visible = false;
-        
-        avatarGroup.add(avatarObject);
+
+// Success: Hide Fallback
+if (fallbackModel) fallbackModel.visible = false;
+
+avatarGroup.add(avatarObject);
         console.log("3D Engine SUCCESS: Avatar Model Object Injected.");
         
         if(window.onComplexionChange) window.onComplexionChange('fair');
