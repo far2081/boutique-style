@@ -119,7 +119,7 @@ function loadBaseAvatar() {
     gltfLoader.load(avatarPath, (gltf) => {
         avatarObject = gltf.scene;
      
-      avatarObject.rotation.x = 0;
+     avatarObject.rotation.x = -Math.PI / 2;
         avatarObject.visible = true; 
  let box = new THREE.Box3().setFromObject(avatarObject);
 let size = box.getSize(new THREE.Vector3()).length();
@@ -132,7 +132,7 @@ avatarObject.scale.setScalar(2 / size); // Ye model ko 2 units ke barabar chota 
         console.log("3D Engine SUCCESS: Avatar Model Object Injected.");
         
         if(window.onComplexionChange) window.onComplexionChange('fair');
-        updateBody(profileHeight, profileWeight);
+      // updateBody(profileHeight, profileWeight);
     }, 
     (xhr) => {
         if(xhr.total > 0) console.log("Asset Progress: " + Math.round(xhr.loaded / xhr.total * 100) + "%");
