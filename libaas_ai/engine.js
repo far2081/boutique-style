@@ -32,7 +32,7 @@ function init() {
     const height = container.clientHeight || 500;
 
     camera = new THREE.PerspectiveCamera(45, width / height, 1, 5000);
- camera.position.set(0, 1.2, 5);
+ camera.position.set(0, 1.5, 6.5);
     renderer = new THREE.WebGLRenderer({ antialias: true, alpha: false, preserveDrawingBuffer: true });
     renderer.setPixelRatio(window.devicePixelRatio);
     renderer.setSize(width, height);
@@ -127,7 +127,7 @@ avatarObject.traverse(child => {
     }
 });
 avatarObject.position.set(0, -1.0, 0);
-avatarObject.rotation.x = 0;
+rotation.x = -Math.PI / 2;
 if (fallbackModel) fallbackModel.visible = false;
 avatarGroup.add(avatarObject);
         console.log("3D Engine SUCCESS: Avatar Model Object Injected.");
