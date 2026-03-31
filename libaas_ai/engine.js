@@ -119,18 +119,18 @@ function loadBaseAvatar() {
     console.log("3D Engine: Attempting standard load from", avatarPath);
 
     gltfLoader.load(avatarPath, (gltf) => {
-        avatarObject = gltf.scene;
-
-        // Force Center and Scale
+      avatarObject = gltf.scene;
         avatarObject.traverse(child => {
             if (child.isMesh) {
                 child.geometry.center(); 
-                child.geometry.scale(1.1, 1.1, 1.1); 
+                // Is nayi file ke liye scale 1.0 perfect hai
+                child.geometry.scale(1.0, 1.0, 1.0); 
             }
         });
-
-        avatarObject.position.set(0, 0.4, 0); // Stage ke ooper set kiya
-        avatarObject.rotation.x = 0; // Seedha khara kiya
+        avatarObject.position.set(0, 0, 0); 
+        avatarObject.rotation.x = 0; 
+        if (fallbackModel) fallbackModel.visible = false;
+        avatarGroup.add(avatarObject);
         
         if (fallbackModel) fallbackModel.visible = false;
         avatarGroup.add(avatarObject);
