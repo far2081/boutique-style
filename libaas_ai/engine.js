@@ -134,8 +134,11 @@ function init() {
     animate();
 }
 
-if (!gltfLoader) return;
+function loadBaseAvatar() {
+    if (!gltfLoader) return;
     
+    const avatarPath = "https://models.readyplayer.me/64f06834005c2104928e4e94.glb";
+
     gltfLoader.load(avatarPath, (gltf) => {
         avatarObject = gltf.scene;
 
@@ -156,6 +159,15 @@ if (!gltfLoader) return;
         }
 
         avatarGroup.add(avatarObject);
+        
+        if(window.onComplexionChange) window.onComplexionChange('fair');
+        console.log("3D Engine SUCCESS: Real Human Avatar Injected.");
+
+    }, undefined, (err) => {
+        console.warn("Avatar load failed, showing fallback.", err);
+        if (fallbackModel) fallbackModel.visible = true;
+    });
+}
         
         if(window.onComplexionChange) window.onComplexionChange('fair');
         console.log("3D Engine SUCCESS: Real Human Avatar Injected.");
