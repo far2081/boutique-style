@@ -1,6 +1,6 @@
 
 // libaas_ai/engine.js - Virtual Try-On 3D Engine
-// Fixed Version: No Pillar Distortion, Proper Framing
+// Fixed Version: Proper Human Body Presence & Stable Framing
 
 let scene, camera, renderer, controls;
 let avatarObject = null;
@@ -13,16 +13,13 @@ const avatarGroup = new THREE.Group();
 let fallbackModel; 
 
 function getResponsiveScale() {
-  return window.innerWidth < 768 ? 0.8 : 1.0; 
+  return window.innerWidth < 768 ? 0.7 : 0.9; // Adjusted to fit perfect in frame
 }
 
 function init() {
     console.log("3D Engine: Initializing Studio...");
     const container = document.getElementById('canvas-container');
-    if (!container) {
-        console.error("3D Engine Error: 'canvas-container' element not found!");
-        return;
-    }
+    if (!container) return;
 
     scene = new THREE.Scene();
     scene.background = new THREE.Color(0x0b0b0b); 
@@ -30,57 +27,62 @@ function init() {
     const width = container.clientWidth || 600;
     const height = container.clientHeight || 500;
 
+    // Camera framed for a human body
     camera = new THREE.PerspectiveCamera(45, width / height, 0.1, 1000);
-    camera.position.set(0, 1.2, 4.5); // Properly framed for human body
+    camera.position.set(0, 1.3, 4.2); 
     
     renderer = new THREE.WebGLRenderer({ antialias: true, alpha: false, preserveDrawingBuffer: true });
     renderer.setPixelRatio(window.devicePixelRatio);
     renderer.setSize(width, height);
-    renderer.outputEncoding = THREE.sRGBEncoding;
+    if(THREE.sRGBEncoding) renderer.outputEncoding = THREE.sRGBEncoding;
     
     container.innerHTML = ''; 
     container.appendChild(renderer.domElement);
     
-    // Balanced Studio Lighting
-    scene.add(new THREE.AmbientLight(0xffffff, 1.5));
+    // Proper Lighting
+    scene.add(new THREE.AmbientLight(0xffffff, 1.2));
+    const dLight = new THREE.DirectionalLight(0xffffff, 1.5);
+    dLight.position.set(2, 5, 5);
+    scene.add(dLight);
     
-    const keyLight = new THREE.DirectionalLight(0xffffff, 1.8);
-    keyLight.position.set(5, 10, 5);
-    scene.add(keyLight);
-    
-    const rimLight = new THREE.DirectionalLight(0xD4AF37, 1.0);
-    rimLight.position.set(0, 5, -5);
-    scene.add(rimLight);
+    // Interaction Controls with safety check
+    if (typeof THREE.OrbitControls !== 'undefined') {
+        controls = new THREE.OrbitControls(camera, renderer.domElement);
+        controls.enableDamping = true;
+        controls.target.set(0, 1.0, 0);
+        controls.autoRotate = true;
+        controls.autoRotateSpeed = 1.0;
+    }
 
-    controls = new THREE.OrbitControls(camera, renderer.domElement);
-    controls.enableDamping = true; 
-    controls.dampingFactor = 0.05;
-    controls.target.set(0, 1.0, 0); 
-    controls.autoRotate = true;
-    controls.autoRotateSpeed = 1.0;
-
-    // Small Platform (Original Size)
-    const platform = new THREE.Mesh(
-        new THREE.CylinderGeometry(1.2, 1.3, 0.1, 64),
-        new THREE.MeshStandardMaterial({ color: 0x1a1a1a, metalness: 0.8, roughness: 0.2 })
-    );
+    // Original Stage Size (Fixed at 1.4 radius)
+    const platformGeo = new THREE.CylinderGeometry(1.4, 1.5, 0.1, 64);
+    const platformMat = new THREE.MeshStandardMaterial({ color: 0x1a1a1a, metalness: 0.8, roughness: 0.2 });
+    const platform = new THREE.Mesh(platformGeo, platformMat);
     platform.position.y = -0.05;
     scene.add(platform);
 
     const rim = new THREE.Mesh(
-        new THREE.TorusGeometry(1.2, 0.03, 16, 100),
+        new THREE.TorusGeometry(1.4, 0.03, 16, 100),
         new THREE.MeshStandardMaterial({ color: 0xD4AF37, emissive: 0xD4AF37, emissiveIntensity: 0.5 })
     );
     rim.rotation.x = Math.PI/2;
     rim.position.y = 0.05;
     scene.add(rim);
     
-    // Minimal Fallback (Only shown if loading fails)
-    const mockGeo = new THREE.CapsuleGeometry(0.4, 1.0, 4, 8);
-    const mockMat = new THREE.MeshStandardMaterial({ color: 0x333333, wireframe: true });
-    fallbackModel = new THREE.Mesh(mockGeo, mockMat);
-    fallbackModel.position.set(0, 1.0, 0); 
-    fallbackModel.visible = false;
+    // HUMAN BODY FALLBACK (Instead of a Pillar)
+    const dummyGroup = new THREE.Group();
+    const dMat = new THREE.MeshStandardMaterial({ color: 0x333333, wireframe: true });
+    
+    const torso = new THREE.Mesh(new THREE.CapsuleGeometry(0.3, 0.8, 4, 8), dMat);
+    torso.position.y = 1.0;
+    dummyGroup.add(torso);
+    
+    const head = new THREE.Mesh(new THREE.SphereGeometry(0.18, 8, 8), dMat);
+    head.position.y = 1.7;
+    dummyGroup.add(head);
+    
+    fallbackModel = dummyGroup;
+    fallbackModel.visible = false; 
     scene.add(fallbackModel);
 
     scene.add(avatarGroup);
@@ -90,7 +92,7 @@ function init() {
         loadBaseAvatar();
     } else {
         console.error("3D Engine: GLTFLoader MISSING!");
-        if (fallbackModel) fallbackModel.visible = true;
+        fallbackModel.visible = true;
     }
     
     window.addEventListener('resize', onEngineResize);
@@ -99,26 +101,24 @@ function init() {
 
 function loadBaseAvatar() {
     if (!gltfLoader) return;
-    console.log("3D Engine: Loading Avatar...");
+    console.log("3D Engine: Fetching Body Model...");
 
     gltfLoader.load(avatarPath, (gltf) => {
         avatarObject = gltf.scene;
 
-        // FIXED: Removed the .center() call that was causing the "pillar" distortion
-        // The model should remain at its default origin for rigging to work.
-        
-        avatarObject.position.set(0, 0, 0); 
-        avatarObject.scale.set(1, 1, 1); 
+        // FIXED: Scaling and Positioning without distorting the mesh
+        avatarObject.scale.set(1.1, 1.1, 1.1); 
+        avatarObject.position.set(0, 0.05, 0); 
 
         if (fallbackModel) fallbackModel.visible = false;
-        avatarGroup.clear(); // Clear any old objects
+        avatarGroup.clear();
         avatarGroup.add(avatarObject);
 
-        console.log("3D Engine: Avatar Loaded Successfully.");
+        console.log("3D Engine: Avatar Body Active.");
         if(window.onComplexionChange) window.onComplexionChange('fair');
 
     }, undefined, (err) => {
-        console.error("3D Engine Error:", err);
+        console.error("3D Engine: Error loading model, using body fallback.", err);
         if (fallbackModel) fallbackModel.visible = true;
     });
 }
@@ -172,7 +172,7 @@ window.onOutfitColorChange = function(colorName) {
             }
         });
     }
-}
+};
 
 function onEngineResize() {
     const container = document.getElementById('canvas-container');
