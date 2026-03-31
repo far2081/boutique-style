@@ -126,8 +126,9 @@ avatarObject.traverse(child => {
         child.geometry.scale(0.01, 0.01, 0.01); // Thora aur chota kiya
     }
 });
-avatarObject.position.set(0, 0, 0);
-avatarObject.rotation.x = -Math.PI / 2; // <--- Isay theek kar diya
+// Model ko Stage ke ooper aur seedha khara karein
+avatarObject.position.set(0, 0.5, 0); 
+avatarObject.rotation.x = 0; 
 if (fallbackModel) fallbackModel.visible = false;
 avatarGroup.add(avatarObject);
         console.log("3D Engine SUCCESS: Avatar Model Object Injected.");
