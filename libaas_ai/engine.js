@@ -1,6 +1,6 @@
 
 // libaas_ai/engine.js - Virtual Try-On 3D Engine
-// Fixed Version: Proper Human Body Presence & Stable Framing
+// Max Stability Version: Safe Geometries & Original Initialization
 
 let scene, camera, renderer, controls;
 let avatarObject = null;
@@ -13,7 +13,7 @@ const avatarGroup = new THREE.Group();
 let fallbackModel; 
 
 function getResponsiveScale() {
-  return window.innerWidth < 768 ? 0.7 : 0.9; // Adjusted to fit perfect in frame
+  return window.innerWidth < 768 ? 0.8 : 1.0; 
 }
 
 function init() {
@@ -27,9 +27,9 @@ function init() {
     const width = container.clientWidth || 600;
     const height = container.clientHeight || 500;
 
-    // Camera framed for a human body
+    // Camera Framing
     camera = new THREE.PerspectiveCamera(45, width / height, 0.1, 1000);
-    camera.position.set(0, 1.3, 4.2); 
+    camera.position.set(0, 1.2, 4.5); 
     
     renderer = new THREE.WebGLRenderer({ antialias: true, alpha: false, preserveDrawingBuffer: true });
     renderer.setPixelRatio(window.devicePixelRatio);
@@ -39,49 +39,49 @@ function init() {
     container.innerHTML = ''; 
     container.appendChild(renderer.domElement);
     
-    // Proper Lighting
-    scene.add(new THREE.AmbientLight(0xffffff, 1.2));
-    const dLight = new THREE.DirectionalLight(0xffffff, 1.5);
-    dLight.position.set(2, 5, 5);
+    // Lighting
+    scene.add(new THREE.AmbientLight(0xffffff, 1.5));
+    const dLight = new THREE.DirectionalLight(0xffffff, 1.2);
+    dLight.position.set(5, 10, 5);
     scene.add(dLight);
     
-    // Interaction Controls with safety check
+    // Orbit Controls Safety check
     if (typeof THREE.OrbitControls !== 'undefined') {
         controls = new THREE.OrbitControls(camera, renderer.domElement);
         controls.enableDamping = true;
         controls.target.set(0, 1.0, 0);
         controls.autoRotate = true;
-        controls.autoRotateSpeed = 1.0;
     }
 
-    // Original Stage Size (Fixed at 1.4 radius)
-    const platformGeo = new THREE.CylinderGeometry(1.4, 1.5, 0.1, 64);
-    const platformMat = new THREE.MeshStandardMaterial({ color: 0x1a1a1a, metalness: 0.8, roughness: 0.2 });
-    const platform = new THREE.Mesh(platformGeo, platformMat);
+    // Stable Stage (radius 1.4)
+    const platform = new THREE.Mesh(
+        new THREE.CylinderGeometry(1.4, 1.5, 0.1, 32),
+        new THREE.MeshStandardMaterial({ color: 0x1a1a1a, metalness: 0.8, roughness: 0.2 })
+    );
     platform.position.y = -0.05;
     scene.add(platform);
 
     const rim = new THREE.Mesh(
-        new THREE.TorusGeometry(1.4, 0.03, 16, 100),
+        new THREE.TorusGeometry(1.4, 0.03, 16, 64),
         new THREE.MeshStandardMaterial({ color: 0xD4AF37, emissive: 0xD4AF37, emissiveIntensity: 0.5 })
     );
     rim.rotation.x = Math.PI/2;
     rim.position.y = 0.05;
     scene.add(rim);
     
-    // HUMAN BODY FALLBACK (Instead of a Pillar)
-    const dummyGroup = new THREE.Group();
-    const dMat = new THREE.MeshStandardMaterial({ color: 0x333333, wireframe: true });
+    // SAFE HUMAN FALLBACK (Using oldest stable geometries)
+    const dummy = new THREE.Group();
+    const dMat = new THREE.MeshStandardMaterial({ color: 0x444444, wireframe: true });
     
-    const torso = new THREE.Mesh(new THREE.CapsuleGeometry(0.3, 0.8, 4, 8), dMat);
-    torso.position.y = 1.0;
-    dummyGroup.add(torso);
+    const body = new THREE.Mesh(new THREE.CylinderGeometry(0.2, 0.2, 0.7, 8), dMat);
+    body.position.y = 1.0; 
+    dummy.add(body);
     
-    const head = new THREE.Mesh(new THREE.SphereGeometry(0.18, 8, 8), dMat);
-    head.position.y = 1.7;
-    dummyGroup.add(head);
-    
-    fallbackModel = dummyGroup;
+    const head = new THREE.Mesh(new THREE.SphereGeometry(0.15, 8, 8), dMat);
+    head.position.y = 1.5; 
+    dummy.add(head);
+
+    fallbackModel = dummy;
     fallbackModel.visible = false; 
     scene.add(fallbackModel);
 
@@ -91,7 +91,7 @@ function init() {
         gltfLoader = new THREE.GLTFLoader();
         loadBaseAvatar();
     } else {
-        console.error("3D Engine: GLTFLoader MISSING!");
+        console.warn("GLTFLoader not found, showing body fallback.");
         fallbackModel.visible = true;
     }
     
@@ -101,25 +101,21 @@ function init() {
 
 function loadBaseAvatar() {
     if (!gltfLoader) return;
-    console.log("3D Engine: Fetching Body Model...");
-
     gltfLoader.load(avatarPath, (gltf) => {
         avatarObject = gltf.scene;
-
-        // FIXED: Scaling and Positioning without distorting the mesh
-        avatarObject.scale.set(1.1, 1.1, 1.1); 
-        avatarObject.position.set(0, 0.05, 0); 
+        
+        // Use normal scaling/positioning
+        avatarObject.scale.set(1, 1, 1);
+        avatarObject.position.set(0, 0, 0);
 
         if (fallbackModel) fallbackModel.visible = false;
         avatarGroup.clear();
         avatarGroup.add(avatarObject);
 
-        console.log("3D Engine: Avatar Body Active.");
         if(window.onComplexionChange) window.onComplexionChange('fair');
-
     }, undefined, (err) => {
-        console.error("3D Engine: Error loading model, using body fallback.", err);
-        if (fallbackModel) fallbackModel.visible = true;
+        console.error("Model load error:", err);
+        fallbackModel.visible = true;
     });
 }
 
@@ -155,7 +151,6 @@ window.onOutfitColorChange = function(colorName) {
         'navy': 0x000080, 'azure': 0x007FFF, 'rosegold': 0xE0BFB8
     };
     const cHex = palette[colorName.toLowerCase()] || 0xD4AF37;
-
     if (avatarObject) {
         avatarObject.traverse(c => {
             const n = c.name.toLowerCase();
@@ -177,10 +172,8 @@ window.onOutfitColorChange = function(colorName) {
 function onEngineResize() {
     const container = document.getElementById('canvas-container');
     if(!container || !renderer) return;
-    
     const width = container.clientWidth;
     const height = container.clientHeight;
-    
     camera.aspect = width / height;
     camera.updateProjectionMatrix();
     renderer.setSize(width, height);
@@ -198,6 +191,8 @@ function bootEngine() {
 
 if (document.readyState === 'complete' || document.readyState === 'interactive') {
     bootEngine();
+} else if (typeof $ !== 'undefined') {
+    $(document).ready(bootEngine);
 } else {
     document.addEventListener('DOMContentLoaded', bootEngine);
 }
