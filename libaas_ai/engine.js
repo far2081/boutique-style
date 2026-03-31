@@ -1,6 +1,6 @@
 
 // libaas_ai/engine.js - Virtual Try-On 3D Engine
-// Max Stability Version: Safe Geometries & Original Initialization
+// Studio Version: Humanoid Presence & Full 3D Rotation
 
 let scene, camera, renderer, controls;
 let avatarObject = null;
@@ -11,10 +11,6 @@ let gltfLoader = null;
 const avatarPath = "https://models.readyplayer.me/64f06834005c2104928e4e94.glb";
 const avatarGroup = new THREE.Group();
 let fallbackModel; 
-
-function getResponsiveScale() {
-  return window.innerWidth < 768 ? 0.8 : 1.0; 
-}
 
 function init() {
     console.log("3D Engine: Initializing Studio...");
@@ -27,9 +23,8 @@ function init() {
     const width = container.clientWidth || 600;
     const height = container.clientHeight || 500;
 
-    // Camera Framing
     camera = new THREE.PerspectiveCamera(45, width / height, 0.1, 1000);
-    camera.position.set(0, 1.2, 4.5); 
+    camera.position.set(0, 1.3, 4.5); 
     
     renderer = new THREE.WebGLRenderer({ antialias: true, alpha: false, preserveDrawingBuffer: true });
     renderer.setPixelRatio(window.devicePixelRatio);
@@ -39,21 +34,20 @@ function init() {
     container.innerHTML = ''; 
     container.appendChild(renderer.domElement);
     
-    // Lighting
     scene.add(new THREE.AmbientLight(0xffffff, 1.5));
     const dLight = new THREE.DirectionalLight(0xffffff, 1.2);
     dLight.position.set(5, 10, 5);
     scene.add(dLight);
     
-    // Orbit Controls Safety check
     if (typeof THREE.OrbitControls !== 'undefined') {
         controls = new THREE.OrbitControls(camera, renderer.domElement);
         controls.enableDamping = true;
         controls.target.set(0, 1.0, 0);
         controls.autoRotate = true;
+        controls.autoRotateSpeed = 3.0; // Noticeable 360 rotation
     }
 
-    // Stable Stage (radius 1.4)
+    // Platform (1.4 radius)
     const platform = new THREE.Mesh(
         new THREE.CylinderGeometry(1.4, 1.5, 0.1, 32),
         new THREE.MeshStandardMaterial({ color: 0x1a1a1a, metalness: 0.8, roughness: 0.2 })
@@ -69,19 +63,41 @@ function init() {
     rim.position.y = 0.05;
     scene.add(rim);
     
-    // SAFE HUMAN FALLBACK (Using oldest stable geometries)
-    const dummy = new THREE.Group();
-    const dMat = new THREE.MeshStandardMaterial({ color: 0x444444, wireframe: true });
+    // ENHANCED HUMANOID FALLBACK
+    const hGroup = new THREE.Group();
+    const hMat = new THREE.MeshStandardMaterial({ color: 0x555555, wireframe: true });
     
-    const body = new THREE.Mesh(new THREE.CylinderGeometry(0.2, 0.2, 0.7, 8), dMat);
-    body.position.y = 1.0; 
-    dummy.add(body);
+    // Torso
+    const torso = new THREE.Mesh(new THREE.CylinderGeometry(0.2, 0.15, 0.7, 8), hMat);
+    torso.position.y = 1.05;
+    hGroup.add(torso);
     
-    const head = new THREE.Mesh(new THREE.SphereGeometry(0.15, 8, 8), dMat);
-    head.position.y = 1.5; 
-    dummy.add(head);
+    // Head
+    const head = new THREE.Mesh(new THREE.SphereGeometry(0.15, 8, 8), hMat);
+    head.position.y = 1.5;
+    hGroup.add(head);
 
-    fallbackModel = dummy;
+    // Legs
+    const leg1 = new THREE.Mesh(new THREE.CylinderGeometry(0.08, 0.06, 0.7, 8), hMat);
+    leg1.position.set(-0.12, 0.35, 0);
+    hGroup.add(leg1);
+
+    const leg2 = new THREE.Mesh(new THREE.CylinderGeometry(0.08, 0.06, 0.7, 8), hMat);
+    leg2.position.set(0.12, 0.35, 0);
+    hGroup.add(leg2);
+
+    // Arms
+    const arm1 = new THREE.Mesh(new THREE.CylinderGeometry(0.06, 0.05, 0.6, 8), hMat);
+    arm1.position.set(-0.25, 1.0, 0);
+    arm1.rotation.z = 0.2;
+    hGroup.add(arm1);
+
+    const arm2 = new THREE.Mesh(new THREE.CylinderGeometry(0.06, 0.05, 0.6, 8), hMat);
+    arm2.position.set(0.25, 1.0, 0);
+    arm2.rotation.z = -0.2;
+    hGroup.add(arm2);
+
+    fallbackModel = hGroup;
     fallbackModel.visible = false; 
     scene.add(fallbackModel);
 
@@ -91,7 +107,6 @@ function init() {
         gltfLoader = new THREE.GLTFLoader();
         loadBaseAvatar();
     } else {
-        console.warn("GLTFLoader not found, showing body fallback.");
         fallbackModel.visible = true;
     }
     
@@ -103,9 +118,7 @@ function loadBaseAvatar() {
     if (!gltfLoader) return;
     gltfLoader.load(avatarPath, (gltf) => {
         avatarObject = gltf.scene;
-        
-        // Use normal scaling/positioning
-        avatarObject.scale.set(1, 1, 1);
+        avatarObject.scale.set(1.05, 1.05, 1.05);
         avatarObject.position.set(0, 0, 0);
 
         if (fallbackModel) fallbackModel.visible = false;
@@ -114,7 +127,6 @@ function loadBaseAvatar() {
 
         if(window.onComplexionChange) window.onComplexionChange('fair');
     }, undefined, (err) => {
-        console.error("Model load error:", err);
         fallbackModel.visible = true;
     });
 }
@@ -185,14 +197,10 @@ function animate() {
     if (renderer) renderer.render(scene, camera);
 }
 
-function bootEngine() {
-    init();
-}
-
 if (document.readyState === 'complete' || document.readyState === 'interactive') {
-    bootEngine();
+    init();
 } else if (typeof $ !== 'undefined') {
-    $(document).ready(bootEngine);
+    $(document).ready(init);
 } else {
-    document.addEventListener('DOMContentLoaded', bootEngine);
+    document.addEventListener('DOMContentLoaded', init);
 }
