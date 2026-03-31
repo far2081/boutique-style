@@ -123,11 +123,11 @@ function loadBaseAvatar() {
 avatarObject.traverse(child => {
     if (child.isMesh) {
         child.geometry.center(); 
-        child.geometry.scale(0.02, 0.02, 0.02); // Thora aur chota kiya
+        child.geometry.scale(0.015, 0.015, 0.015); // Thora aur chota kiya
     }
 });
 // Model ko Stage ke ooper aur seedha khara karein
-avatarObject.position.set(0, 0.5, 0); 
+avatarObject.position.set(0, 1.3, 0);
 avatarObject.rotation.x = 0; 
 if (fallbackModel) fallbackModel.visible = false;
 avatarGroup.add(avatarObject);
