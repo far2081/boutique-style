@@ -113,44 +113,34 @@ function init() {
 function loadBaseAvatar() {
     if (!gltfLoader) return;
 
-    // --- YE LINE SAB SE ZAROORI HAI (Isay check karein) ---
     const avatarPath = "https://models.readyplayer.me/64f06834005c2104928e4e94.glb";
 
     console.log("3D Engine: Attempting standard load from", avatarPath);
 
     gltfLoader.load(avatarPath, (gltf) => {
-      avatarObject = gltf.scene;
+        avatarObject = gltf.scene;
+
         avatarObject.traverse(child => {
             if (child.isMesh) {
                 child.geometry.center(); 
-                // Is nayi file ke liye scale 1.0 perfect hai
                 child.geometry.scale(1.0, 1.0, 1.0); 
             }
         });
+
         avatarObject.position.set(0, 0, 0); 
-        avatarObject.rotation.x = 0; 
-        if (fallbackModel) fallbackModel.visible = false;
-        avatarGroup.add(avatarObject);
-        
+        avatarObject.rotation.y = 0; 
+
         if (fallbackModel) fallbackModel.visible = false;
         avatarGroup.add(avatarObject);
 
         console.log("3D Engine SUCCESS: Avatar Model Object Injected.");
-        
         if(window.onComplexionChange) window.onComplexionChange('fair');
-    }, 
-    (xhr) => {
+
+    }, (xhr) => {
         if(xhr.total > 0) console.log("Asset Progress: " + Math.round(xhr.loaded / xhr.total * 100) + "%");
-    }, 
-    (err) => {
+    }, (err) => {
         console.error("3D Engine ERROR:", err);
-    });
-}
-        // Show Fallback Pillar to prove engine is ALIVE
-        if (fallbackModel) {
-            fallbackModel.visible = true;
-            console.log("3D Engine: Standing by with White Fallback Cylinder.");
-        }
+        if (fallbackModel) fallbackModel.visible = true;
     });
 }
 
@@ -160,7 +150,6 @@ function updateBody(h, w) {
     const sW = Math.sqrt(w / 65);
     avatarGroup.scale.set(sW, sH, sW);
 }
-
 window.onComplexionChange = function(tone) {
     const skinColors = { 'fair': 0xFAD4B2, 'medium': 0xE6B98D, 'tan': 0xC68E5A, 'deep': 0x8D5524 };
     const color = skinColors[tone] || 0xFAD4B2;
