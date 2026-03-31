@@ -107,13 +107,13 @@ function init() {
     const createArm = (side) => {
         const arm = new THREE.Group();
         const upper = new THREE.Mesh(new THREE.CylinderGeometry(0.06, 0.05, 0.4, 8), skinMat);
-        function loadBaseAvatar() {
+      function loadBaseAvatar() {
     if (!gltfLoader) return;
 
-    // Direct Link inside function to be 100% sure
+    // Naya aur Asli Human Avatar Path
     const humanModel = "https://models.readyplayer.me/64f06834005c2104928e4e94.glb";
 
-    console.log("3D Engine: Final attempt to load human avatar...");
+    console.log("3D Engine: FINAL START - Loading human avatar...");
 
     gltfLoader.load(humanModel, (gltf) => {
         avatarObject = gltf.scene;
@@ -121,8 +121,8 @@ function init() {
         avatarObject.traverse(child => {
             if (child.isMesh) {
                 child.geometry.center(); 
+                // Model ka size aur visibility set karna
                 child.geometry.scale(1.2, 1.2, 1.2); 
-                // Force solid visibility
                 if (child.material) {
                     child.material.wireframe = false;
                     child.material.opacity = 1.0;
@@ -131,11 +131,10 @@ function init() {
             }
         });
 
-        // Position model exactly on the platform
+        // Model ko platform ke bilkul ooper set karna
         avatarObject.position.set(0, 1.3, 0); 
-        avatarObject.rotation.y = 0; 
-
-        if (fallbackModel) fallbackModel.visible = false;
+        avatarObject.rotation.y = 0;
+      if (fallbackModel) fallbackModel.visible = false;
         
         // Clear previous invisible junk
         while(avatarGroup.children.length > 0) {
@@ -148,24 +147,6 @@ function init() {
         if(window.onComplexionChange) window.onComplexionChange('fair');
     }, undefined, (err) => {
         console.error("3D Engine Error:", err);
-        if (fallbackModel) fallbackModel.visible = true;
-    });
-}
-        if (fallbackModel) fallbackModel.visible = false;
-
-        while(avatarGroup.children.length > 0) {
-            avatarGroup.remove(avatarGroup.children[0]);
-        }
-
-        avatarGroup.add(avatarObject);
-        
-        console.log("3D Engine SUCCESS: Human Avatar Loaded.");
-        if(window.onComplexionChange) window.onComplexionChange('fair');
-
-    }, (xhr) => {
-        // Progress tracking
-    }, (err) => {
-        console.error("3D Engine ERROR:", err);
         if (fallbackModel) fallbackModel.visible = true;
     });
 }
