@@ -134,23 +134,36 @@ function init() {
     animate();
 }
 
-function loadBaseAvatar() {
-    if (!gltfLoader) return;
+if (!gltfLoader) return;
+    
     gltfLoader.load(avatarPath, (gltf) => {
         avatarObject = gltf.scene;
-        avatarObject.scale.set(1.1, 1.1, 1.1);
-        avatarObject.position.set(0, 0, 0);
+
+        avatarObject.traverse(child => {
+            if (child.isMesh) {
+                child.geometry.center(); 
+                child.geometry.scale(1.1, 1.1, 1.1); 
+            }
+        });
+
+        avatarObject.position.set(0, 1.4, 0); 
+        avatarObject.rotation.y = 0; 
+
         if (fallbackModel) fallbackModel.visible = false;
+
         while(avatarGroup.children.length > 0) {
             avatarGroup.remove(avatarGroup.children[0]);
         }
-        avatarGroup.add(avatarObject);
-        if(window.onComplexionChange) window.onComplexionChange('fair');
-    }, undefined, (err) => {
-        console.warn("Avatar load failed, using fallback.");
-    });
-}
 
+        avatarGroup.add(avatarObject);
+        
+        if(window.onComplexionChange) window.onComplexionChange('fair');
+        console.log("3D Engine SUCCESS: Real Human Avatar Injected.");
+
+    }, undefined, (err) => {
+        console.warn("Avatar load failed, showing fallback.", err);
+        if (fallbackModel) fallbackModel.visible = true;
+    });
 window.onComplexionChange = function(tone) {
     const skinColors = { 'fair': 0xFAD4B2, 'medium': 0xE6B98D, 'tan': 0xC68E5A, 'deep': 0x8D5524 };
     const color = skinColors[tone] || 0xFAD4B2;
