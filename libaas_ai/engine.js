@@ -123,7 +123,7 @@ function loadBaseAvatar() {
         avatarObject.traverse(child => {
             if (child.isMesh) {
                 child.geometry.center(); 
-                child.geometry.scale(1.0, 1.0, 1.0); 
+                child.geometry.scale(1.0, 1.4, 1.0); 
             }
         });
 
