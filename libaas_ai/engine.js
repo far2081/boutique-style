@@ -127,7 +127,7 @@ avatarObject.traverse(child => {
     }
 });
 // Model ko Stage ke ooper aur seedha khara karein
-avatarObject.position.set(0, 1.3, 0);
+avatarObject.position.set(0, 1.4, 0);
 avatarObject.rotation.x = 0; 
 if (fallbackModel) fallbackModel.visible = false;
 avatarGroup.add(avatarObject);
