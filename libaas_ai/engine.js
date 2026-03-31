@@ -107,55 +107,50 @@ function init() {
     const createArm = (side) => {
         const arm = new THREE.Group();
         const upper = new THREE.Mesh(new THREE.CylinderGeometry(0.06, 0.05, 0.4, 8), skinMat);
-        upper.position.y = 1.35;
-        upper.position.x = 0.32 * side;
-        upper.rotation.z = 0.1 * side;
-        upper.name = "human_skin";
-        const lower = new THREE.Mesh(new THREE.CylinderGeometry(0.05, 0.04, 0.4, 8), skinMat);
-        lower.position.y = 1.0;
-        lower.position.x = 0.35 * side;
-        lower.name = "human_skin";
-        arm.add(upper); arm.add(lower);
-        return arm;
-    };
-    humanoid.add(createArm(1));
-    humanoid.add(createArm(-1));
+        function loadBaseAvatar() {
+    if (!gltfLoader) return;
 
-    fallbackModel = humanoid;
-    scene.add(fallbackModel);
-    scene.add(avatarGroup);
-    
-    if (typeof THREE.GLTFLoader !== 'undefined') {
-        gltfLoader = new THREE.GLTFLoader();
-        loadBaseAvatar();
-    }
-    
-    window.addEventListener('resize', onEngineResize);
-    animate();
-}
+    // Direct Link inside function to be 100% sure
+    const humanModel = "https://models.readyplayer.me/64f06834005c2104928e4e94.glb";
 
-function loadBaseAvatar() {
-    if (!gltfLoader) {
-        console.error("3D Engine: Loader not ready!");
-        return;
-    }
+    console.log("3D Engine: Final attempt to load human avatar...");
 
-    const avatarPath = "https://models.readyplayer.me/64f06834005c2104928e4e94.glb";
-    console.log("3D Engine: Loading from", avatarPath);
-
-    gltfLoader.load(avatarPath, (gltf) => {
+    gltfLoader.load(humanModel, (gltf) => {
         avatarObject = gltf.scene;
 
         avatarObject.traverse(child => {
             if (child.isMesh) {
                 child.geometry.center(); 
-                child.geometry.scale(1.1, 1.1, 1.1); 
+                child.geometry.scale(1.2, 1.2, 1.2); 
+                // Force solid visibility
+                if (child.material) {
+                    child.material.wireframe = false;
+                    child.material.opacity = 1.0;
+                    child.material.transparent = false;
+                }
             }
         });
 
-        avatarObject.position.set(0, 1.4, 0); 
+        // Position model exactly on the platform
+        avatarObject.position.set(0, 1.3, 0); 
         avatarObject.rotation.y = 0; 
 
+        if (fallbackModel) fallbackModel.visible = false;
+        
+        // Clear previous invisible junk
+        while(avatarGroup.children.length > 0) {
+            avatarGroup.remove(avatarGroup.children[0]);
+        }
+
+        avatarGroup.add(avatarObject);
+        console.log("3D Engine SUCCESS: Avatar is now ON STAGE.");
+
+        if(window.onComplexionChange) window.onComplexionChange('fair');
+    }, undefined, (err) => {
+        console.error("3D Engine Error:", err);
+        if (fallbackModel) fallbackModel.visible = true;
+    });
+}
         if (fallbackModel) fallbackModel.visible = false;
 
         while(avatarGroup.children.length > 0) {
