@@ -123,7 +123,17 @@ function loadBaseAvatar() {
 avatarObject.traverse(child => {
     if (child.isMesh) {
         child.geometry.center(); 
-        child.geometry.scale(0.015, 0.015, 0.015); // Thora aur chota kiya
+        child.geometry.scale(0.015, 0.015, 0.015); 
+        
+        // --- Insaan Banane Wali Setting ---
+        if (child.material) {
+            child.material.metalness = 0; // Chamak khatam karein
+            child.material.roughness = 0.8; // Skin ko mat (natural) banayein
+            if (child.material.emissive) {
+                child.material.emissive.setHex(0x000000); // Neeli roshni band
+            }
+            child.material.needsUpdate = true;
+        }
     }
 });
 // Model ko Stage ke ooper aur seedha khara karein
