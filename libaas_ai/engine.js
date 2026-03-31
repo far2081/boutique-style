@@ -122,12 +122,12 @@ function loadBaseAvatar() {
 // Force Center and Scale
 avatarObject.traverse(child => {
     if (child.isMesh) {
-        child.geometry.center(); // Model ko center mein lao
-        child.geometry.scale(0.05, 0.05, 0.05) // Yahin chota karo
+        child.geometry.center(); 
+        child.geometry.scale(0.01, 0.01, 0.01); // Thora aur chota kiya
     }
 });
 avatarObject.position.set(0, -1, 0);
-rotation.x = -Math.PI / 2;
+avatarObject.rotation.x = -Math.PI / 2; // <--- Isay theek kar diya
 if (fallbackModel) fallbackModel.visible = false;
 avatarGroup.add(avatarObject);
         console.log("3D Engine SUCCESS: Avatar Model Object Injected.");
