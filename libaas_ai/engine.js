@@ -9,7 +9,7 @@ let profileHeight = 170;
 let profileWeight = 65;
 
 let gltfLoader = null;
-const avatarPath = 'assets/models/avatar.glb'; // Path Verification
+"https://models.readyplayer.me/64f06834005c2104928e4e94.glb";
 const avatarGroup = new THREE.Group();
 let fallbackModel; 
 
@@ -119,28 +119,18 @@ function loadBaseAvatar() {
         avatarObject = gltf.scene;
    
   
-// Force Center and Scale
+// Line 122 se shuru karein
 avatarObject.traverse(child => {
     if (child.isMesh) {
         child.geometry.center(); 
-        child.geometry.scale(0.015, 0.015, 0.015); 
-        
-        // --- Insaan Banane Wali Setting ---
-        if (child.material) {
-            child.material.metalness = 0; // Chamak khatam karein
-            child.material.roughness = 0.8; // Skin ko mat (natural) banayein
-            if (child.material.emissive) {
-                child.material.emissive.setHex(0x000000); // Neeli roshni band
-            }
-            child.material.needsUpdate = true;
-        }
+        child.geometry.scale(1.1, 1.1, 1.1); 
     }
 });
-// Model ko Stage ke ooper aur seedha khara karein
-avatarObject.position.set(0, 1.4, 0);
+avatarObject.position.set(0, 0, 0); 
 avatarObject.rotation.x = 0; 
 if (fallbackModel) fallbackModel.visible = false;
-avatarGroup.add(avatarObject);
+avatarGroup.add(avatarObject); 
+
         console.log("3D Engine SUCCESS: Avatar Model Object Injected.");
         
         if(window.onComplexionChange) window.onComplexionChange('fair');
