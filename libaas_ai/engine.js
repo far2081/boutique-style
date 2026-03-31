@@ -112,37 +112,40 @@ function init() {
 
 function loadBaseAvatar() {
     if (!gltfLoader) return;
-    
+
+    // --- YE LINE SAB SE ZAROORI HAI (Isay check karein) ---
+    const avatarPath = "https://models.readyplayer.me/64f06834005c2104928e4e94.glb";
+
     console.log("3D Engine: Attempting standard load from", avatarPath);
-    
+
     gltfLoader.load(avatarPath, (gltf) => {
         avatarObject = gltf.scene;
-   
-  
-// Line 122 se shuru karein
-avatarObject.traverse(child => {
-    if (child.isMesh) {
-        child.geometry.center(); 
-        child.geometry.scale(1.1, 1.1, 1.1); 
-    }
-});
-avatarObject.position.set(0, 0, 0); 
-avatarObject.rotation.x = 0; 
-if (fallbackModel) fallbackModel.visible = false;
-avatarGroup.add(avatarObject); 
+
+        // Force Center and Scale
+        avatarObject.traverse(child => {
+            if (child.isMesh) {
+                child.geometry.center(); 
+                child.geometry.scale(1.1, 1.1, 1.1); 
+            }
+        });
+
+        avatarObject.position.set(0, 0.4, 0); // Stage ke ooper set kiya
+        avatarObject.rotation.x = 0; // Seedha khara kiya
+        
+        if (fallbackModel) fallbackModel.visible = false;
+        avatarGroup.add(avatarObject);
 
         console.log("3D Engine SUCCESS: Avatar Model Object Injected.");
         
         if(window.onComplexionChange) window.onComplexionChange('fair');
-      // updateBody(profileHeight, profileWeight);
     }, 
     (xhr) => {
         if(xhr.total > 0) console.log("Asset Progress: " + Math.round(xhr.loaded / xhr.total * 100) + "%");
     }, 
     (err) => {
-        console.error("3D Engine LOADING ERROR: Path is likely incorrect or file missing.", err);
-        console.warn("Target Path was: " + avatarPath);
-        
+        console.error("3D Engine ERROR:", err);
+    });
+}
         // Show Fallback Pillar to prove engine is ALIVE
         if (fallbackModel) {
             fallbackModel.visible = true;
