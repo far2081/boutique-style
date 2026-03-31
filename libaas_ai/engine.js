@@ -135,9 +135,13 @@ function init() {
 }
 
 function loadBaseAvatar() {
-    if (!gltfLoader) return;
-    
+    if (!gltfLoader) {
+        console.error("3D Engine: Loader not ready!");
+        return;
+    }
+
     const avatarPath = "https://models.readyplayer.me/64f06834005c2104928e4e94.glb";
+    console.log("3D Engine: Loading from", avatarPath);
 
     gltfLoader.load(avatarPath, (gltf) => {
         avatarObject = gltf.scene;
@@ -160,83 +164,13 @@ function loadBaseAvatar() {
 
         avatarGroup.add(avatarObject);
         
+        console.log("3D Engine SUCCESS: Human Avatar Loaded.");
         if(window.onComplexionChange) window.onComplexionChange('fair');
-        console.log("3D Engine SUCCESS: Real Human Avatar Injected.");
 
-    }, undefined, (err) => {
-        console.warn("Avatar load failed, showing fallback.", err);
+    }, (xhr) => {
+        // Progress tracking
+    }, (err) => {
+        console.error("3D Engine ERROR:", err);
         if (fallbackModel) fallbackModel.visible = true;
     });
-}
-        
-        if(window.onComplexionChange) window.onComplexionChange('fair');
-        console.log("3D Engine SUCCESS: Real Human Avatar Injected.");
-
-    }, undefined, (err) => {
-        console.warn("Avatar load failed, showing fallback.", err);
-        if (fallbackModel) fallbackModel.visible = true;
-    });
-window.onComplexionChange = function(tone) {
-    const skinColors = { 'fair': 0xFAD4B2, 'medium': 0xE6B98D, 'tan': 0xC68E5A, 'deep': 0x8D5524 };
-    const color = skinColors[tone] || 0xFAD4B2;
-    // Update main avatar if loaded
-    if (avatarObject) {
-        avatarObject.traverse(o => {
-            if (o.isMesh && (o.name.includes('Skin') || o.name.includes('Body'))) {
-                o.material.color.setHex(color);
-            }
-        });
-    }
-    // Update fallback mannequin
-    if (fallbackModel) {
-        fallbackModel.traverse(o => {
-            if (o.name === "human_skin" && o.material) {
-                o.material.color.setHex(color);
-            }
-        });
-    }
-};
-
-window.onOutfitColorChange = function(colorName) {
-    const palette = {
-        'ruby': 0x9B111E, 'emerald': 0x006D5B, 'gold': 0xD4AF37,
-        'navy': 0x000080, 'azure': 0x007FFF, 'rosegold': 0xE0BFB8
-    };
-    const color = palette[colorName.toLowerCase()] || 0xD4AF37;
-    if (avatarObject) {
-        avatarObject.traverse(o => {
-            if (o.isMesh && !o.name.includes('Skin')) {
-                o.material.color.setHex(color);
-            }
-        });
-    }
-    if (fallbackModel) {
-        fallbackModel.traverse(o => {
-            if (o.name === "human_outfit" && o.material) {
-                o.material.color.setHex(color);
-            }
-        });
-    }
-};
-
-function onEngineResize() {
-    const container = document.getElementById('canvas-container');
-    if(!container || !renderer) return;
-    camera.aspect = container.clientWidth / container.clientHeight;
-    camera.updateProjectionMatrix();
-    renderer.setSize(container.clientWidth, container.clientHeight);
-}
-
-function animate() {
-    requestAnimationFrame(animate);
-    if (fallbackModel && fallbackModel.visible) fallbackModel.rotation.y += 0.02;
-    if (avatarGroup) avatarGroup.rotation.y += 0.02;
-    if (controls) controls.update();
-    if (renderer) renderer.render(scene, camera);
-}
-
-if (document.readyState === 'complete' || document.readyState === 'interactive') {
-    init();
-} else {
-    document.addEventListener('DOMContentLoaded', init);
 }
