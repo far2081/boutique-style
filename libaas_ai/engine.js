@@ -1,6 +1,6 @@
 
-// libaas_ai/engine.js - Professional 3D Virtual Try-On Engine (v5.0 Compatibility Version)
-// Optimized for Pakistani Luxury Couture & THREE.js r128 Stability
+// libaas_ai/engine.js - FINAL PRODUCTION 3D ENGINE (v6.0)
+// Optimized for Pakistani Heritage Textiles & Modern Web Compatibility (r128)
 
 let scene, camera, renderer, controls, clock;
 let avatarObject = null;
@@ -9,126 +9,140 @@ let avatarGroup = new THREE.Group();
 let fallbackModel;
 let gltfLoader = null;
 
-// Multi-path scanning specifically for Pakistani Model
+// Multi-path scanning (Covers all possibilities for Vercel/GitHub)
 const modelSources = [
     "./assets/models/scene.gltf",
     "assets/models/scene.gltf",
+    "../assets/models/scene.gltf",
+    "libaas_ai/scene.gltf",
     "scene.gltf",
+    "avatar.glb",
     "https://models.readyplayer.me/63b36340268427f7f07297d2.glb" 
 ];
 let currentSourceIndex = 0;
 
 function init() {
-    console.log("3D Engine v5: Initializing Stable Environment...");
+    console.log("3D Engine v6.0 Initializing...");
     const container = document.getElementById('canvas-container');
     if (!container) return;
 
+    // Core Setup
     clock = new THREE.Clock();
     scene = new THREE.Scene();
     scene.background = new THREE.Color(0x0a0a0a); 
 
-    const width = container.clientWidth || 600;
-    const height = container.clientHeight || 500;
+    const w = container.clientWidth || 600;
+    const h = container.clientHeight || 500;
 
-    camera = new THREE.PerspectiveCamera(45, width / height, 0.1, 1000);
-    camera.position.set(0, 1.4, 4.0);
+    camera = new THREE.PerspectiveCamera(45, w / h, 0.1, 1000);
+    camera.position.set(0, 1.5, 4.2);
     
+    // Renderer Configuration
     renderer = new THREE.WebGLRenderer({ antialias: true, alpha: true });
-    renderer.setSize(width, height);
+    renderer.setSize(w, h);
     renderer.setPixelRatio(window.devicePixelRatio || 1);
     
-    // r128 Color Configuration
-    if(THREE.sRGBEncoding) renderer.outputEncoding = THREE.sRGBEncoding;
+    // Compatibility for r128 Color Space
+    if (THREE.sRGBEncoding) renderer.outputEncoding = THREE.sRGBEncoding;
     
     container.innerHTML = ''; 
     container.appendChild(renderer.domElement);
     
-    // STAGE LIGHTS
-    scene.add(new THREE.AmbientLight(0xffffff, 1.0));
-    const kL = new THREE.DirectionalLight(0xffffff, 1.2);
-    kL.position.set(2, 5, 2);
-    scene.add(kL);
+    // High-End Studio Lighting
+    scene.add(new THREE.AmbientLight(0xffffff, 0.9));
+    const pointLight = new THREE.PointLight(0xffffff, 1.2);
+    pointLight.position.set(2, 5, 3);
+    scene.add(pointLight);
+    
+    const fillLight = new THREE.DirectionalLight(0xffffff, 0.7);
+    fillLight.position.set(-2, 2, -2);
+    scene.add(fillLight);
 
+    // Human-Centric Controls
     if (typeof THREE.OrbitControls !== 'undefined') {
         controls = new THREE.OrbitControls(camera, renderer.domElement);
         controls.enableDamping = true;
-        controls.target.set(0, 1.1, 0);
+        controls.target.set(0, 1.2, 0);
         controls.autoRotate = true;
-        controls.autoRotateSpeed = 0.6;
+        controls.autoRotateSpeed = 0.5;
     }
 
-    // SIMPLE PLATFORM
-    const floor = new THREE.Mesh(
-        new THREE.CylinderGeometry(1.5, 1.6, 0.05, 32),
+    // THE LUXURY STAGE
+    const platform = new THREE.Mesh(
+        new THREE.CylinderGeometry(1.5, 1.6, 0.08, 64),
         new THREE.MeshStandardMaterial({ color: 0x111111, metalness: 0.8, roughness: 0.2 })
     );
-    floor.position.y = -0.025;
-    scene.add(floor);
+    platform.position.y = -0.04;
+    scene.add(platform);
 
-    // LUXURY FALLBACK SILHOUETTE (If load fails)
-    const silhouette = new THREE.Group();
-    const sMat = new THREE.MeshStandardMaterial({ color: 0x444444, transparent: true, opacity: 0.5 });
-    const addPart = (g, y, s = [1,1,1]) => {
-        const m = new THREE.Mesh(g, sMat);
+    // HQ MANNEQUIN (Silhouette Fallback)
+    const mannequin = new THREE.Group();
+    const mat = new THREE.MeshStandardMaterial({ color: 0x444444, transparent: true, opacity: 0.5 });
+    const addM = (g, y, s = [1,1,1]) => {
+        const m = new THREE.Mesh(g, mat);
         m.position.y = y;
         m.scale.set(...s);
-        silhouette.add(m);
+        mannequin.add(m);
     };
-    addPart(new THREE.SphereGeometry(0.12, 16), 1.7);
-    addPart(new THREE.CylinderGeometry(0.2, 0.2, 0.6, 16), 1.4);
-    addPart(new THREE.CylinderGeometry(0.08, 0.08, 1.0, 16), 0.5, [1,1,1]);
+    addM(new THREE.SphereGeometry(0.12, 32), 1.7); // Head
+    addM(new THREE.CylinderGeometry(0.2, 0.18, 0.6, 32), 1.35); // Body
+    addM(new THREE.CylinderGeometry(0.1, 0.08, 1.0, 32), 0.5); // Leg
     
-    fallbackModel = silhouette;
+    fallbackModel = mannequin;
     fallbackModel.visible = false;
     scene.add(fallbackModel);
 
     scene.add(avatarGroup);
     
-    if (typeof THREE.GLTFLoader !== 'undefined' || typeof GLTFLoader !== 'undefined') {
-        gltfLoader = new (THREE.GLTFLoader || GLTFLoader)();
-        tryLoad();
+    // GLTF Loading Initiation
+    if (typeof THREE.GLTFLoader !== 'undefined') {
+        gltfLoader = new THREE.GLTFLoader();
+        tryLoadNext();
     } else {
-        console.error("GLTFLoader NOT FOUND");
-        fallbackModel.visible = true;
+        console.error("3D Engine: GLTFLoader is missing. Please check scripts.");
+        if (fallbackModel) fallbackModel.visible = true;
     }
     
-    window.addEventListener('resize', onResize);
+    window.addEventListener('resize', onRescale);
     animate();
 }
 
-function tryLoad() {
+function tryLoadNext() {
     if (currentSourceIndex >= modelSources.length) {
+        console.error("3D Engine: All paths checked. Using Designer Mannequin.");
         if (fallbackModel) fallbackModel.visible = true;
         return;
     }
 
-    const p = modelSources[currentSourceIndex];
-    console.log("3D Engine v5: Loading -> " + p);
+    const path = modelSources[currentSourceIndex];
+    console.log("3D Engine: Investigating -> " + path);
     
-    gltfLoader.load(p, (gltf) => {
-        console.log("3D Engine v5: SUCCESS.");
+    gltfLoader.load(path, (gltf) => {
+        console.log("3D Engine SUCCESS: Model Injected from " + path);
         avatarObject = gltf.scene;
         
-        // ANIMATIONS
+        // Handle Animations
         if (gltf.animations && gltf.animations.length > 0) {
             mixer = new THREE.AnimationMixer(avatarObject);
-            mixer.clipAction(gltf.animations[0]).play();
+            const action = mixer.clipAction(gltf.animations[0]);
+            action.fadeIn(1).play();
         }
 
-        // SCALING & POSITIONING
+        // AUTO-CORRECTION: Scale and Position
         const box = new THREE.Box3().setFromObject(avatarObject);
         const size = box.getSize(new THREE.Vector3());
         
-        // Z-up Correction
-        if (size.z > size.y * 1.5) {
+        // Z-up Correction (for Sketchfab/Blender exports)
+        if (size.z > size.y * 1.6) {
+             console.warn("3D Engine Detect: Z-up model found. Auto-rotating...");
              avatarObject.rotation.x = -Math.PI / 2;
-             box.setFromObject(avatarObject);
+             box.setFromObject(avatarObject); // Re-calculate
              box.getSize(size);
         }
 
-        const scale = 1.78 / size.y;
+        const scale = 1.8 / size.y;
         avatarObject.scale.set(scale, scale, scale);
-        avatarObject.position.y = - (box.min.y * scale);
+        avatarObject.position.y = - (box.min.y * scale); 
         avatarObject.position.x = 0;
         avatarObject.position.z = 0;
 
@@ -136,7 +150,7 @@ function tryLoad() {
             if (o.isMesh) {
                 o.castShadow = true;
                 if (o.material) {
-                    o.material.side = THREE.DoubleSide;
+                    o.material.side = THREE.DoubleSide; 
                     if (o.material.map) o.material.map.anisotropy = 16;
                 }
             }
@@ -145,13 +159,16 @@ function tryLoad() {
         if (fallbackModel) fallbackModel.visible = false;
         while(avatarGroup.children.length > 0) avatarGroup.remove(avatarGroup.children[0]);
         avatarGroup.add(avatarObject);
-        if(window.onComplexionChange) window.onComplexionChange('fair');
+        
+        if (window.onComplexionChange) window.onComplexionChange('fair');
     }, 
-    undefined, 
+    (xhr) => {
+        if(xhr.lengthComputable) console.log("Engine Loading: " + Math.round(xhr.loaded/xhr.total*100) + "%");
+    }, 
     (err) => {
-        console.warn("Load failed for path: " + p);
+        console.warn("3D Engine: Resource unreachable at " + path);
         currentSourceIndex++;
-        tryLoad();
+        tryLoadNext();
     });
 }
 
@@ -190,7 +207,7 @@ window.onOutfitColorChange = function(colorName) {
     }
 };
 
-function onResize() {
+function onRescale() {
     const container = document.getElementById('canvas-container');
     if(!container || !renderer) return;
     camera.aspect = container.clientWidth / container.clientHeight;
@@ -206,4 +223,9 @@ function animate() {
     if (renderer) renderer.render(scene, camera);
 }
 
-init();
+// Initial Boot Sequence
+if (document.readyState === 'complete' || document.readyState === 'interactive') {
+    init();
+} else {
+    document.addEventListener('DOMContentLoaded', init);
+}
