@@ -100,53 +100,60 @@ function init() {
         leg.position.x = 0.12 * side;
         return leg;
     };
-    humanoid.add(createLeg(1));
-    humanoid.add(createLeg(-1));
+    // --- Yahan se Paste karein (Line 100 ke baad) ---
 
-    // Arms
-    const createArm = (side) => {
-        const arm = new THREE.Group();
-        const upper = new THREE.Mesh(new THREE.CylinderGeometry(0.06, 0.05, 0.4, 8), skinMat);
-      function loadBaseAvatar() {
+function loadBaseAvatar() {
     if (!gltfLoader) return;
 
-    // Naya aur Asli Human Avatar Path
-    const humanModel = "https://models.readyplayer.me/64f06834005c2104928e4e94.glb";
+    const avatarPath = "https://models.readyplayer.me/64f06834005c2104928e4e94.glb";
 
-    console.log("3D Engine: FINAL START - Loading human avatar...");
-
-    gltfLoader.load(humanModel, (gltf) => {
+    gltfLoader.load(avatarPath, (gltf) => {
         avatarObject = gltf.scene;
 
         avatarObject.traverse(child => {
             if (child.isMesh) {
                 child.geometry.center(); 
-                // Model ka size aur visibility set karna
-                child.geometry.scale(1.2, 1.2, 1.2); 
-                if (child.material) {
-                    child.material.wireframe = false;
-                    child.material.opacity = 1.0;
-                    child.material.transparent = false;
-                }
+                child.geometry.scale(1.1, 1.1, 1.1); 
             }
         });
 
-        // Model ko platform ke bilkul ooper set karna
-        avatarObject.position.set(0, 1.3, 0); 
-        avatarObject.rotation.y = 0;
-      if (fallbackModel) fallbackModel.visible = false;
-        
-        // Clear previous invisible junk
+        avatarObject.position.set(0, 1.4, 0); 
+        avatarObject.rotation.y = 0; 
+
+        if (fallbackModel) fallbackModel.visible = false;
+
         while(avatarGroup.children.length > 0) {
             avatarGroup.remove(avatarGroup.children[0]);
         }
 
         avatarGroup.add(avatarObject);
-        console.log("3D Engine SUCCESS: Avatar is now ON STAGE.");
+        console.log("3D Engine: Avatar Loaded Successfully");
 
         if(window.onComplexionChange) window.onComplexionChange('fair');
+
     }, undefined, (err) => {
         console.error("3D Engine Error:", err);
         if (fallbackModel) fallbackModel.visible = true;
     });
 }
+
+function updateBody(h, w) {
+    if(!avatarGroup) return;
+    const sH = h / 170;
+    const sW = Math.sqrt(w / 65);
+    avatarGroup.scale.set(sW, sH, sW);
+}
+
+window.onComplexionChange = function(tone) {
+    const skinColors = { 'fair': 0xFAD4B2, 'medium': 0xE6B98D, 'tan': 0xCC8E5A, 'deep': 0xAD5524 };
+    const color = skinColors[tone] || 0xFAD4B2;
+    if (avatarObject) {
+        avatarObject.traverse(o => {
+            if (o.isMesh && (o.name.includes('Skin') || o.name.includes('Body'))) {
+                o.material.color.setHex(color);
+            }
+        });
+    }
+};
+
+// --- Paste Khatam ---
