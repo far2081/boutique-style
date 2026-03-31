@@ -9,7 +9,7 @@ let profileHeight = 170;
 let profileWeight = 65;
 
 let gltfLoader = null;
-"https://models.readyplayer.me/64f06834005c2104928e4e94.glb";
+const avatarPath = "https://models.readyplayer.me/64f06834005c2104928e4e94.glb";
 const avatarGroup = new THREE.Group();
 let fallbackModel; 
 
