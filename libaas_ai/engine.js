@@ -32,7 +32,7 @@ function init() {
     const height = container.clientHeight || 500;
 
     camera = new THREE.PerspectiveCamera(45, width / height, 1, 5000);
- camera.position.set(0, 0.8, 5);
+ camera.position.set(0, 1.0, 4.5);
     renderer = new THREE.WebGLRenderer({ antialias: true, alpha: false, preserveDrawingBuffer: true });
     renderer.setPixelRatio(window.devicePixelRatio);
     renderer.setSize(width, height);
@@ -123,7 +123,7 @@ function loadBaseAvatar() {
 avatarObject.traverse(child => {
     if (child.isMesh) {
         child.geometry.center(); 
-        child.geometry.scale(0.01, 0.01, 0.01); // Thora aur chota kiya
+        child.geometry.scale(0.02, 0.02, 0.02); // Thora aur chota kiya
     }
 });
 // Model ko Stage ke ooper aur seedha khara karein
