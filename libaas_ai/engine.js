@@ -262,7 +262,8 @@ function loadAvatar() {
         model.position.y += 0.02; // Elevated on platform gold ring
         model.updateMatrixWorld(true);
 
-        avatarGroup.clear();
+        // Compatible clearing for THREE.js r128
+        while(avatarGroup.children.length > 0) avatarGroup.remove(avatarGroup.children[0]);
         avatarGroup.add(model);
         
         if (gltf.animations && gltf.animations.length > 0) {
@@ -327,7 +328,8 @@ function createMannequin() {
     group.add(leg2);
     
     group.position.y = 0.02;
-    avatarGroup.clear();
+    
+    while(avatarGroup.children.length > 0) avatarGroup.remove(avatarGroup.children[0]);
     avatarGroup.add(group);
 }
 
