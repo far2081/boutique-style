@@ -6,7 +6,7 @@ let gltfLoader = null;
 let mixer = null;
 let isInitialized = false;
 
-const AVATAR_PATH = "assets/models/avatar.glb";
+const AVATAR_PATH = "assets/models/scene.gltf";
 
 function init() {
     if (isInitialized) return;
@@ -113,17 +113,14 @@ function loadAvatar() {
         model.position.z = -center.z;
         model.position.y = -newBox.min.y;
 
-        // EXTREME VISIBILITY FIXES
+        // Enhance rendering slightly without forcing transparency locks
         model.traverse((o) => {
             if (o.isMesh) {
+                o.castShadow = true;
+                o.receiveShadow = true;
                 if (o.material) {
                     let mats = Array.isArray(o.material) ? o.material : [o.material];
-                    mats.forEach(m => { 
-                        m.side = THREE.DoubleSide; 
-                        m.transparent = false; // Block transparency completely
-                        m.opacity = 1.0; 
-                        m.depthWrite = true;
-                    });
+                    mats.forEach(m => { m.side = THREE.DoubleSide; });
                 }
             }
         });
@@ -131,14 +128,11 @@ function loadAvatar() {
         // Add to scene
         avatarGroup.clear();
         avatarGroup.add(model);
-
-        // VISUAL DEBUGGER: A bright red box around the model!
-        // If the red box shows up but no model, the 3D file itself has invisible meshes.
-        const helper = new THREE.BoxHelper(model, 0xff0000);
-        avatarGroup.add(helper);
         
-        // ANIMATION DISABLED: Poorly exported animations shrink models to 0,0,0
-        // We will leave the model in static pose first to ensure it's visible.
+        if (gltf.animations && gltf.animations.length > 0) {
+            mixer = new THREE.AnimationMixer(model);
+            mixer.clipAction(gltf.animations[0]).play();
+        }
 
         setTimeout(() => {
             if (window.onComplexionChange) {
