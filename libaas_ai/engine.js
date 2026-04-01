@@ -51,25 +51,38 @@ function init() {
     rimLight.position.set(-2, 3, -2);
     scene.add(rimLight);
 
-    // 3. THE "BOHAT ACHCHA" GOLD RING STAGE - EXACTLY MATCHED
+    // LUXURY STAGE - DEFINED 3D VERSION
     const stageGroup = new THREE.Group();
     
-    // Glossy Platform
+    // Main Platform Physical Body (Match Image 2/5 fix)
     const base = new THREE.Mesh(
-        new THREE.CylinderGeometry(0.85, 0.85, 0.05, 64),
+        new THREE.CylinderGeometry(0.85, 0.9, 0.1, 64),
         new THREE.MeshStandardMaterial({ 
             color: 0x111111, 
-            roughness: 0.1, 
-            metalness: 0.9 
+            roughness: 0.3, 
+            metalness: 0.7 
         })
     );
-    base.position.y = -0.025;
+    base.position.y = -0.05;
     base.receiveShadow = true;
     stageGroup.add(base);
 
-    // Golden Ring
+    // Visible Top Surface (Doesn't blend into background)
+    const topSurface = new THREE.Mesh(
+        new THREE.CylinderGeometry(0.83, 0.83, 0.02, 64),
+        new THREE.MeshStandardMaterial({ 
+            color: 0x2a2a2a, 
+            roughness: 0.5, 
+            metalness: 0.2 
+        })
+    );
+    topSurface.position.y = 0.01;
+    topSurface.receiveShadow = true;
+    stageGroup.add(topSurface);
+
+    // LUXURY POLISHED RING
     const ring = new THREE.Mesh(
-        new THREE.TorusGeometry(0.82, 0.02, 32, 100),
+        new THREE.TorusGeometry(0.82, 0.022, 32, 100),
         new THREE.MeshStandardMaterial({ 
             color: 0xD4AF37, 
             metalness: 1.0, 
@@ -79,8 +92,9 @@ function init() {
         })
     );
     ring.rotation.x = Math.PI / 2;
-    ring.position.y = 0.01;
+    ring.position.y = 0.025;
     ring.name = 'goldRing';
+    ring.castShadow = true;
     stageGroup.add(ring);
 
     scene.add(stageGroup);
@@ -91,15 +105,15 @@ function init() {
         controls.target.set(0, 1.1, 0);
         controls.enableDamping = true;
         controls.autoRotate = true;
+        controls.autoRotateSpeed = 0.4;
     }
 
     window.addEventListener('resize', onResize);
-    window.onEngineResize = onResize; // CRITICAL FOR SYNCING WITH MODAL
+    window.onEngineResize = onResize;
     
     isInitialized = true;
     animate();
 
-    // 4. TRIGGER ASYNC LOADING
     if (typeof THREE.GLTFLoader !== 'undefined' && typeof THREE !== 'undefined') {
         gltfLoader = new THREE.GLTFLoader();
         loadAvatar();
