@@ -1,4 +1,7 @@
-// libaas_ai/engine.js - FINAL GUARANTEED FIX v16
+// libaas_ai/engine.js - ULTIMATE DEBUG & FIX v17
+window.onerror = function(msg, url, line) {
+    alert("STAGE ERROR: " + msg + " (at " + line + ")");
+};
 
 let scene, camera, renderer, controls, clock;
 let avatarGroup = new THREE.Group();
@@ -16,151 +19,60 @@ let currentSourceIndex = 0;
 
 function init() {
     if (isInitialized) return;
-
-    // Check for local file protocol (CORS issue indicator)
-    if (window.location.protocol === 'file:') {
-        showStatus("Note: Local file protocol (file://) detected. Use a local server if models fail.");
-    }
-
     const container = document.getElementById('canvas-container');
-    if (!container) {
-        console.error("Canvas container not found!");
-        return;
-    }
+    if (!container) return;
 
     clock = new THREE.Clock();
     scene = new THREE.Scene();
-    // Premium dark gradient feel
-    scene.background = new THREE.Color(0x0a0a0a);
-    scene.fog = new THREE.Fog(0x0a0a0a, 2, 10);
+    scene.background = new THREE.Color(0x050505);
 
-    let width = container.clientWidth || 400;
-    let height = container.clientHeight || 500;
-
-    // CAMERA TUNING: Elegant perspective
-    camera = new THREE.PerspectiveCamera(35, width / height, 0.1, 100);
+    camera = new THREE.PerspectiveCamera(35, container.clientWidth / container.clientHeight, 0.1, 100);
     camera.position.set(0, 1.4, 4.2);
 
-    renderer = new THREE.WebGLRenderer({ antialias: true, alpha: true, powerPreference: "high-performance" });
-    renderer.setSize(width, height);
-    renderer.setPixelRatio(Math.min(window.devicePixelRatio, 2));
+    renderer = new THREE.WebGLRenderer({ antialias: true, alpha: true });
+    renderer.setSize(container.clientWidth, container.clientHeight);
+    renderer.setPixelRatio(window.devicePixelRatio || 1);
     
-    // PREMIUM: Enable Shadows
-    renderer.shadowMap.enabled = true;
-    renderer.shadowMap.type = THREE.PCFSoftShadowMap;
-    
-    if (renderer.outputColorSpace) renderer.outputColorSpace = THREE.SRGBColorSpace;
-    renderer.toneMapping = THREE.ACESFilmicToneMapping;
-    renderer.toneMappingExposure = 1.2;
-
     container.innerHTML = '';
     container.appendChild(renderer.domElement);
 
-    // LIGHTING: Dramatic studio lighting
-    scene.add(new THREE.AmbientLight(0xffffff, 0.6));
-    
-    // Key Light
-    const mainLight = new THREE.DirectionalLight(0xffffff, 1.2);
-    mainLight.position.set(2, 5, 5);
-    mainLight.castShadow = true;
-    mainLight.shadow.mapSize.width = 1024;
-    mainLight.shadow.mapSize.height = 1024;
-    mainLight.shadow.camera.near = 0.5;
-    mainLight.shadow.camera.far = 15;
-    scene.add(mainLight);
+    // EXTREME LIGHTING: Rule out darkness
+    scene.add(new THREE.AmbientLight(0xffffff, 2.0)); // Super bright
+    const sun = new THREE.DirectionalLight(0xffffff, 1.5);
+    sun.position.set(2, 5, 5);
+    scene.add(sun);
 
-    // Fill Light
-    const fillLight = new THREE.PointLight(0xD4AF37, 0.8);
-    fillLight.position.set(-3, 2, 2);
-    scene.add(fillLight);
-
-    // Rim Light (Backlight for silhouette)
-    const rimLight = new THREE.DirectionalLight(0xffffff, 0.5);
-    rimLight.position.set(0, 5, -5);
-    scene.add(rimLight);
-
-    // THE STAGE: Elegant, tiered luxury platform
-    const stageGroup = new THREE.Group();
-    
-    // Bottom Base
-    const baseStage = new THREE.Mesh(
-        new THREE.CylinderGeometry(0.85, 0.9, 0.08, 64),
-        new THREE.MeshStandardMaterial({ 
-            color: 0x111111, 
-            roughness: 0.2, 
-            metalness: 0.8 
-        })
+    // LUXURY STAGE
+    const stage = new THREE.Mesh(
+        new THREE.CylinderGeometry(0.85, 0.9, 0.05, 64),
+        new THREE.MeshStandardMaterial({ color: 0x111111, metalness: 0.8, roughness: 0.2 })
     );
-    baseStage.position.y = -0.04;
-    baseStage.receiveShadow = true;
-    stageGroup.add(baseStage);
+    stage.position.y = -0.025;
+    scene.add(stage);
 
-    // Top Glossy Surface
-    const topStage = new THREE.Mesh(
-        new THREE.CylinderGeometry(0.8, 0.8, 0.02, 64),
-        new THREE.MeshStandardMaterial({ 
-            color: 0x050505, 
-            roughness: 0.1, 
-            metalness: 0.5,
-            emissive: 0x111111,
-            emissiveIntensity: 0.1
-        })
-    );
-    topStage.position.y = 0.01;
-    topStage.receiveShadow = true;
-    stageGroup.add(topStage);
-
-    // Radiant Gold Ring
-    const goldRing = new THREE.Mesh(
+    const ring = new THREE.Mesh(
         new THREE.TorusGeometry(0.81, 0.02, 16, 100),
-        new THREE.MeshStandardMaterial({ 
-            color: 0xD4AF37, 
-            metalness: 1, 
-            roughness: 0.1,
-            emissive: 0xD4AF37,
-            emissiveIntensity: 0.2
-        })
+        new THREE.MeshStandardMaterial({ color: 0xD4AF37, emissive: 0xD4AF37, emissiveIntensity: 0.5 })
     );
-    goldRing.rotation.x = Math.PI / 2;
-    goldRing.position.y = 0.02;
-    goldRing.name = 'goldRing';
-    stageGroup.add(goldRing);
-    
-    // Add a circular glow underneath
-    const glowGeo = new THREE.CircleGeometry(1.2, 32);
-    const glowMat = new THREE.MeshBasicMaterial({ 
-        color: 0xD4AF37, 
-        transparent: true, 
-        opacity: 0.1,
-        side: THREE.DoubleSide
-    });
-    const glow = new THREE.Mesh(glowGeo, glowMat);
-    glow.rotation.x = Math.PI / 2;
-    glow.position.y = -0.07;
-    stageGroup.add(glow);
+    ring.rotation.x = Math.PI / 2;
+    ring.position.y = 0.01;
+    ring.name = 'goldRing';
+    scene.add(ring);
 
-    scene.add(stageGroup);
     scene.add(avatarGroup);
 
     if (typeof THREE.OrbitControls !== 'undefined') {
         controls = new THREE.OrbitControls(camera, renderer.domElement);
         controls.target.set(0, 1.0, 0);
         controls.enableDamping = true;
-        controls.dampingFactor = 0.05;
-        controls.maxDistance = 6;
-        controls.minDistance = 1.5;
-        controls.maxPolarAngle = Math.PI / 1.7; // Prevent looking under the floor
-        
-        // Premium behavior
         controls.autoRotate = true;
-        controls.autoRotateSpeed = 0.8;
     }
 
     if (typeof THREE.GLTFLoader !== 'undefined') {
         gltfLoader = new THREE.GLTFLoader();
         loadAvatar();
     } else {
-        showStatus("ERROR: THREE.GLTFLoader missing context");
+        showStatus("ERROR: GLTF Loader Missing");
     }
 
     window.addEventListener('resize', onResize);
@@ -169,59 +81,55 @@ function init() {
 }
 
 function loadAvatar() {
-    // FALLBACK: Immediately show a mannequin so the stage is never empty
-    createMannequin();
+    // PROOF OF LIFE: Show a Red Cube immediately
+    // If the user sees this cube, the engine is WORKING.
+    const proofCube = new THREE.Mesh(
+        new THREE.BoxGeometry(0.5, 1.0, 0.5),
+        new THREE.MeshBasicMaterial({ color: 0xff0000 })
+    );
+    proofCube.position.y = 0.52; // Stand on stage
+    while(avatarGroup.children.length > 0) avatarGroup.remove(avatarGroup.children[0]);
+    avatarGroup.add(proofCube);
     
     const path = modelSources[currentSourceIndex];
-    showStatus(`Launching Model... ${currentSourceIndex + 1}/${modelSources.length}`);
-    
+    showStatus(`BOUTIQUE ARRIVING... ${currentSourceIndex + 1}/${modelSources.length}`);
+
     gltfLoader.load(path, (gltf) => {
         const model = gltf.scene || gltf.scenes[0];
         if (!model) return;
 
-        console.log("Model arrived! Swapping with mannequin...");
-
-        // PREP: Ensure it's visible and doesn't have junk
+        // Force visibility
         model.traverse(o => {
             if (o.isMesh) {
                 o.visible = true;
-                o.castShadow = true;
-                o.receiveShadow = true;
-                // Force brightness to avoid black/invisible textures
                 if (o.material) {
                     const m = Array.isArray(o.material) ? o.material[0] : o.material;
                     m.side = THREE.DoubleSide;
                     m.transparent = false;
                     m.opacity = 1.0;
-                    if (m.emissive) m.emissive.setHex(0x222222);
-                    m.emissiveIntensity = 0.5;
+                    if (m.emissive) m.emissive.setHex(0x333333);
                 }
             }
         });
 
-        // AUTO-SCALE to 1.7 units
+        // Simple Scaling
+        model.scale.set(1, 1, 1);
         model.updateMatrixWorld(true);
         const box = new THREE.Box3().setFromObject(model);
         const size = box.getSize(new THREE.Vector3());
-        let s = size.y > 0 ? 1.7 / size.y : 1.0;
         
-        // Safety for mm vs meter units
-        if (s > 100) s = 0.1;
-        if (s < 0.001) s = 1.0;
-        
-        model.scale.set(s, s, s);
+        const s = size.y > 0 ? 1.7 / size.y : 1.0;
+        model.scale.multiplyScalar(s);
         model.updateMatrixWorld(true);
 
-        // GROUNDING
         const newBox = new THREE.Box3().setFromObject(model);
         const center = newBox.getCenter(new THREE.Vector3());
         
-        // Final placement on stage
         model.position.x = -center.x;
         model.position.z = -center.z;
-        model.position.y = -newBox.min.y + 0.02; // Elevated on gold ring
-        
-        // REPLACE MANNEQUIN
+        model.position.y = -newBox.min.y + 0.02;
+
+        // SWAP CUBE WITH MODEL
         while(avatarGroup.children.length > 0) avatarGroup.remove(avatarGroup.children[0]);
         avatarGroup.add(model);
         
@@ -231,11 +139,7 @@ function loadAvatar() {
         }
         
         clearStatus();
-        console.log("SUCCESS: Character on stage.");
-        
-        setTimeout(() => {
-            if (window.onComplexionChange) window.onComplexionChange('fair');
-        }, 500);
+        console.log("FINAL SUCCESS: Model on stage.");
 
     }, null, (err) => {
         console.error("Load failed for:", path);
@@ -248,59 +152,25 @@ function tryNextSource() {
     if (currentSourceIndex < modelSources.length) {
         loadAvatar();
     } else {
-        showStatus("ERROR: Use a local server to view 3D models.");
-        createMannequin();
+        showStatus("ERROR: Use local server for 3D GLB/GLTF.");
     }
-}
-
-function createMannequin() {
-    console.log("Creating abstract mannequin fallback...");
-    const group = new THREE.Group();
-    const mat = new THREE.MeshStandardMaterial({ color: 0x444444, roughness: 0.5 });
-    
-    const head = new THREE.Mesh(new THREE.SphereGeometry(0.12, 16, 16), mat);
-    head.position.y = 1.6;
-    group.add(head);
-    
-    const torso = new THREE.Mesh(new THREE.CylinderGeometry(0.2, 0.15, 0.6, 16), mat);
-    torso.position.y = 1.25;
-    group.add(torso);
-    
-    const leg1 = new THREE.Mesh(new THREE.CylinderGeometry(0.08, 0.05, 0.8, 16), mat);
-    leg1.position.set(-0.1, 0.45, 0);
-    group.add(leg1);
-    const leg2 = new THREE.Mesh(new THREE.CylinderGeometry(0.08, 0.05, 0.8, 16), mat);
-    leg2.position.set(0.1, 0.45, 0);
-    group.add(leg2);
-    
-    group.position.y = 0.02;
-    
-    while(avatarGroup.children.length > 0) avatarGroup.remove(avatarGroup.children[0]);
-    avatarGroup.add(group);
 }
 
 function onResize() {
     const container = document.getElementById('canvas-container');
     if (!container || !renderer || !camera) return;
-    const w = container.clientWidth;
-    const h = container.clientHeight;
-    if (w === 0 || h === 0) return;
-    camera.aspect = w / h;
+    camera.aspect = container.clientWidth / container.clientHeight;
     camera.updateProjectionMatrix();
-    renderer.setSize(w, h);
+    renderer.setSize(container.clientWidth, container.clientHeight);
 }
-window.onEngineResize = onResize;
 
 function animate() {
     requestAnimationFrame(animate);
     const delta = clock ? clock.getDelta() : 0.01;
     if (mixer) mixer.update(delta);
     if (controls) controls.update();
-    
-    // Subtle luxury stage rotation
     const ring = scene ? scene.getObjectByName('goldRing') : null;
     if (ring) ring.rotation.z += 0.005;
-
     if (renderer && scene && camera) renderer.render(scene, camera);
 }
 
@@ -329,11 +199,7 @@ function safeChangeColor(model, keywords, hexColor) {
             const match = keywords.some(k => name.includes(k));
             if (match) {
                 const materials = Array.isArray(o.material) ? o.material : [o.material];
-                materials.forEach(m => {
-                    if (m && m.color) {
-                        m.color.setHex(hexColor);
-                    }
-                });
+                materials.forEach(m => { if (m && m.color) m.color.setHex(hexColor); });
             }
         }
     });
@@ -357,5 +223,4 @@ window.onOutfitColorChange = (colorName) => {
 
 if (document.readyState === 'complete') init();
 else window.addEventListener('load', init);
-
 
