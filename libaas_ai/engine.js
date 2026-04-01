@@ -76,50 +76,54 @@ function init() {
 }
 
 function loadAvatar() {
-    showStatus("Loading Your 3D Model...");
+    showStatus("Analysing and Placing Model...");
     
     gltfLoader.load(AVATAR_PATH + "?t=" + Date.now(), (gltf) => {
         clearStatus();
         const model = gltf.scene;
         
-        // Reset transform
+        // Base reset
         model.position.set(0, 0, 0);
         model.rotation.set(0, 0, 0);
         model.scale.set(1, 1, 1);
         model.updateMatrixWorld(true);
 
+        // Safe scaling calculation
         const box = new THREE.Box3().setFromObject(model);
-        if (!box.isEmpty()) {
-            const size = new THREE.Vector3();
-            box.getSize(size);
-            const center = new THREE.Vector3();
-            box.getCenter(center);
-            
-            // Safe scaling to ensure model sits perfectly inside the viewport
-            if (size.y > 0.01 && size.y < 1000) {
-                let scale = 1.6 / size.y;
-                if (scale < 0.001) scale = 0.001;
-                if (scale > 100) scale = 100;
-                
-                model.scale.set(scale, scale, scale);
-                model.updateMatrixWorld(true);
-                
-                box.setFromObject(model);
-                box.getCenter(center);
-                model.position.x = -center.x;
-                model.position.z = -center.z;
-                model.position.y = -box.min.y;
-            }
+        const size = new THREE.Vector3();
+        box.getSize(size);
+        
+        if (size.y > 0.001 && size.y < 2000) {
+            let scaleFit = 1.6 / size.y;
+            if (scaleFit > 500) scaleFit = 500;
+            if (scaleFit < 0.002) scaleFit = 0.002;
+            model.scale.set(scaleFit, scaleFit, scaleFit);
+            model.updateMatrixWorld(true);
+        } else {
+            model.scale.set(10, 10, 10); // fallback scale
+            model.updateMatrixWorld(true);
         }
 
-        // Force all materials to be visible from both sides
+        // Safe Center & Placing
+        const newBox = new THREE.Box3().setFromObject(model);
+        const center = new THREE.Vector3();
+        newBox.getCenter(center);
+        
+        model.position.x = -center.x;
+        model.position.z = -center.z;
+        model.position.y = -newBox.min.y;
+
+        // EXTREME VISIBILITY FIXES
         model.traverse((o) => {
-            if (o.isMesh && o.material) {
-                if (Array.isArray(o.material)) {
-                    o.material.forEach(m => { m.side = THREE.DoubleSide; m.depthWrite = true; });
-                } else {
-                    o.material.side = THREE.DoubleSide;
-                    o.material.depthWrite = true;
+            if (o.isMesh) {
+                if (o.material) {
+                    let mats = Array.isArray(o.material) ? o.material : [o.material];
+                    mats.forEach(m => { 
+                        m.side = THREE.DoubleSide; 
+                        m.transparent = false; // Block transparency completely
+                        m.opacity = 1.0; 
+                        m.depthWrite = true;
+                    });
                 }
             }
         });
@@ -127,11 +131,14 @@ function loadAvatar() {
         // Add to scene
         avatarGroup.clear();
         avatarGroup.add(model);
+
+        // VISUAL DEBUGGER: A bright red box around the model!
+        // If the red box shows up but no model, the 3D file itself has invisible meshes.
+        const helper = new THREE.BoxHelper(model, 0xff0000);
+        avatarGroup.add(helper);
         
-        if (gltf.animations && gltf.animations.length > 0) {
-            mixer = new THREE.AnimationMixer(model);
-            mixer.clipAction(gltf.animations[0]).play();
-        }
+        // ANIMATION DISABLED: Poorly exported animations shrink models to 0,0,0
+        // We will leave the model in static pose first to ensure it's visible.
 
         setTimeout(() => {
             if (window.onComplexionChange) {
@@ -142,11 +149,11 @@ function loadAvatar() {
                 const colorName = document.getElementById('product-modal')?.getAttribute('data-color') || 'emerald';
                 window.onOutfitColorChange(colorName);
             }
-        }, 300);
+        }, 400);
 
     }, undefined, (e) => {
         console.error(e);
-        showStatus("Model Load Error: Check Vercel cache or valid avatar.glb");
+        showStatus("Error: avatar.glb missing or not readable.");
     });
 }
 
