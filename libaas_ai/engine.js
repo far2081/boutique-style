@@ -26,11 +26,11 @@ function init() {
     scene = new THREE.Scene();
     scene.background = new THREE.Color(0x0b0b0b); // Deep Onyx to match boutique dashboard
 
-    const width = container.clientWidth || 800;
-    const height = container.clientHeight || 600;
+    const width = container.clientWidth;
+    const height = container.clientHeight;
 
-    camera = new THREE.PerspectiveCamera(35, width / height, 0.1, 100);
-    camera.position.set(0, 1.4, 4.0);
+    camera = new THREE.PerspectiveCamera(45, width / height, 0.1, 100);
+    camera.position.set(0, 1.4, 4.2);
 
     renderer = new THREE.WebGLRenderer({ antialias: true, alpha: false });
     renderer.setSize(width, height);
