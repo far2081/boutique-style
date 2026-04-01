@@ -82,14 +82,53 @@ function init() {
         controls.autoRotate = true;
     }
 
-    if (typeof THREE.GLTFLoader !== 'undefined') {
+    window.addEventListener('resize', onResize);
+    isInitialized = true;
+    
+    // 1. START RENDERING IMMEDIATELY (Fixes "Stage Ghayab" issue)
+    animate();
+
+    // 2. TRIGGER ASYNC LOADING AFTER RENDERER STARTS
+    if (typeof THREE !== 'undefined' && typeof THREE.GLTFLoader !== 'undefined') {
         gltfLoader = new THREE.GLTFLoader();
         loadAvatar();
     }
+}
+
+function createMannequin() {
+    console.log("Creating elegant mannequin fallback...");
+    const group = new THREE.Group();
+    const mat = new THREE.MeshStandardMaterial({ 
+        color: 0x222222, 
+        roughness: 0.3,
+        metalness: 0.8,
+        emissive: 0x111111 
+    });
     
-    window.addEventListener('resize', onResize);
-    isInitialized = true;
-    animate();
+    const head = new THREE.Mesh(new THREE.SphereGeometry(0.12, 16, 16), mat);
+    head.position.y = 1.6;
+    head.castShadow = true;
+    group.add(head);
+    
+    const torso = new THREE.Mesh(new THREE.CylinderGeometry(0.2, 0.15, 0.6, 16), mat);
+    torso.position.y = 1.25;
+    torso.castShadow = true;
+    group.add(torso);
+    
+    const leg1 = new THREE.Mesh(new THREE.CylinderGeometry(0.08, 0.05, 0.8, 16), mat);
+    leg1.position.set(-0.1, 0.45, 0);
+    leg1.castShadow = true;
+    group.add(leg1);
+    
+    const leg2 = new THREE.Mesh(new THREE.CylinderGeometry(0.08, 0.05, 0.8, 16), mat);
+    leg2.position.set(0.1, 0.45, 0);
+    leg2.castShadow = true;
+    group.add(leg2);
+    
+    group.position.y = 0.02;
+    
+    while(avatarGroup.children.length > 0) avatarGroup.remove(avatarGroup.children[0]);
+    avatarGroup.add(group);
 }
 
 function loadAvatar() {
