@@ -24,41 +24,55 @@ function init() {
 
     clock = new THREE.Clock();
     scene = new THREE.Scene();
-    scene.background = new THREE.Color(0x050505);
+    scene.background = new THREE.Color(0x0a0a0a);
+    scene.fog = new THREE.Fog(0x0a0a0a, 2, 10);
 
-    camera = new THREE.PerspectiveCamera(35, container.clientWidth / container.clientHeight, 0.1, 100);
+    const width = container.clientWidth;
+    const height = container.clientHeight;
+
+    camera = new THREE.PerspectiveCamera(35, width / height, 0.1, 100);
     camera.position.set(0, 1.4, 4.2);
 
     renderer = new THREE.WebGLRenderer({ antialias: true, alpha: true });
-    renderer.setSize(container.clientWidth, container.clientHeight);
+    renderer.setSize(width, height);
     renderer.setPixelRatio(window.devicePixelRatio || 1);
+    renderer.shadowMap.enabled = true;
     
     container.innerHTML = '';
     container.appendChild(renderer.domElement);
 
-    // EXTREME LIGHTING: Rule out darkness
-    scene.add(new THREE.AmbientLight(0xffffff, 2.0)); // Super bright
-    const sun = new THREE.DirectionalLight(0xffffff, 1.5);
-    sun.position.set(2, 5, 5);
-    scene.add(sun);
+    scene.add(new THREE.AmbientLight(0xffffff, 0.8));
+    const mainLight = new THREE.DirectionalLight(0xffffff, 1.2);
+    mainLight.position.set(2, 5, 5);
+    mainLight.castShadow = true;
+    scene.add(mainLight);
 
-    // LUXURY STAGE
-    const stage = new THREE.Mesh(
-        new THREE.CylinderGeometry(0.85, 0.9, 0.05, 64),
-        new THREE.MeshStandardMaterial({ color: 0x111111, metalness: 0.8, roughness: 0.2 })
+    // LUXURY STAGE RESTORED
+    const stageGroup = new THREE.Group();
+    const baseStage = new THREE.Mesh(
+        new THREE.CylinderGeometry(0.85, 0.9, 0.08, 64),
+        new THREE.MeshStandardMaterial({ color: 0x111111, roughness: 0.2, metalness: 0.8 })
     );
-    stage.position.y = -0.025;
-    scene.add(stage);
+    baseStage.position.y = -0.04;
+    stageGroup.add(baseStage);
 
-    const ring = new THREE.Mesh(
+    const topStage = new THREE.Mesh(
+        new THREE.CylinderGeometry(0.8, 0.8, 0.02, 64),
+        new THREE.MeshStandardMaterial({ color: 0x050505, roughness: 0.1, metalness: 0.5 })
+    );
+    topStage.position.y = 0.01;
+    stageGroup.add(topStage);
+
+    const goldRing = new THREE.Mesh(
         new THREE.TorusGeometry(0.81, 0.02, 16, 100),
-        new THREE.MeshStandardMaterial({ color: 0xD4AF37, emissive: 0xD4AF37, emissiveIntensity: 0.5 })
+        new THREE.MeshStandardMaterial({ color: 0xD4AF37, metalness: 1, roughness: 0.1, emissive: 0xD4AF37, emissiveIntensity: 0.2 })
     );
-    ring.rotation.x = Math.PI / 2;
-    ring.position.y = 0.01;
-    ring.name = 'goldRing';
-    scene.add(ring);
+    goldRing.rotation.x = Math.PI / 2;
+    goldRing.position.y = 0.02;
+    goldRing.name = 'goldRing';
+    stageGroup.add(goldRing);
 
+    scene.add(stageGroup);
     scene.add(avatarGroup);
 
     if (typeof THREE.OrbitControls !== 'undefined') {
@@ -71,25 +85,16 @@ function init() {
     if (typeof THREE.GLTFLoader !== 'undefined') {
         gltfLoader = new THREE.GLTFLoader();
         loadAvatar();
-    } else {
-        showStatus("ERROR: GLTF Loader Missing");
     }
-
+    
     window.addEventListener('resize', onResize);
     isInitialized = true;
     animate();
 }
 
 function loadAvatar() {
-    // PROOF OF LIFE: Show a Red Cube immediately
-    // If the user sees this cube, the engine is WORKING.
-    const proofCube = new THREE.Mesh(
-        new THREE.BoxGeometry(0.5, 1.0, 0.5),
-        new THREE.MeshBasicMaterial({ color: 0xff0000 })
-    );
-    proofCube.position.y = 0.52; // Stand on stage
-    while(avatarGroup.children.length > 0) avatarGroup.remove(avatarGroup.children[0]);
-    avatarGroup.add(proofCube);
+    // Elegant Placeholder instead of red box
+    createMannequin();
     
     const path = modelSources[currentSourceIndex];
     showStatus(`BOUTIQUE ARRIVING... ${currentSourceIndex + 1}/${modelSources.length}`);
@@ -98,38 +103,50 @@ function loadAvatar() {
         const model = gltf.scene || gltf.scenes[0];
         if (!model) return;
 
-        // Force visibility
+        console.log("Processing character scene...");
+
         model.traverse(o => {
             if (o.isMesh) {
                 o.visible = true;
+                o.castShadow = true;
+                o.receiveShadow = true;
+                // Force base material to ensure visibility
                 if (o.material) {
                     const m = Array.isArray(o.material) ? o.material[0] : o.material;
                     m.side = THREE.DoubleSide;
-                    m.transparent = false;
                     m.opacity = 1.0;
-                    if (m.emissive) m.emissive.setHex(0x333333);
+                    m.transparent = false;
+                    // Boost lighting reactivity
+                    if (m.isMeshStandardMaterial) {
+                        m.roughness = 0.5;
+                        m.metalness = 0.1;
+                    }
                 }
             }
         });
 
-        // Simple Scaling
-        model.scale.set(1, 1, 1);
+        // Robust Height-Based Scaling
         model.updateMatrixWorld(true);
         const box = new THREE.Box3().setFromObject(model);
         const size = box.getSize(new THREE.Vector3());
         
-        const s = size.y > 0 ? 1.7 / size.y : 1.0;
-        model.scale.multiplyScalar(s);
+        let scale = 1.0;
+        if (size.y > 0.01) {
+            scale = 1.7 / size.y;
+        } else {
+            scale = 100.0; // Assume Blender cm -> meter scale fail
+        }
+        model.scale.set(scale, scale, scale);
         model.updateMatrixWorld(true);
 
+        // Grounding on Gold Ring
         const newBox = new THREE.Box3().setFromObject(model);
         const center = newBox.getCenter(new THREE.Vector3());
-        
         model.position.x = -center.x;
         model.position.z = -center.z;
         model.position.y = -newBox.min.y + 0.02;
 
-        // SWAP CUBE WITH MODEL
+        // SWAP AND SHOW
         while(avatarGroup.children.length > 0) avatarGroup.remove(avatarGroup.children[0]);
         avatarGroup.add(model);
         
@@ -139,10 +156,10 @@ function loadAvatar() {
         }
         
         clearStatus();
-        console.log("FINAL SUCCESS: Model on stage.");
+        console.log("SUCCESS: Final model placed on luxury stage.");
 
     }, null, (err) => {
-        console.error("Load failed for:", path);
+        console.error("Load failed for path", path);
         tryNextSource();
     });
 }
