@@ -7,8 +7,8 @@ let mixer = null;
 let isInitialized = false;
 
 const modelSources = [
-    "assets/models/avatar.glb",
     "assets/models/scene.gltf",
+    "assets/models/avatar.glb",
     "avatar.glb",
     "https://models.readyplayer.me/63b36340268427f7f07297d2.glb"
 ];
@@ -16,12 +16,12 @@ let currentSourceIndex = 0;
 
 function init() {
     if (isInitialized) return;
-    
+
     // Check for local file protocol (CORS issue indicator)
     if (window.location.protocol === 'file:') {
         showStatus("Note: Local file protocol (file://) detected. Use a local server if models fail.");
     }
-    
+
     const container = document.getElementById('canvas-container');
     if (!container) {
         console.error("Canvas container not found!");
@@ -30,51 +30,130 @@ function init() {
 
     clock = new THREE.Clock();
     scene = new THREE.Scene();
-    scene.background = new THREE.Color(0x111111);
-    
+    // Premium dark gradient feel
+    scene.background = new THREE.Color(0x0a0a0a);
+    scene.fog = new THREE.Fog(0x0a0a0a, 2, 10);
+
     let width = container.clientWidth || 400;
     let height = container.clientHeight || 500;
 
-    // CAMERA TUNING: Zoomed out slightly to ensure the full stage fits
-    camera = new THREE.PerspectiveCamera(40, width / height, 0.1, 100);
-    camera.position.set(0, 1.2, 3.5); 
-    
-    renderer = new THREE.WebGLRenderer({ antialias: true, alpha: true });
+    // CAMERA TUNING: Elegant perspective
+    camera = new THREE.PerspectiveCamera(35, width / height, 0.1, 100);
+    camera.position.set(0, 1.4, 4.2);
+
+    renderer = new THREE.WebGLRenderer({ antialias: true, alpha: true, powerPreference: "high-performance" });
     renderer.setSize(width, height);
     renderer.setPixelRatio(Math.min(window.devicePixelRatio, 2));
-    if(renderer.outputColorSpace) renderer.outputColorSpace = THREE.SRGBColorSpace;
     
-    container.innerHTML = ''; 
+    // PREMIUM: Enable Shadows
+    renderer.shadowMap.enabled = true;
+    renderer.shadowMap.type = THREE.PCFSoftShadowMap;
+    
+    if (renderer.outputColorSpace) renderer.outputColorSpace = THREE.SRGBColorSpace;
+    renderer.toneMapping = THREE.ACESFilmicToneMapping;
+    renderer.toneMappingExposure = 1.2;
+
+    container.innerHTML = '';
     container.appendChild(renderer.domElement);
+
+    // LIGHTING: Dramatic studio lighting
+    scene.add(new THREE.AmbientLight(0xffffff, 0.6));
     
-    // LIGHTING: Extremely bright to ensure no model hides in the dark
-    scene.add(new THREE.AmbientLight(0xffffff, 1.5));
-    const dirLight = new THREE.DirectionalLight(0xffffff, 1.2);
-    dirLight.position.set(0, 5, 5);
-    scene.add(dirLight);
+    // Key Light
+    const mainLight = new THREE.DirectionalLight(0xffffff, 1.2);
+    mainLight.position.set(2, 5, 5);
+    mainLight.castShadow = true;
+    mainLight.shadow.mapSize.width = 1024;
+    mainLight.shadow.mapSize.height = 1024;
+    mainLight.shadow.camera.near = 0.5;
+    mainLight.shadow.camera.far = 15;
+    scene.add(mainLight);
 
-    // FIXED: Much smaller stage (radius 0.7 instead of 1.5) so it doesn't get cut off!
-    const stage = new THREE.Mesh(
-        new THREE.CylinderGeometry(0.7, 0.7, 0.05, 32),
-        new THREE.MeshStandardMaterial({ color: 0x222222, roughness: 0.8 })
+    // Fill Light
+    const fillLight = new THREE.PointLight(0xD4AF37, 0.8);
+    fillLight.position.set(-3, 2, 2);
+    scene.add(fillLight);
+
+    // Rim Light (Backlight for silhouette)
+    const rimLight = new THREE.DirectionalLight(0xffffff, 0.5);
+    rimLight.position.set(0, 5, -5);
+    scene.add(rimLight);
+
+    // THE STAGE: Elegant, tiered luxury platform
+    const stageGroup = new THREE.Group();
+    
+    // Bottom Base
+    const baseStage = new THREE.Mesh(
+        new THREE.CylinderGeometry(0.85, 0.9, 0.08, 64),
+        new THREE.MeshStandardMaterial({ 
+            color: 0x111111, 
+            roughness: 0.2, 
+            metalness: 0.8 
+        })
     );
-    stage.position.y = -0.025;
-    scene.add(stage);
+    baseStage.position.y = -0.04;
+    baseStage.receiveShadow = true;
+    stageGroup.add(baseStage);
 
-    const ring = new THREE.Mesh(
-        new THREE.TorusGeometry(0.7, 0.015, 16, 100),
-        new THREE.MeshStandardMaterial({ color: 0xD4AF37 })
+    // Top Glossy Surface
+    const topStage = new THREE.Mesh(
+        new THREE.CylinderGeometry(0.8, 0.8, 0.02, 64),
+        new THREE.MeshStandardMaterial({ 
+            color: 0x050505, 
+            roughness: 0.1, 
+            metalness: 0.5,
+            emissive: 0x111111,
+            emissiveIntensity: 0.1
+        })
     );
-    ring.rotation.x = Math.PI / 2;
-    ring.position.y = 0.01;
-    scene.add(ring);
+    topStage.position.y = 0.01;
+    topStage.receiveShadow = true;
+    stageGroup.add(topStage);
 
+    // Radiant Gold Ring
+    const goldRing = new THREE.Mesh(
+        new THREE.TorusGeometry(0.81, 0.02, 16, 100),
+        new THREE.MeshStandardMaterial({ 
+            color: 0xD4AF37, 
+            metalness: 1, 
+            roughness: 0.1,
+            emissive: 0xD4AF37,
+            emissiveIntensity: 0.2
+        })
+    );
+    goldRing.rotation.x = Math.PI / 2;
+    goldRing.position.y = 0.02;
+    goldRing.name = 'goldRing';
+    stageGroup.add(goldRing);
+    
+    // Add a circular glow underneath
+    const glowGeo = new THREE.CircleGeometry(1.2, 32);
+    const glowMat = new THREE.MeshBasicMaterial({ 
+        color: 0xD4AF37, 
+        transparent: true, 
+        opacity: 0.1,
+        side: THREE.DoubleSide
+    });
+    const glow = new THREE.Mesh(glowGeo, glowMat);
+    glow.rotation.x = Math.PI / 2;
+    glow.position.y = -0.07;
+    stageGroup.add(glow);
+
+    scene.add(stageGroup);
     scene.add(avatarGroup);
 
     if (typeof THREE.OrbitControls !== 'undefined') {
         controls = new THREE.OrbitControls(camera, renderer.domElement);
-        controls.target.set(0, 0.9, 0); 
+        controls.target.set(0, 1.0, 0);
         controls.enableDamping = true;
+        controls.dampingFactor = 0.05;
+        controls.maxDistance = 6;
+        controls.minDistance = 1.5;
+        controls.maxPolarAngle = Math.PI / 1.7; // Prevent looking under the floor
+        
+        // Premium behavior
+        controls.autoRotate = true;
+        controls.autoRotateSpeed = 0.8;
     }
 
     if (typeof THREE.GLTFLoader !== 'undefined') {
@@ -83,96 +162,95 @@ function init() {
     } else {
         showStatus("ERROR: THREE.GLTFLoader missing context");
     }
-    
+
     window.addEventListener('resize', onResize);
     isInitialized = true;
     animate();
 }
 
 function loadAvatar() {
-   const path = "https://models.readyplayer.me/64f06834005c2104928e4e94.glb";
-    showStatus("Loading NoorStyle Female Avatar...");
-    console.log("Loading model from:", path);
+    const path = modelSources[0]; // Try the primary model first
+    showStatus("Launching Glam Studio...");
     
     gltfLoader.load(path, (gltf) => {
         clearStatus();
         const model = gltf.scene;
-        console.log("SUCCESS: 3D Model Loaded from", path);
-        
-        // Ensure animations play if available which can fix bounds
+        console.log("SUCCESS: Premium Model Loaded");
+
         if (gltf.animations && gltf.animations.length > 0) {
             mixer = new THREE.AnimationMixer(model);
             mixer.clipAction(gltf.animations[0]).play();
         }
 
-        // Base reset
         model.position.set(0, 0, 0);
         model.rotation.set(0, 0, 0);
         model.scale.set(1, 1, 1);
         model.updateMatrixWorld(true);
 
-        // Fix for SkinnedMesh bounds
-        model.traverse(function(child) {
-            if (child.isSkinnedMesh) {
-                child.computeBoundingBox();
-                child.computeBoundingSphere();
-            }
-        });
-
-        // Safe scaling calculation
-        const box = new THREE.Box3().setFromObject(model);
-        const size = new THREE.Vector3();
-        box.getSize(size);
-        
-        console.log("Model initial size:", size);
-
-        // Apply a reasonable default scale if bounds are broken
-        if (size.y > 0.1 && size.y < 100) {
-            const scaleFit = 1.6 / size.y;
-            model.scale.set(scaleFit, scaleFit, scaleFit);
-        } else {
-            // Default scale for readyplayer.me or standard glb avatars
-            model.scale.set(1, 1, 1); 
-        }
-        
-        model.updateMatrixWorld(true);
-
-        // Safe Center & Placing
-        const newBox = new THREE.Box3().setFromObject(model);
-        const center = new THREE.Vector3();
-        newBox.getCenter(center);
-        
-        model.position.x = -center.x;
-        model.position.y = -newBox.min.y; // Stand on stage
-        model.position.z = -center.z;
-        model.updateMatrixWorld(true);
-
-        // Enhance rendering materials
         model.traverse((o) => {
             if (o.isMesh) {
+                // CLEANUP: Hide existing floors or background planes in the model
+                const name = (o.name || "").toLowerCase();
+                if (name.includes("floor") || name.includes("ground") || name.includes("plane") || name.includes("stage")) {
+                    o.visible = false;
+                    return;
+                }
+
                 o.castShadow = true;
                 o.receiveShadow = true;
+                if (o.isSkinnedMesh) {
+                    o.computeBoundingBox();
+                    o.computeBoundingSphere();
+                }
+
                 if (o.material) {
                     const mats = Array.isArray(o.material) ? o.material : [o.material];
-                    mats.forEach(m => { 
-                        m.side = THREE.DoubleSide; 
+                    mats.forEach(m => {
+                        m.side = THREE.DoubleSide;
                         m.depthWrite = true;
-                        // Help prevent transparency sorting issues
-                        if (m.transparent) {
-                            m.alphaTest = 0.5;
+                        if (m.transparent) m.alphaTest = 0.5;
+                        
+                        if (m.isMeshStandardMaterial) {
+                            m.envMapIntensity = 1.5;
                         }
                     });
                 }
             }
         });
 
-        // Add to scene
+        // Safe scaling calculation - ignoring hidden/redundant objects
+        const box = new THREE.Box3();
+        model.traverse(o => {
+            if (o.isMesh && o.visible) box.expandByObject(o);
+        });
+        
+        const size = new THREE.Vector3();
+        box.getSize(size);
+
+        if (size.y > 0.1 && size.y < 100) {
+            const scaleFit = 1.7 / size.y;
+            model.scale.set(scaleFit, scaleFit, scaleFit);
+        }
+        model.updateMatrixWorld(true);
+
+        // Re-calculate box after scaling for perfect placement
+        const newBox = new THREE.Box3();
+        model.traverse(o => {
+            if (o.isMesh && o.visible) newBox.expandByObject(o);
+        });
+        
+        const center = new THREE.Vector3();
+        newBox.getCenter(center);
+
+        // Final Positioning on Stage
+        model.position.x = -center.x;
+        model.position.y = (-newBox.min.y) + 0.02; // Elevated on platform
+        model.position.z = -center.z;
+        model.updateMatrixWorld(true);
+
         avatarGroup.clear();
         avatarGroup.add(model);
-        
-        console.log("Model fully integrated and placed on stage.");
 
-        // Apply default colors after a small delay
         setTimeout(() => {
             if (window.onComplexionChange) {
                 const tone = document.querySelector('.complexion-circle.active')?.dataset?.tone || 'fair';
@@ -182,19 +260,24 @@ function loadAvatar() {
                 const colorName = document.getElementById('product-modal')?.getAttribute('data-color') || 'emerald';
                 window.onOutfitColorChange(colorName);
             }
-        }, 300);
+        }, 100);
 
-    }, 
+    },
     (xhr) => {
-        // Progress callback
         if (xhr.lengthComputable) {
-            const percentComplete = xhr.loaded / xhr.total * 100;
-            showStatus("Loading model: " + Math.round(percentComplete) + "%");
+            const percent = Math.round(xhr.loaded / xhr.total * 100);
+            showStatus(`Preparing Boutique: ${percent}%`);
         }
-    }, 
+    },
     (e) => {
-        console.error("Failed to load original model:", e);
-        showStatus("ERROR: Failed to load assets/models/avatar.glb. Check file exists.");
+        console.error("Path failed, trying next source...");
+        currentSourceIndex++;
+        if (currentSourceIndex < modelSources.length) {
+            modelSources[0] = modelSources[currentSourceIndex];
+            loadAvatar();
+        } else {
+            showStatus("ERROR: Model assets missing.");
+        }
     });
 }
 
@@ -215,6 +298,11 @@ function animate() {
     const delta = clock ? clock.getDelta() : 0.01;
     if (mixer) mixer.update(delta);
     if (controls) controls.update();
+    
+    // Subtle luxury stage rotation
+    const ring = scene ? scene.getObjectByName('goldRing') : null;
+    if (ring) ring.rotation.z += 0.005;
+
     if (renderer && scene && camera) renderer.render(scene, camera);
 }
 
@@ -223,14 +311,7 @@ function showStatus(msg) {
     if (!div) {
         div = document.createElement('div');
         div.id = 'engine-status-msg';
-        div.style.position = 'absolute';
-        div.style.top = '50%';
-        div.style.left = '50%';
-        div.style.transform = 'translate(-50%, -50%)';
-        div.style.color = '#D4AF37';
-        div.style.fontFamily = 'Montserrat, sans-serif';
-        div.style.fontSize = '12px';
-        div.style.zIndex = '1000';
+        div.style = 'position:absolute; top:50%; left:50%; transform:translate(-50%, -50%); color:#D4AF37; font-family:"Montserrat", sans-serif; font-size:12px; letter-spacing:3px; text-transform:uppercase; z-index:1000; text-shadow:0 0 10px rgba(212,175,55,0.5); font-weight:700;';
         document.getElementById('canvas-container').appendChild(div);
     }
     div.innerText = msg;
