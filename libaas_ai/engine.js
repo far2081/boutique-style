@@ -90,41 +90,52 @@ function init() {
 }
 
 function loadAvatar() {
-    if (currentSourceIndex >= modelSources.length) {
-        showStatus("ERROR: All model sources failed. Please run a local server.");
-        console.error("All model sources failed including local and remote fallbacks.");
-        return;
-    }
-
-    const path = modelSources[currentSourceIndex];
-    showStatus("Analysing and Placing Model (Attempt " + (currentSourceIndex+1) + ")...");
+    const path = "assets/models/avatar.glb";
+    showStatus("Loading original model...");
+    console.log("Loading model from:", path);
     
-    gltfLoader.load(path + "?v=" + Date.now(), (gltf) => {
+    gltfLoader.load(path, (gltf) => {
         clearStatus();
         const model = gltf.scene;
-        console.log("SUCCESS: 3D Model Loaded from " + path);
+        console.log("SUCCESS: 3D Model Loaded from", path);
         
+        // Ensure animations play if available which can fix bounds
+        if (gltf.animations && gltf.animations.length > 0) {
+            mixer = new THREE.AnimationMixer(model);
+            mixer.clipAction(gltf.animations[0]).play();
+        }
+
         // Base reset
         model.position.set(0, 0, 0);
         model.rotation.set(0, 0, 0);
         model.scale.set(1, 1, 1);
         model.updateMatrixWorld(true);
 
+        // Fix for SkinnedMesh bounds
+        model.traverse(function(child) {
+            if (child.isSkinnedMesh) {
+                child.computeBoundingBox();
+                child.computeBoundingSphere();
+            }
+        });
+
         // Safe scaling calculation
         const box = new THREE.Box3().setFromObject(model);
         const size = new THREE.Vector3();
         box.getSize(size);
         
-        if (size.y > 0.01 && size.y < 2000) {
-            let scaleFit = 1.6 / size.y;
-            if (scaleFit > 500) scaleFit = 500;
-            if (scaleFit < 0.002) scaleFit = 0.002;
+        console.log("Model initial size:", size);
+
+        // Apply a reasonable default scale if bounds are broken
+        if (size.y > 0.1 && size.y < 100) {
+            const scaleFit = 1.6 / size.y;
             model.scale.set(scaleFit, scaleFit, scaleFit);
-            model.updateMatrixWorld(true);
         } else {
-            model.scale.set(10, 10, 10); // fallback scale for tiny or huge models
-            model.updateMatrixWorld(true);
+            // Default scale for readyplayer.me or standard glb avatars
+            model.scale.set(1, 1, 1); 
         }
+        
+        model.updateMatrixWorld(true);
 
         // Safe Center & Placing
         const newBox = new THREE.Box3().setFromObject(model);
@@ -132,17 +143,25 @@ function loadAvatar() {
         newBox.getCenter(center);
         
         model.position.x = -center.x;
+        model.position.y = -newBox.min.y; // Stand on stage
         model.position.z = -center.z;
-        model.position.y = -newBox.min.y;
+        model.updateMatrixWorld(true);
 
-        // Enhance rendering slightly without forcing transparency locks
+        // Enhance rendering materials
         model.traverse((o) => {
             if (o.isMesh) {
                 o.castShadow = true;
                 o.receiveShadow = true;
                 if (o.material) {
-                    let mats = Array.isArray(o.material) ? o.material : [o.material];
-                    mats.forEach(m => { m.side = THREE.DoubleSide; });
+                    const mats = Array.isArray(o.material) ? o.material : [o.material];
+                    mats.forEach(m => { 
+                        m.side = THREE.DoubleSide; 
+                        m.depthWrite = true;
+                        // Help prevent transparency sorting issues
+                        if (m.transparent) {
+                            m.alphaTest = 0.5;
+                        }
+                    });
                 }
             }
         });
@@ -151,11 +170,9 @@ function loadAvatar() {
         avatarGroup.clear();
         avatarGroup.add(model);
         
-        if (gltf.animations && gltf.animations.length > 0) {
-            mixer = new THREE.AnimationMixer(model);
-            mixer.clipAction(gltf.animations[0]).play();
-        }
+        console.log("Model fully integrated and placed on stage.");
 
+        // Apply default colors after a small delay
         setTimeout(() => {
             if (window.onComplexionChange) {
                 const tone = document.querySelector('.complexion-circle.active')?.dataset?.tone || 'fair';
@@ -165,12 +182,19 @@ function loadAvatar() {
                 const colorName = document.getElementById('product-modal')?.getAttribute('data-color') || 'emerald';
                 window.onOutfitColorChange(colorName);
             }
-        }, 400);
+        }, 300);
 
-    }, undefined, (e) => {
-        console.warn("Attempt " + (currentSourceIndex+1) + " failed: " + path);
-        currentSourceIndex++;
-        loadAvatar(); // Try next model in list
+    }, 
+    (xhr) => {
+        // Progress callback
+        if (xhr.lengthComputable) {
+            const percentComplete = xhr.loaded / xhr.total * 100;
+            showStatus("Loading model: " + Math.round(percentComplete) + "%");
+        }
+    }, 
+    (e) => {
+        console.error("Failed to load original model:", e);
+        showStatus("ERROR: Failed to load assets/models/avatar.glb. Check file exists.");
     });
 }
 
