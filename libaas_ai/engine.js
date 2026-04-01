@@ -169,132 +169,106 @@ function init() {
 }
 
 function loadAvatar() {
-    const path = modelSources[currentSourceIndex];
-    showStatus(`Loading Boutique... ${currentSourceIndex + 1}/${modelSources.length}`);
-    console.log("Attempting load:", path);
+    const rawPath = modelSources[currentSourceIndex];
+    // Try multiple path variants to find the file
+    const pathVariants = [
+        rawPath,
+        rawPath.startsWith('/') ? '.' + rawPath : './' + rawPath,
+        rawPath.replace('assets/models/', '') 
+    ];
+    
+    let triedVariantIndex = 0;
 
-    gltfLoader.load(path, (gltf) => {
-        clearStatus();
-        let model = gltf.scene || gltf.scenes[0];
-        if (!model) {
-            console.error("Empty GLTF");
-            tryNextSource();
-            return;
-        }
+    function tryLoading(p) {
+        showStatus(`Searching Boutique... ${currentSourceIndex + 1}/${modelSources.length}`);
+        console.log("Searching path:", p);
+        
+        gltfLoader.load(p, (gltf) => {
+            clearStatus();
+            const model = gltf.scene || gltf.scenes[0];
+            if (!model) {
+                console.error("No scene in GLTF");
+                tryNextSource();
+                return;
+            }
 
-        console.log("Model loaded. Ensuring visibility...");
+            console.log("Model found! Forcing onto stage...");
 
-        // Ensure all meshes are visible and hide grounds
-        let meshesFound = false;
-        model.traverse((o) => {
-            if (o.isMesh) {
-                meshesFound = true;
-                const name = (o.name || "").toLowerCase();
-                
-                // Hide common world/environment objects
-                if (name.includes("floor") || name.includes("ground") || name.includes("plane") || name.includes("stage") || name.includes("background")) {
-                    o.visible = false;
-                } else {
-                    o.visible = true;
+            // FORCE VISIBILITY & Basic Prep
+            model.traverse((o) => {
+                if (o.isMesh) {
+                    o.visible = true; // Force everything visible first
                     o.castShadow = true;
                     o.receiveShadow = true;
-                    
                     if (o.material) {
-                        const mats = Array.isArray(o.material) ? o.material : [o.material];
-                        mats.forEach(m => {
-                            m.side = THREE.DoubleSide;
-                            m.depthWrite = true;
-                            if (m.transparent) {
-                                m.alphaTest = 0.5;
-                                m.opacity = 1.0;
-                            }
-                        });
+                        const m = Array.isArray(o.material) ? o.material[0] : o.material;
+                        m.side = THREE.DoubleSide;
+                        m.transparent = false; // Disable transparency if it's hiding things
+                        m.opacity = 1.0;
                     }
                 }
-                
-                if (o.isSkinnedMesh) {
-                    o.frustumCulled = false;
-                }
+            });
+
+            // Calculate scale - ensure it's roughly 1.7m high
+            model.updateMatrixWorld(true);
+            const box = new THREE.Box3().setFromObject(model);
+            const size = box.getSize(new THREE.Vector3());
+            
+            console.log("Model size detected:", size);
+            
+            // Auto-scale to human height
+            let s = 1.0;
+            if (size.y > 0) {
+                s = 1.7 / size.y;
+            } else {
+                s = 0.01; // Scale down common 100x blender exports if box fails
             }
-        });
+            model.scale.set(s, s, s);
+            model.updateMatrixWorld(true);
 
-        if (!meshesFound) {
-            console.warn("No visible meshes found in GLTF");
-            tryNextSource();
-            return;
-        }
-
-        // SCALING: Set to reliable human height
-        model.updateMatrixWorld(true);
-        const box = new THREE.Box3();
-        model.traverse(o => {
-            if (o.isMesh && o.visible) {
-                 if (!o.geometry.boundingBox) o.geometry.computeBoundingBox();
-                 const b = o.geometry.boundingBox.clone();
-                 b.applyMatrix4(o.matrixWorld);
-                 box.union(b);
+            // Re-center
+            const newBox = new THREE.Box3().setFromObject(model);
+            const center = newBox.getCenter(new THREE.Vector3());
+            
+            model.position.x = -center.x;
+            model.position.z = -center.z;
+            model.position.y = -newBox.min.y + 0.02; // Elevated on gold ring
+            
+            // FINAL ADD
+            while(avatarGroup.children.length > 0) avatarGroup.remove(avatarGroup.children[0]);
+            avatarGroup.add(model);
+            
+            if (gltf.animations && gltf.animations.length > 0) {
+                mixer = new THREE.AnimationMixer(model);
+                mixer.clipAction(gltf.animations[0]).play();
             }
-        });
-        
-        const size = box.getSize(new THREE.Vector3());
-        if (size.y > 0.001) {
-            const scaleFactor = 1.7 / size.y;
-            model.scale.multiplyScalar(scaleFactor);
-        } else {
-            model.scale.set(1.5, 1.5, 1.5);
-        }
-        model.updateMatrixWorld(true);
 
-        // POSITIONING: Re-center and ground
-        const finalBox = new THREE.Box3();
-        model.traverse(o => {
-            if (o.isMesh && o.visible) {
-                 const b = o.geometry.boundingBox.clone();
-                 b.applyMatrix4(o.matrixWorld);
-                 finalBox.union(b);
-            }
-        });
-        
-        const center = finalBox.getCenter(new THREE.Vector3());
-        model.position.x -= center.x;
-        model.position.z -= center.z;
-        model.position.y -= finalBox.min.y; // Feet to zero
-        model.position.y += 0.02; // Elevated on platform gold ring
-        model.updateMatrixWorld(true);
-
-        // Compatible clearing for THREE.js r128
-        while(avatarGroup.children.length > 0) avatarGroup.remove(avatarGroup.children[0]);
-        avatarGroup.add(model);
-        
-        if (gltf.animations && gltf.animations.length > 0) {
-            mixer = new THREE.AnimationMixer(model);
-            mixer.clipAction(gltf.animations[0]).play();
-        }
-
-        console.log("Model successfully integrated at scale.");
-
-        setTimeout(() => {
-            if (window.onComplexionChange) {
+            console.log("Model is now live on stage.");
+            
+            // UI Sync
+            setTimeout(() => {
                 const tone = document.querySelector('.complexion-circle.active')?.dataset?.tone || 'fair';
-                window.onComplexionChange(tone);
-            }
-            if (window.onOutfitColorChange) {
-                const colorName = document.getElementById('product-modal')?.getAttribute('data-color') || 'emerald';
-                window.onOutfitColorChange(colorName);
-            }
-        }, 100);
+                if (window.onComplexionChange) window.onComplexionChange(tone);
+            }, 500);
 
-    }, 
-    (xhr) => {
-        if (xhr.lengthComputable) {
-            const percent = Math.round((xhr.loaded / xhr.total) * 100);
-            showStatus(`Preparing Boutique: ${percent}%`);
-        }
-    }, 
-    (e) => {
-        console.error("GLTF load failed", e);
-        tryNextSource();
-    });
+        }, 
+        (xhr) => {
+            if (xhr.lengthComputable) {
+                showStatus(`Boutique Arriving: ${Math.round(xhr.loaded / xhr.total * 100)}%`);
+            }
+        }, 
+        (err) => {
+            console.warn(`Path failed: ${p}`);
+            triedVariantIndex++;
+            if (triedVariantIndex < pathVariants.length) {
+                tryLoading(pathVariants[triedVariantIndex]);
+            } else {
+                tryNextSource();
+            }
+        });
+    }
+
+    tryLoading(pathVariants[0]);
 }
 
 function tryNextSource() {
