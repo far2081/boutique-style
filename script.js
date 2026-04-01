@@ -586,12 +586,7 @@ document.addEventListener('click', (e) => {
     const productCard = e.target.closest('.product-card');
     if (productCard && !e.target.closest('button')) {
         syncGlobalProduct(productCard);
-        
-        // Scroll to AI section for visual confirmation
-        const aiSection = document.getElementById('ai-stylist');
-        if (aiSection) {
-            window.scrollTo({ top: aiSection.offsetTop - 100, behavior: 'smooth' });
-        }
+        // Removed auto-scroll to AI section per user request to maintain layout stability
     }
 
     // 13. Advisor Trend Card Sync
