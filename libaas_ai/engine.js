@@ -90,8 +90,8 @@ function init() {
 }
 
 function loadAvatar() {
-    const path = "assets/models/avatar.glb";
-    showStatus("Loading original model...");
+   const path = "https://models.readyplayer.me/64f06834005c2104928e4e94.glb";
+    showStatus("Loading NoorStyle Female Avatar...");
     console.log("Loading model from:", path);
     
     gltfLoader.load(path, (gltf) => {
