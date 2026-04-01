@@ -27,8 +27,8 @@ function init() {
     scene.background = new THREE.Color(0x0a0a0a);
     scene.fog = new THREE.Fog(0x0a0a0a, 2, 10);
 
-    const width = container.clientWidth;
-    const height = container.clientHeight;
+    const width = container.clientWidth || 800;
+    const height = container.clientHeight || 600;
 
     camera = new THREE.PerspectiveCamera(35, width / height, 0.1, 100);
     camera.position.set(0, 1.4, 4.2);
@@ -83,12 +83,11 @@ function init() {
     }
 
     window.addEventListener('resize', onResize);
+    window.onEngineResize = onResize; // Export for script.js
     isInitialized = true;
     
-    // 1. START RENDERING IMMEDIATELY (Fixes "Stage Ghayab" issue)
     animate();
 
-    // 2. TRIGGER ASYNC LOADING AFTER RENDERER STARTS
     if (typeof THREE !== 'undefined' && typeof THREE.GLTFLoader !== 'undefined') {
         gltfLoader = new THREE.GLTFLoader();
         loadAvatar();
