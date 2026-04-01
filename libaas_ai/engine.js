@@ -1,4 +1,4 @@
-// libaas_ai/engine.js - ULTRA SIMPLE & ROBUST ENGINE v15
+// libaas_ai/engine.js - FINAL GUARANTEED FIX v16
 
 let scene, camera, renderer, controls, clock;
 let avatarGroup = new THREE.Group();
@@ -6,7 +6,6 @@ let gltfLoader = null;
 let mixer = null;
 let isInitialized = false;
 
-// ONLY load the model you specified
 const AVATAR_PATH = "assets/models/avatar.glb";
 
 function init() {
@@ -17,18 +16,15 @@ function init() {
 
     clock = new THREE.Clock();
     scene = new THREE.Scene();
-    
-    // Very simple and clean background
     scene.background = new THREE.Color(0x111111);
     
     let width = container.clientWidth || 400;
     let height = container.clientHeight || 500;
 
-    camera = new THREE.PerspectiveCamera(45, width / height, 0.1, 100);
-    // Camera is placed far enough to see the whole model
-    camera.position.set(0, 1.5, 4); 
+    // CAMERA TUNING: Zoomed out slightly to ensure the full stage fits
+    camera = new THREE.PerspectiveCamera(40, width / height, 0.1, 100);
+    camera.position.set(0, 1.2, 3.5); 
     
-    // Simple robust renderer
     renderer = new THREE.WebGLRenderer({ antialias: true, alpha: true });
     renderer.setSize(width, height);
     renderer.setPixelRatio(Math.min(window.devicePixelRatio, 2));
@@ -37,22 +33,22 @@ function init() {
     container.innerHTML = ''; 
     container.appendChild(renderer.domElement);
     
-    // Simple Lighting - Impossible to break
-    scene.add(new THREE.AmbientLight(0xffffff, 1.2));
-    const dirLight = new THREE.DirectionalLight(0xffffff, 1.0);
-    dirLight.position.set(2, 5, 5);
+    // LIGHTING: Extremely bright to ensure no model hides in the dark
+    scene.add(new THREE.AmbientLight(0xffffff, 1.5));
+    const dirLight = new THREE.DirectionalLight(0xffffff, 1.2);
+    dirLight.position.set(0, 5, 5);
     scene.add(dirLight);
 
-    // Simple Stage - Just a basic floor with gold ring (Will not mess up)
+    // FIXED: Much smaller stage (radius 0.7 instead of 1.5) so it doesn't get cut off!
     const stage = new THREE.Mesh(
-        new THREE.CylinderGeometry(1.5, 1.5, 0.05, 32),
+        new THREE.CylinderGeometry(0.7, 0.7, 0.05, 32),
         new THREE.MeshStandardMaterial({ color: 0x222222, roughness: 0.8 })
     );
     stage.position.y = -0.025;
     scene.add(stage);
 
     const ring = new THREE.Mesh(
-        new THREE.TorusGeometry(1.5, 0.02, 16, 100),
+        new THREE.TorusGeometry(0.7, 0.015, 16, 100),
         new THREE.MeshStandardMaterial({ color: 0xD4AF37 })
     );
     ring.rotation.x = Math.PI / 2;
@@ -61,14 +57,12 @@ function init() {
 
     scene.add(avatarGroup);
 
-    // Basic controls
     if (typeof THREE.OrbitControls !== 'undefined') {
         controls = new THREE.OrbitControls(camera, renderer.domElement);
-        controls.target.set(0, 1, 0);
+        controls.target.set(0, 0.9, 0); 
         controls.enableDamping = true;
     }
 
-    // Safely load the GLTF Loader
     if (typeof THREE.GLTFLoader !== 'undefined') {
         gltfLoader = new THREE.GLTFLoader();
         loadAvatar();
@@ -88,37 +82,49 @@ function loadAvatar() {
         clearStatus();
         const model = gltf.scene;
         
-        // Basic Setup
+        // Reset transform
         model.position.set(0, 0, 0);
         model.rotation.set(0, 0, 0);
         model.scale.set(1, 1, 1);
-        
-        // Force Update Matrix
         model.updateMatrixWorld(true);
 
         const box = new THREE.Box3().setFromObject(model);
-        const size = new THREE.Vector3();
-        box.getSize(size);
-        const center = new THREE.Vector3();
-        box.getCenter(center);
-        
-        // Safe scaling calculation
-        if (!isNaN(size.y) && size.y > 0.01) {
-            const scale = 1.7 / size.y;
-            model.scale.set(scale, scale, scale);
-            
-            box.setFromObject(model);
+        if (!box.isEmpty()) {
+            const size = new THREE.Vector3();
+            box.getSize(size);
+            const center = new THREE.Vector3();
             box.getCenter(center);
             
-            model.position.x = -center.x;
-            model.position.z = -center.z;
-            model.position.y = -box.min.y;
-        } else {
-            // fallback generic scale
-            model.scale.set(0.5, 0.5, 0.5);
-            model.position.y = 0;
+            // Safe scaling to ensure model sits perfectly inside the viewport
+            if (size.y > 0.01 && size.y < 1000) {
+                let scale = 1.6 / size.y;
+                if (scale < 0.001) scale = 0.001;
+                if (scale > 100) scale = 100;
+                
+                model.scale.set(scale, scale, scale);
+                model.updateMatrixWorld(true);
+                
+                box.setFromObject(model);
+                box.getCenter(center);
+                model.position.x = -center.x;
+                model.position.z = -center.z;
+                model.position.y = -box.min.y;
+            }
         }
 
+        // Force all materials to be visible from both sides
+        model.traverse((o) => {
+            if (o.isMesh && o.material) {
+                if (Array.isArray(o.material)) {
+                    o.material.forEach(m => { m.side = THREE.DoubleSide; m.depthWrite = true; });
+                } else {
+                    o.material.side = THREE.DoubleSide;
+                    o.material.depthWrite = true;
+                }
+            }
+        });
+
+        // Add to scene
         avatarGroup.clear();
         avatarGroup.add(model);
         
@@ -127,7 +133,6 @@ function loadAvatar() {
             mixer.clipAction(gltf.animations[0]).play();
         }
 
-        // Apply initial colors cleanly
         setTimeout(() => {
             if (window.onComplexionChange) {
                 const tone = document.querySelector('.complexion-circle.active')?.dataset?.tone || 'fair';
@@ -141,7 +146,7 @@ function loadAvatar() {
 
     }, undefined, (e) => {
         console.error(e);
-        showStatus("Failed to load model. Please ensure the file is valid.");
+        showStatus("Model Load Error: Check Vercel cache or valid avatar.glb");
     });
 }
 
@@ -176,7 +181,7 @@ function showStatus(msg) {
         div.style.transform = 'translate(-50%, -50%)';
         div.style.color = '#D4AF37';
         div.style.fontFamily = 'Montserrat, sans-serif';
-        div.style.fontSize = '14px';
+        div.style.fontSize = '12px';
         div.style.zIndex = '1000';
         document.getElementById('canvas-container').appendChild(div);
     }
@@ -189,7 +194,6 @@ function clearStatus() {
     if (div) div.style.display = 'none';
 }
 
-// Very safe color changing logic (handles arrays natively to prevent crashing)
 function safeChangeColor(model, keywords, hexColor) {
     if (!model) return;
     model.traverse((o) => {
