@@ -6,13 +6,27 @@ let gltfLoader = null;
 let mixer = null;
 let isInitialized = false;
 
-const AVATAR_PATH = "assets/models/scene.gltf";
+const modelSources = [
+    "assets/models/avatar.glb",
+    "assets/models/scene.gltf",
+    "avatar.glb",
+    "https://models.readyplayer.me/63b36340268427f7f07297d2.glb"
+];
+let currentSourceIndex = 0;
 
 function init() {
     if (isInitialized) return;
     
+    // Check for local file protocol (CORS issue indicator)
+    if (window.location.protocol === 'file:') {
+        showStatus("Note: Local file protocol (file://) detected. Use a local server if models fail.");
+    }
+    
     const container = document.getElementById('canvas-container');
-    if (!container) return;
+    if (!container) {
+        console.error("Canvas container not found!");
+        return;
+    }
 
     clock = new THREE.Clock();
     scene = new THREE.Scene();
@@ -76,11 +90,19 @@ function init() {
 }
 
 function loadAvatar() {
-    showStatus("Analysing and Placing Model...");
+    if (currentSourceIndex >= modelSources.length) {
+        showStatus("ERROR: All model sources failed. Please run a local server.");
+        console.error("All model sources failed including local and remote fallbacks.");
+        return;
+    }
+
+    const path = modelSources[currentSourceIndex];
+    showStatus("Analysing and Placing Model (Attempt " + (currentSourceIndex+1) + ")...");
     
-    gltfLoader.load(AVATAR_PATH + "?t=" + Date.now(), (gltf) => {
+    gltfLoader.load(path + "?v=" + Date.now(), (gltf) => {
         clearStatus();
         const model = gltf.scene;
+        console.log("SUCCESS: 3D Model Loaded from " + path);
         
         // Base reset
         model.position.set(0, 0, 0);
@@ -93,14 +115,14 @@ function loadAvatar() {
         const size = new THREE.Vector3();
         box.getSize(size);
         
-        if (size.y > 0.001 && size.y < 2000) {
+        if (size.y > 0.01 && size.y < 2000) {
             let scaleFit = 1.6 / size.y;
             if (scaleFit > 500) scaleFit = 500;
             if (scaleFit < 0.002) scaleFit = 0.002;
             model.scale.set(scaleFit, scaleFit, scaleFit);
             model.updateMatrixWorld(true);
         } else {
-            model.scale.set(10, 10, 10); // fallback scale
+            model.scale.set(10, 10, 10); // fallback scale for tiny or huge models
             model.updateMatrixWorld(true);
         }
 
@@ -146,8 +168,9 @@ function loadAvatar() {
         }, 400);
 
     }, undefined, (e) => {
-        console.error(e);
-        showStatus("Error: avatar.glb missing or not readable.");
+        console.warn("Attempt " + (currentSourceIndex+1) + " failed: " + path);
+        currentSourceIndex++;
+        loadAvatar(); // Try next model in list
     });
 }
 
