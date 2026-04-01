@@ -169,87 +169,108 @@ function init() {
 }
 
 function loadAvatar() {
-    const path = modelSources[0]; // Try the primary model first
-    showStatus("Launching Glam Studio...");
-    
+    const path = modelSources[currentSourceIndex];
+    showStatus(`Loading Boutique... ${currentSourceIndex + 1}/${modelSources.length}`);
+    console.log("Attempting load:", path);
+
     gltfLoader.load(path, (gltf) => {
         clearStatus();
-        const model = gltf.scene;
-        console.log("SUCCESS: Premium Model Loaded");
+        let model = gltf.scene || gltf.scenes[0];
+        if (!model) {
+            console.error("Empty GLTF");
+            tryNextSource();
+            return;
+        }
 
+        console.log("Model loaded. Ensuring visibility...");
+
+        // Ensure all meshes are visible and hide grounds
+        let meshesFound = false;
+        model.traverse((o) => {
+            if (o.isMesh) {
+                meshesFound = true;
+                const name = (o.name || "").toLowerCase();
+                
+                // Hide common world/environment objects
+                if (name.includes("floor") || name.includes("ground") || name.includes("plane") || name.includes("stage") || name.includes("background")) {
+                    o.visible = false;
+                } else {
+                    o.visible = true;
+                    o.castShadow = true;
+                    o.receiveShadow = true;
+                    
+                    if (o.material) {
+                        const mats = Array.isArray(o.material) ? o.material : [o.material];
+                        mats.forEach(m => {
+                            m.side = THREE.DoubleSide;
+                            m.depthWrite = true;
+                            if (m.transparent) {
+                                m.alphaTest = 0.5;
+                                m.opacity = 1.0;
+                            }
+                        });
+                    }
+                }
+                
+                if (o.isSkinnedMesh) {
+                    o.frustumCulled = false;
+                }
+            }
+        });
+
+        if (!meshesFound) {
+            console.warn("No visible meshes found in GLTF");
+            tryNextSource();
+            return;
+        }
+
+        // SCALING: Set to reliable human height
+        model.updateMatrixWorld(true);
+        const box = new THREE.Box3();
+        model.traverse(o => {
+            if (o.isMesh && o.visible) {
+                 if (!o.geometry.boundingBox) o.geometry.computeBoundingBox();
+                 const b = o.geometry.boundingBox.clone();
+                 b.applyMatrix4(o.matrixWorld);
+                 box.union(b);
+            }
+        });
+        
+        const size = box.getSize(new THREE.Vector3());
+        if (size.y > 0.001) {
+            const scaleFactor = 1.7 / size.y;
+            model.scale.multiplyScalar(scaleFactor);
+        } else {
+            model.scale.set(1.5, 1.5, 1.5);
+        }
+        model.updateMatrixWorld(true);
+
+        // POSITIONING: Re-center and ground
+        const finalBox = new THREE.Box3();
+        model.traverse(o => {
+            if (o.isMesh && o.visible) {
+                 const b = o.geometry.boundingBox.clone();
+                 b.applyMatrix4(o.matrixWorld);
+                 finalBox.union(b);
+            }
+        });
+        
+        const center = finalBox.getCenter(new THREE.Vector3());
+        model.position.x -= center.x;
+        model.position.z -= center.z;
+        model.position.y -= finalBox.min.y; // Feet to zero
+        model.position.y += 0.02; // Elevated on platform gold ring
+        model.updateMatrixWorld(true);
+
+        avatarGroup.clear();
+        avatarGroup.add(model);
+        
         if (gltf.animations && gltf.animations.length > 0) {
             mixer = new THREE.AnimationMixer(model);
             mixer.clipAction(gltf.animations[0]).play();
         }
 
-        model.position.set(0, 0, 0);
-        model.rotation.set(0, 0, 0);
-        model.scale.set(1, 1, 1);
-        model.updateMatrixWorld(true);
-
-        model.traverse((o) => {
-            if (o.isMesh) {
-                // CLEANUP: Hide existing floors or background planes in the model
-                const name = (o.name || "").toLowerCase();
-                if (name.includes("floor") || name.includes("ground") || name.includes("plane") || name.includes("stage")) {
-                    o.visible = false;
-                    return;
-                }
-
-                o.castShadow = true;
-                o.receiveShadow = true;
-                if (o.isSkinnedMesh) {
-                    o.computeBoundingBox();
-                    o.computeBoundingSphere();
-                }
-
-                if (o.material) {
-                    const mats = Array.isArray(o.material) ? o.material : [o.material];
-                    mats.forEach(m => {
-                        m.side = THREE.DoubleSide;
-                        m.depthWrite = true;
-                        if (m.transparent) m.alphaTest = 0.5;
-                        
-                        if (m.isMeshStandardMaterial) {
-                            m.envMapIntensity = 1.5;
-                        }
-                    });
-                }
-            }
-        });
-
-        // Safe scaling calculation - ignoring hidden/redundant objects
-        const box = new THREE.Box3();
-        model.traverse(o => {
-            if (o.isMesh && o.visible) box.expandByObject(o);
-        });
-        
-        const size = new THREE.Vector3();
-        box.getSize(size);
-
-        if (size.y > 0.1 && size.y < 100) {
-            const scaleFit = 1.7 / size.y;
-            model.scale.set(scaleFit, scaleFit, scaleFit);
-        }
-        model.updateMatrixWorld(true);
-
-        // Re-calculate box after scaling for perfect placement
-        const newBox = new THREE.Box3();
-        model.traverse(o => {
-            if (o.isMesh && o.visible) newBox.expandByObject(o);
-        });
-        
-        const center = new THREE.Vector3();
-        newBox.getCenter(center);
-
-        // Final Positioning on Stage
-        model.position.x = -center.x;
-        model.position.y = (-newBox.min.y) + 0.02; // Elevated on platform
-        model.position.z = -center.z;
-        model.updateMatrixWorld(true);
-
-        avatarGroup.clear();
-        avatarGroup.add(model);
+        console.log("Model successfully integrated at scale.");
 
         setTimeout(() => {
             if (window.onComplexionChange) {
@@ -262,23 +283,52 @@ function loadAvatar() {
             }
         }, 100);
 
-    },
+    }, 
     (xhr) => {
         if (xhr.lengthComputable) {
-            const percent = Math.round(xhr.loaded / xhr.total * 100);
+            const percent = Math.round((xhr.loaded / xhr.total) * 100);
             showStatus(`Preparing Boutique: ${percent}%`);
         }
-    },
+    }, 
     (e) => {
-        console.error("Path failed, trying next source...");
-        currentSourceIndex++;
-        if (currentSourceIndex < modelSources.length) {
-            modelSources[0] = modelSources[currentSourceIndex];
-            loadAvatar();
-        } else {
-            showStatus("ERROR: Model assets missing.");
-        }
+        console.error("GLTF load failed", e);
+        tryNextSource();
     });
+}
+
+function tryNextSource() {
+    currentSourceIndex++;
+    if (currentSourceIndex < modelSources.length) {
+        loadAvatar();
+    } else {
+        showStatus("ERROR: Use a local server to view 3D models.");
+        createMannequin();
+    }
+}
+
+function createMannequin() {
+    console.log("Creating abstract mannequin fallback...");
+    const group = new THREE.Group();
+    const mat = new THREE.MeshStandardMaterial({ color: 0x444444, roughness: 0.5 });
+    
+    const head = new THREE.Mesh(new THREE.SphereGeometry(0.12, 16, 16), mat);
+    head.position.y = 1.6;
+    group.add(head);
+    
+    const torso = new THREE.Mesh(new THREE.CylinderGeometry(0.2, 0.15, 0.6, 16), mat);
+    torso.position.y = 1.25;
+    group.add(torso);
+    
+    const leg1 = new THREE.Mesh(new THREE.CylinderGeometry(0.08, 0.05, 0.8, 16), mat);
+    leg1.position.set(-0.1, 0.45, 0);
+    group.add(leg1);
+    const leg2 = new THREE.Mesh(new THREE.CylinderGeometry(0.08, 0.05, 0.8, 16), mat);
+    leg2.position.set(0.1, 0.45, 0);
+    group.add(leg2);
+    
+    group.position.y = 0.02;
+    avatarGroup.clear();
+    avatarGroup.add(group);
 }
 
 function onResize() {
