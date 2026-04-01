@@ -169,106 +169,78 @@ function init() {
 }
 
 function loadAvatar() {
-    const rawPath = modelSources[currentSourceIndex];
-    // Try multiple path variants to find the file
-    const pathVariants = [
-        rawPath,
-        rawPath.startsWith('/') ? '.' + rawPath : './' + rawPath,
-        rawPath.replace('assets/models/', '') 
-    ];
+    // FALLBACK: Immediately show a mannequin so the stage is never empty
+    createMannequin();
     
-    let triedVariantIndex = 0;
+    const path = modelSources[currentSourceIndex];
+    showStatus(`Launching Model... ${currentSourceIndex + 1}/${modelSources.length}`);
+    
+    gltfLoader.load(path, (gltf) => {
+        const model = gltf.scene || gltf.scenes[0];
+        if (!model) return;
 
-    function tryLoading(p) {
-        showStatus(`Searching Boutique... ${currentSourceIndex + 1}/${modelSources.length}`);
-        console.log("Searching path:", p);
-        
-        gltfLoader.load(p, (gltf) => {
-            clearStatus();
-            const model = gltf.scene || gltf.scenes[0];
-            if (!model) {
-                console.error("No scene in GLTF");
-                tryNextSource();
-                return;
-            }
+        console.log("Model arrived! Swapping with mannequin...");
 
-            console.log("Model found! Forcing onto stage...");
-
-            // FORCE VISIBILITY & Basic Prep
-            model.traverse((o) => {
-                if (o.isMesh) {
-                    o.visible = true; // Force everything visible first
-                    o.castShadow = true;
-                    o.receiveShadow = true;
-                    if (o.material) {
-                        const m = Array.isArray(o.material) ? o.material[0] : o.material;
-                        m.side = THREE.DoubleSide;
-                        m.transparent = false; // Disable transparency if it's hiding things
-                        m.opacity = 1.0;
-                    }
+        // PREP: Ensure it's visible and doesn't have junk
+        model.traverse(o => {
+            if (o.isMesh) {
+                o.visible = true;
+                o.castShadow = true;
+                o.receiveShadow = true;
+                // Force brightness to avoid black/invisible textures
+                if (o.material) {
+                    const m = Array.isArray(o.material) ? o.material[0] : o.material;
+                    m.side = THREE.DoubleSide;
+                    m.transparent = false;
+                    m.opacity = 1.0;
+                    if (m.emissive) m.emissive.setHex(0x222222);
+                    m.emissiveIntensity = 0.5;
                 }
-            });
-
-            // Calculate scale - ensure it's roughly 1.7m high
-            model.updateMatrixWorld(true);
-            const box = new THREE.Box3().setFromObject(model);
-            const size = box.getSize(new THREE.Vector3());
-            
-            console.log("Model size detected:", size);
-            
-            // Auto-scale to human height
-            let s = 1.0;
-            if (size.y > 0) {
-                s = 1.7 / size.y;
-            } else {
-                s = 0.01; // Scale down common 100x blender exports if box fails
-            }
-            model.scale.set(s, s, s);
-            model.updateMatrixWorld(true);
-
-            // Re-center
-            const newBox = new THREE.Box3().setFromObject(model);
-            const center = newBox.getCenter(new THREE.Vector3());
-            
-            model.position.x = -center.x;
-            model.position.z = -center.z;
-            model.position.y = -newBox.min.y + 0.02; // Elevated on gold ring
-            
-            // FINAL ADD
-            while(avatarGroup.children.length > 0) avatarGroup.remove(avatarGroup.children[0]);
-            avatarGroup.add(model);
-            
-            if (gltf.animations && gltf.animations.length > 0) {
-                mixer = new THREE.AnimationMixer(model);
-                mixer.clipAction(gltf.animations[0]).play();
-            }
-
-            console.log("Model is now live on stage.");
-            
-            // UI Sync
-            setTimeout(() => {
-                const tone = document.querySelector('.complexion-circle.active')?.dataset?.tone || 'fair';
-                if (window.onComplexionChange) window.onComplexionChange(tone);
-            }, 500);
-
-        }, 
-        (xhr) => {
-            if (xhr.lengthComputable) {
-                showStatus(`Boutique Arriving: ${Math.round(xhr.loaded / xhr.total * 100)}%`);
-            }
-        }, 
-        (err) => {
-            console.warn(`Path failed: ${p}`);
-            triedVariantIndex++;
-            if (triedVariantIndex < pathVariants.length) {
-                tryLoading(pathVariants[triedVariantIndex]);
-            } else {
-                tryNextSource();
             }
         });
-    }
 
-    tryLoading(pathVariants[0]);
+        // AUTO-SCALE to 1.7 units
+        model.updateMatrixWorld(true);
+        const box = new THREE.Box3().setFromObject(model);
+        const size = box.getSize(new THREE.Vector3());
+        let s = size.y > 0 ? 1.7 / size.y : 1.0;
+        
+        // Safety for mm vs meter units
+        if (s > 100) s = 0.1;
+        if (s < 0.001) s = 1.0;
+        
+        model.scale.set(s, s, s);
+        model.updateMatrixWorld(true);
+
+        // GROUNDING
+        const newBox = new THREE.Box3().setFromObject(model);
+        const center = newBox.getCenter(new THREE.Vector3());
+        
+        // Final placement on stage
+        model.position.x = -center.x;
+        model.position.z = -center.z;
+        model.position.y = -newBox.min.y + 0.02; // Elevated on gold ring
+        
+        // REPLACE MANNEQUIN
+        while(avatarGroup.children.length > 0) avatarGroup.remove(avatarGroup.children[0]);
+        avatarGroup.add(model);
+        
+        if (gltf.animations && gltf.animations.length > 0) {
+            mixer = new THREE.AnimationMixer(model);
+            mixer.clipAction(gltf.animations[0]).play();
+        }
+        
+        clearStatus();
+        console.log("SUCCESS: Character on stage.");
+        
+        setTimeout(() => {
+            if (window.onComplexionChange) window.onComplexionChange('fair');
+        }, 500);
+
+    }, null, (err) => {
+        console.error("Load failed for:", path);
+        tryNextSource();
+    });
 }
 
 function tryNextSource() {
