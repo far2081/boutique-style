@@ -158,8 +158,10 @@ function loadAvatar() {
         const center = newBox.getCenter(new THREE.Vector3());
         
         // Yahan + 0.02 ko badal kar + 0.5 kar diya hai
-   model.scale.set(1.4, 1.4, 1.4); 
-        model.position.set(-center.x, -newBox.min.y + 0.02, -center.z);
+  // Model ka size mazeed chota karein (0.9 fit rahega)
+        model.scale.set(0.9, 0.9, 0.9); 
+        // Position ko stage ke bilkul upar (+0.01) rakhein
+        model.position.set(-center.x, -newBox.min.y + 0.01, -center.z);
         avatarGroup.clear();
         avatarGroup.add(model);
         
