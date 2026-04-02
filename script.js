@@ -465,6 +465,22 @@ document.addEventListener('click', (e) => {
         if (tModal) {
             tModal.classList.remove('active');
             tModal.style.display = 'none'; // Fail-safe
+            
+            // Stop webcam if running
+            if (window.liveStream) {
+                window.liveStream.getTracks().forEach(t => t.stop());
+                window.liveStream = null;
+            }
+            const webcamVideo = document.getElementById('webcam-video');
+            if (webcamVideo) {
+                webcamVideo.srcObject = null;
+                webcamVideo.style.display = 'none';
+            }
+            // Reset to avatar mode for next time
+            const avatarModeBtn = document.getElementById('mode-avatar');
+            if (avatarModeBtn && !avatarModeBtn.classList.contains('active')) {
+                avatarModeBtn.click();
+            }
         }
         document.body.style.overflow = 'auto';
     }
@@ -563,13 +579,26 @@ document.addEventListener('click', (e) => {
         modeBtn.classList.add('active');
         
         const canvasContainer = document.getElementById('canvas-container');
-        const dressOverlay = document.getElementById('dress-overlay');
+        const webcamVideo = document.getElementById('webcam-video');
         
         if (modeBtn.id === 'mode-live') {
             // Live Mirror Focus
             if (canvasContainer) {
-                canvasContainer.style.opacity = '0.3';
-                canvasContainer.style.filter = 'grayscale(100%)';
+                canvasContainer.style.opacity = '0.7';
+                canvasContainer.style.filter = 'drop-shadow(0 0 10px rgba(0,0,0,0.5))'; // Remove grayscale for more realism
+            }
+            if (webcamVideo) {
+                webcamVideo.style.display = 'block';
+                navigator.mediaDevices.getUserMedia({ video: true })
+                    .then(stream => {
+                        window.liveStream = stream;
+                        webcamVideo.srcObject = stream;
+                    })
+                    .catch(err => {
+                        console.error('Camera error:', err);
+                        alert('Unable to access camera. Please allow permissions or check device settings.');
+                        document.getElementById('mode-avatar')?.click();
+                    });
             }
         } else {
             // Standard Avatar Forceful 3D Activation
@@ -577,6 +606,14 @@ document.addEventListener('click', (e) => {
                 canvasContainer.style.opacity = '1';
                 canvasContainer.style.visibility = 'visible';
                 canvasContainer.style.filter = 'none';
+            }
+            if (webcamVideo) {
+                webcamVideo.style.display = 'none';
+                if (window.liveStream) {
+                    window.liveStream.getTracks().forEach(t => t.stop());
+                    window.liveStream = null;
+                    webcamVideo.srcObject = null;
+                }
             }
             if (window.onEngineResize) window.onEngineResize();
         }
