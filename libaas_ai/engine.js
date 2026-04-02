@@ -6,9 +6,14 @@ let avatarGroup = new THREE.Group();
 let gltfLoader = null;
 let mixer = null;
 let isInitialized = false;
-   const modelSources = [
-    "https://models.readyplayer.me/64f06834005c2104928e4e94.glb"
+
+const modelSources = [
+    "assets/models/scene.gltf",
+    "assets/models/avatar.glb",
+    "avatar.glb"
 ];
+let currentSourceIndex = 0;
+
 function init() {
     if (isInitialized) return;
     const container = document.getElementById('canvas-container');
@@ -19,7 +24,7 @@ function init() {
 
     clock = new THREE.Clock();
     scene = new THREE.Scene();
-    scene.background = new THREE.Color(0x0b0b0b); // Deep Onyx to match boutique dashboard
+    scene.background = new THREE.Color(0x1a1a1a); // Lighter Onyx to contrast with stage
 
     const width = container.clientWidth;
     const height = container.clientHeight;
@@ -35,9 +40,9 @@ function init() {
     container.appendChild(renderer.domElement);
 
     // 2. BOOTIQUE LIGHTING (LUXURY STUDIO)
-    scene.add(new THREE.AmbientLight(0xffffff, 1.2)); // Bright Overall Visibility
+    scene.add(new THREE.AmbientLight(0xffffff, 1.8)); // Brighter Overall Visibility
     
-    const dLight = new THREE.DirectionalLight(0xffffff, 1.0);
+    const dLight = new THREE.DirectionalLight(0xffffff, 1.5); // Stronger directional light
     dLight.position.set(2, 5, 5);
     dLight.castShadow = true;
     scene.add(dLight);
@@ -53,9 +58,9 @@ function init() {
     const base = new THREE.Mesh(
         new THREE.CylinderGeometry(0.85, 0.9, 0.1, 64),
         new THREE.MeshStandardMaterial({ 
-            color: 0x111111, 
-            roughness: 0.3, 
-            metalness: 0.7 
+            color: 0x333333, // Lighter grey base
+            roughness: 0.4, 
+            metalness: 0.5 
         })
     );
     base.position.y = -0.05;
@@ -66,8 +71,8 @@ function init() {
     const topSurface = new THREE.Mesh(
         new THREE.CylinderGeometry(0.83, 0.83, 0.02, 64),
         new THREE.MeshStandardMaterial({ 
-            color: 0x2a2a2a, 
-            roughness: 0.5, 
+            color: 0x4a4a4a, // Lighter grey top for visibility
+            roughness: 0.6, 
             metalness: 0.2 
         })
     );
@@ -79,11 +84,11 @@ function init() {
     const ring = new THREE.Mesh(
         new THREE.TorusGeometry(0.82, 0.022, 32, 100),
         new THREE.MeshStandardMaterial({ 
-            color: 0xD4AF37, 
-            metalness: 1.0, 
-            roughness: 0.1, 
+            color: 0xC5A017, // Subtler gold to match but not overwhelm
+            metalness: 0.8, 
+            roughness: 0.2, 
             emissive: 0xD4AF37, 
-            emissiveIntensity: 0.3 
+            emissiveIntensity: 0.05 // Drastically reduced glow
         })
     );
     ring.rotation.x = Math.PI / 2;
@@ -95,22 +100,12 @@ function init() {
     scene.add(stageGroup);
     scene.add(avatarGroup);
 
-    if (typeof THREE.OrbitControls !== 'undefined' || typeof OrbitControls !== 'undefined') {
-        const ControlsClass = typeof OrbitControls !== 'undefined' ? OrbitControls : THREE.OrbitControls;
-        controls = new ControlsClass(camera, renderer.domElement);
+    if (typeof THREE.OrbitControls !== 'undefined') {
+        controls = new THREE.OrbitControls(camera, renderer.domElement);
         controls.target.set(0, 1.1, 0);
         controls.enableDamping = true;
         controls.autoRotate = true;
         controls.autoRotateSpeed = 0.4;
-
-        // --- STAGE KO FIX KARNE KI SETTINGS ---
-        controls.enablePan = false;   // Mouse se stage ko pakar kar hilana BAND
-        controls.minDistance = 2.5;   // Bohat zyada zoom-in band
-        controls.maxDistance = 5.5;   // Bohat zyada door jana band
-        // --------------------------------------
-
-    } else {
-        console.warn("OrbitControls not found, skipping...");
     }
 
     window.addEventListener('resize', onResize);
@@ -126,40 +121,44 @@ function init() {
 }
 
 function loadAvatar() {
-    createMannequin(); 
-    
-    // Sahi rasta (Path) set karein
-    const path = "https://raw.githubusercontent.com/far2081/boutique-style/main/libaas_ai/fashion_girl.glb";
-    
-    showStatus("BOUTIQUE ARRIVING...");
+    createMannequin(); // Instance placeholder while loading
+    const path = modelSources[currentSourceIndex];
+    showStatus(`BOUTIQUE ARRIVING... ${currentSourceIndex + 1}/${modelSources.length}`);
 
     gltfLoader.load(path, (gltf) => {
         const model = gltf.scene || gltf.scenes[0];
         if (!model) return;
 
+        const box = new THREE.Box3();
         model.traverse(o => {
             if (o.isMesh) {
                 o.castShadow = true;
                 o.receiveShadow = true;
+                box.expandByObject(o);
                 if (o.material) {
-                    const m = Array.isArray(o.material) ? o.material[0] : o.material;
-                    m.side = THREE.DoubleSide;
+                    const materials = Array.isArray(o.material) ? o.material : [o.material];
+                    materials.forEach(m => {
+                        m.side = THREE.DoubleSide;
+                        m.transparent = false; // Fix invisible/transparent models
+                        m.depthWrite = true;
+                        m.opacity = 1;
+                        m.needsUpdate = true;
+                    });
                 }
             }
         });
 
-       // Scale & Position Fix (Model ko stage ke center aur upar laane ke liye)
-        const box = new THREE.Box3().setFromObject(model);
         const size = box.getSize(new THREE.Vector3());
-        const scale = 1.7 / size.y;
-        model.scale.set(scale, scale, scale);
+        if (size.y > 0 && size.y !== Infinity) {
+            const scale = 1.7 / size.y;
+            model.scale.set(scale, scale, scale);
+        }
         
-        const newBox = new THREE.Box3().setFromObject(model);
+        const newBox = new THREE.Box3();
+        model.traverse(o => { if (o.isMesh) newBox.expandByObject(o); });
         const center = newBox.getCenter(new THREE.Vector3());
-        
-     // Model ko mazeed chota aur frame ke andar fit karein (0.4 is very safe)
-        model.scale.set(0.7, 0.7, 0.7); 
-        model.position.set(-center.x, -newBox.min.y + 0.01, -center.z);
+        model.position.set(-center.x, -newBox.min.y + 0.02, -center.z);
+
         avatarGroup.clear();
         avatarGroup.add(model);
         
@@ -170,23 +169,31 @@ function loadAvatar() {
         
         clearStatus();
     }, null, (err) => {
-        console.error("Load error:", err);
-        showStatus("STAGE READY");
+        currentSourceIndex++;
+        if (currentSourceIndex < modelSources.length) loadAvatar();
+        else {
+            showStatus("STAGE READY");
+            setTimeout(clearStatus, 3000);
+        }
     });
 }
 
 function createMannequin() {
     const group = new THREE.Group();
     const mat = new THREE.MeshStandardMaterial({ color: 0x111111, roughness: 0.1, metalness: 0.9 });
+    
     const head = new THREE.Mesh(new THREE.SphereGeometry(0.12, 32, 32), mat);
     head.position.y = 1.6;
     group.add(head);
+    
     const torso = new THREE.Mesh(new THREE.CylinderGeometry(0.18, 0.12, 0.6, 32), mat);
     torso.position.y = 1.25;
     group.add(torso);
+    
     const legs = new THREE.Mesh(new THREE.CylinderGeometry(0.12, 0.08, 0.8, 32), mat);
     legs.position.y = 0.55;
     group.add(legs);
+    
     group.position.y = 0.02;
     avatarGroup.clear();
     avatarGroup.add(group);
@@ -235,12 +242,17 @@ function safeChangeColor(model, keywords, hexColor) {
     if (!model) return;
     model.traverse((o) => {
         if (o.isMesh && o.material) {
-            const name = (o.name || "").toLowerCase();
-            const match = keywords.some(k => name.includes(k));
-            if (match) {
-                const materials = Array.isArray(o.material) ? o.material : [o.material];
-                materials.forEach(m => { if (m && m.color) m.color.setHex(hexColor); });
-            }
+            const meshName = (o.name || "").toLowerCase();
+            const materials = Array.isArray(o.material) ? o.material : [o.material];
+            
+            materials.forEach(m => {
+                const matName = (m.name || "").toLowerCase();
+                // Check if either mesh name or material name contains any of the target keywords
+                const match = keywords.some(k => meshName.includes(k) || matName.includes(k));
+                if (match && m.color) {
+                    m.color.setHex(hexColor);
+                }
+            });
         }
     });
 }
@@ -249,7 +261,7 @@ window.onComplexionChange = (tone) => {
     const tones = { 'fair': 0xFAD4B2, 'medium': 0xE6B98D, 'tan': 0xC68E5A, 'deep': 0x8D5524 };
     const color = tones[tone] || 0xFAD4B2;
     if (avatarGroup.children.length > 0) {
-        safeChangeColor(avatarGroup.children[0], ['skin', 'face', 'body', 'head', 'arm', 'leg'], color);
+        safeChangeColor(avatarGroup.children[0], ['skin', 'face', 'body', 'head', 'arm', 'leg', 'hand', 'neck', 'foot'], color);
     }
 };
 
