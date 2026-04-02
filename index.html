@@ -1148,6 +1148,9 @@
                     <div id="avatar-view" style="width: 100%; height: 100%; min-height: 400px; position: relative;">
                         <!-- Webcam Feed -->
                         <video id="webcam-video" autoplay playsinline style="display:none; position:absolute; inset:0; width:100%; height:100%; object-fit:cover; z-index:4; transform: scaleX(-1); border-radius: 20px;"></video>
+                        <div id="face-guide" class="face-guide-overlay" style="display:none; position:absolute; top:50%; left:50%; transform:translate(-50%, -50%); width:180px; height:240px; border: 2px dashed var(--gold); border-radius: 50%; z-index:10; pointer-events:none; box-shadow: 0 0 0 2000px rgba(0,0,0,0.4);">
+                            <span style="position:absolute; top:-30px; left:50%; transform:translateX(-50%); color:var(--gold); font-size:10px; white-space:nowrap; letter-spacing:2px; font-weight:700; text-transform:uppercase;">Align Your Face</span>
+                        </div>
                         <div id="canvas-container" style="width: 100%; height: 100%; min-height: 400px; z-index: 5;"></div>
 
                         <!-- Phase 2: Drafting Outfit Loading Spinner -->
@@ -1159,11 +1162,14 @@
                 </div>
                 
                 <div class="viewport-controls" style="margin-top: 20px;">
-                    <div style="display: flex; gap: 15px; background: white; padding: 10px 20px; border-radius: 30px; box-shadow: var(--shadow-sm);">
+                    <div style="display: flex; gap: 15px; background: white; padding: 10px 20px; border-radius: 30px; box-shadow: var(--shadow-sm); align-items: center;">
                         <i data-lucide="rotate-ccw" id="rotate-overlay" title="Rotate View"></i>
                         <i data-lucide="zoom-in" id="zoom-in-overlay" title="Zoom In"></i>
                         <i data-lucide="zoom-out" id="zoom-out-overlay" title="Zoom Out"></i>
                         <i data-lucide="palette" id="color-swap-overlay" title="Swap Color"></i>
+                        <div id="capture-group" style="display:none; border-left: 1px solid #ddd; padding-left: 15px; margin-left: 5px; gap: 15px; align-items: center;">
+                            <i data-lucide="camera" id="capture-face-btn" title="Capture & Apply Face" style="color: var(--gold); cursor: pointer;"></i>
+                        </div>
                     </div>
                 </div>
             </main>
