@@ -122,7 +122,12 @@ function loadAvatar() {
 
     gltfLoader.load(path, (gltf) => {
         const model = gltf.scene || gltf.scenes[0];
-        if (!model) return;const path = "https://models.readyplayer.me/64f06834005c2104928e4e94.glb";
+       const path = "https://models.readyplayer.me/64f06834005c2104928e4e94.glb";
+    showStatus("BOUTIQUE ARRIVING...");
+
+    gltfLoader.load(path, (gltf) => {
+        const model = gltf.scene || gltf.scenes[0];
+        if (!model) return;
 
         model.traverse(o => {
             if (o.isMesh) {
