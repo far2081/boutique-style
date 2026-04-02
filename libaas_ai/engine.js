@@ -117,7 +117,7 @@ function init() {
 
 function loadAvatar() {
     createMannequin(); 
-    const path = "https://models.readyplayer.me/64f06834005c2104928e4e94.glb";
+    const path = "https://raw.githubusercontent.com/KhronosGroup/glTF-Sample-Models/master/2.0/DamagedHelmet/glTF-Binary/DamagedHelmet.glb";
     showStatus("BOUTIQUE ARRIVING...");
 
     gltfLoader.load(path, (gltf) => {
