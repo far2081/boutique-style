@@ -102,6 +102,13 @@ function init() {
         controls.enableDamping = true;
         controls.autoRotate = true;
         controls.autoRotateSpeed = 0.4;
+
+        // --- STAGE KO FIX KARNE KI SETTINGS ---
+        controls.enablePan = false;   // Mouse se stage ko pakar kar hilana BAND
+        controls.minDistance = 2.5;   // Bohat zyada zoom-in band
+        controls.maxDistance = 5.5;   // Bohat zyada door jana band
+        // --------------------------------------
+
     } else {
         console.warn("OrbitControls not found, skipping...");
     }
@@ -148,8 +155,7 @@ function loadAvatar() {
         const center = newBox.getCenter(new THREE.Vector3());
         
         // Yahan + 0.02 ko badal kar + 0.5 kar diya hai
-        model.position.set(-center.x, -newBox.min.y + 0.5, -center.z);
-
+       model.position.set(-center.x, -newBox.min.y + 0.05, -center.z);
         avatarGroup.clear();
         avatarGroup.add(model);
         
