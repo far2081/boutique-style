@@ -131,54 +131,7 @@ function loadAvatar() {
     createMannequin(); // Instance placeholder while loading
     const path = modelSources[currentSourceIndex];
     showStatus(`BOUTIQUE ARRIVING... ${currentSourceIndex + 1}/${modelSources.length}`);
-gltfLoader.load(path, (gltf) => {
-        const model = gltf.scene || gltf.scenes[0];
-        if (!model) return;
 
-        // 1. MODEL SIZE FIX (Sir frame ke andar rahega)
-        model.scale.set(0.6, 0.6, 0.6); 
-
-        // 2. SHADOWS & MATERIALS
-        model.traverse(o => {
-            if (o.isMesh) {
-                o.castShadow = true;
-                o.receiveShadow = true;
-                if (o.material) {
-                    const materials = Array.isArray(o.material) ? o.material : [o.material];
-                    materials.forEach(m => {
-                        m.side = THREE.DoubleSide;
-                        m.transparent = false;
-                        m.depthWrite = true;
-                        m.needsUpdate = true;
-                    });
-                }
-            }
-        });
-
-        // 3. POSITION FIX (Paon stage ke upar rahenge)
-        const newBox = new THREE.Box3().setFromObject(model);
-        const center = newBox.getCenter(new THREE.Vector3());
-        model.position.set(-center.x, -newBox.min.y + 0.01, -center.z);
-
-        avatarGroup.clear();
-        avatarGroup.add(model);
-        
-        if (gltf.animations && gltf.animations.length > 0) {
-            mixer = new THREE.AnimationMixer(model);
-            mixer.clipAction(gltf.animations[0]).play();
-        }
-        
-        clearStatus();
-    }, null, (err) => {
-        currentSourceIndex++;
-        if (currentSourceIndex < modelSources.length) {
-            loadAvatar();
-        } else {
-            showStatus("STAGE READY");
-            setTimeout(clearStatus, 3000);
-        }
-    });
-}
     gltfLoader.load(path, (gltf) => {
         const model = gltf.scene || gltf.scenes[0];
         if (!model) return;
