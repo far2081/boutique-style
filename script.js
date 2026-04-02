@@ -593,6 +593,11 @@ document.addEventListener('click', (e) => {
                     .then(stream => {
                         window.liveStream = stream;
                         webcamVideo.srcObject = stream;
+                        // Show capture controls
+                        const capBtn = document.getElementById('capture-group');
+                        const faceGuide = document.getElementById('face-guide');
+                        if (capBtn) capBtn.style.display = 'flex';
+                        if (faceGuide) faceGuide.style.display = 'block';
                     })
                     .catch(err => {
                         console.error('Camera error:', err);
@@ -601,6 +606,12 @@ document.addEventListener('click', (e) => {
                     });
             }
         } else {
+            // Hide capture controls
+            const capBtn = document.getElementById('capture-group');
+            const faceGuide = document.getElementById('face-guide');
+            if (capBtn) capBtn.style.display = 'none';
+            if (faceGuide) faceGuide.style.display = 'none';
+
             // Standard Avatar Forceful 3D Activation
             if (canvasContainer) {
                 canvasContainer.style.opacity = '1';
@@ -706,6 +717,40 @@ document.addEventListener('click', (e) => {
             panel.style.display = 'none';
             document.body.style.overflow = 'auto';
         }
+    }
+
+    // Capture & Apply Face Logic
+    if (e.target.closest('#capture-face-btn')) {
+        const video = document.getElementById('webcam-video');
+        if (!video || video.style.display === 'none') return;
+
+        // 1. Capture to Canvas
+        const captureCanvas = document.createElement('canvas');
+        captureCanvas.width = video.videoWidth;
+        captureCanvas.height = video.videoHeight;
+        const ctx = captureCanvas.getContext('2d');
+        
+        // Match the mirror effect
+        ctx.translate(captureCanvas.width, 0);
+        ctx.scale(-1, 1);
+        ctx.drawImage(video, 0, 0, captureCanvas.width, captureCanvas.height);
+        
+        // 2. Apply to 3D Model
+        if (window.applyFaceTexture) {
+            window.applyFaceTexture(captureCanvas);
+            
+            // Visual feedback
+            const btn = e.target.closest('#capture-face-btn');
+            const originalColor = btn.style.color;
+            btn.style.color = '#4cd964'; // Success green
+            setTimeout(() => btn.style.color = originalColor, 1000);
+        }
+
+        // 3. Save to User Device (Request: "jo pic le jaey wo save ho")
+        const link = document.createElement('a');
+        link.download = `noorstyle_ai_trial_${new Date().getTime()}.png`;
+        link.href = captureCanvas.toDataURL('image/png');
+        link.click();
     }
 });
 
