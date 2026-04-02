@@ -116,13 +116,8 @@ function init() {
 }
 
 function loadAvatar() {
-    createMannequin(); // Instance placeholder while loading
+    createMannequin(); 
     const path = "https://models.readyplayer.me/64f06834005c2104928e4e94.glb";
-    showStatus(`BOUTIQUE ARRIVING... ${currentSourceIndex + 1}/${modelSources.length}`);
-
-    gltfLoader.load(path, (gltf) => {
-        const model = gltf.scene || gltf.scenes[0];
-       const path = "https://models.readyplayer.me/64f06834005c2104928e4e94.glb";
     showStatus("BOUTIQUE ARRIVING...");
 
     gltfLoader.load(path, (gltf) => {
@@ -159,31 +154,22 @@ function loadAvatar() {
         
         clearStatus();
     }, null, (err) => {
-        currentSourceIndex++;
-        if (currentSourceIndex < modelSources.length) loadAvatar();
-        else {
-            showStatus("STAGE READY");
-            setTimeout(clearStatus, 3000);
-        }
+        showStatus("STAGE READY");
     });
 }
 
 function createMannequin() {
     const group = new THREE.Group();
     const mat = new THREE.MeshStandardMaterial({ color: 0x111111, roughness: 0.1, metalness: 0.9 });
-    
     const head = new THREE.Mesh(new THREE.SphereGeometry(0.12, 32, 32), mat);
     head.position.y = 1.6;
     group.add(head);
-    
     const torso = new THREE.Mesh(new THREE.CylinderGeometry(0.18, 0.12, 0.6, 32), mat);
     torso.position.y = 1.25;
     group.add(torso);
-    
     const legs = new THREE.Mesh(new THREE.CylinderGeometry(0.12, 0.08, 0.8, 32), mat);
     legs.position.y = 0.55;
     group.add(legs);
-    
     group.position.y = 0.02;
     avatarGroup.clear();
     avatarGroup.add(group);
