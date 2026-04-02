@@ -127,10 +127,10 @@ function init() {
 
 function loadAvatar() {
     createMannequin(); 
- // Ye code website ke URL se khud hi sahi rasta (Path) bana lega
-const currentDir = window.location.pathname.substring(0, window.location.pathname.lastIndexOf('/') + 1);
-const path = window.location.origin + currentDir + "fashion_girl.glb";
-console.log("Loading
+    
+    // Sahi rasta (Path) set karein
+    const path = "fashion_girl.glb"; 
+    
     showStatus("BOUTIQUE ARRIVING...");
 
     gltfLoader.load(path, (gltf) => {
