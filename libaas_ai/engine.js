@@ -138,7 +138,7 @@ function loadAvatar() {
             }
         });
 
-        // Scale & Position Fix (Model ko stage ke center mein laane ke liye)
+       // Scale & Position Fix (Model ko stage ke center aur upar laane ke liye)
         const box = new THREE.Box3().setFromObject(model);
         const size = box.getSize(new THREE.Vector3());
         const scale = 1.7 / size.y;
@@ -146,7 +146,9 @@ function loadAvatar() {
         
         const newBox = new THREE.Box3().setFromObject(model);
         const center = newBox.getCenter(new THREE.Vector3());
-        model.position.set(-center.x, -newBox.min.y + 0.02, -center.z);
+        
+        // Yahan + 0.02 ko badal kar + 0.5 kar diya hai
+        model.position.set(-center.x, -newBox.min.y + 0.5, -center.z);
 
         avatarGroup.clear();
         avatarGroup.add(model);
