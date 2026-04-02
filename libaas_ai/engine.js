@@ -8,9 +8,11 @@ let mixer = null;
 let isInitialized = false;
 
 const modelSources = [
+    "assets/models/fashion_girl.glb",
     "assets/models/scene.gltf",
     "assets/models/avatar.glb",
-    "avatar.glb"
+    "avatar.glb",
+    "fashion_girl.glb"
 ];
 let currentSourceIndex = 0;
 
@@ -106,6 +108,11 @@ function init() {
         controls.enableDamping = true;
         controls.autoRotate = true;
         controls.autoRotateSpeed = 0.4;
+        
+        // Prevent mouse from freely moving the stage
+        controls.enablePan = false;
+        controls.enableRotate = false; // Stops mouse rotation (autoRotate will still work)
+        controls.enableZoom = false; // Mouse wheel zooming locked
     }
 
     window.addEventListener('resize', onResize);
