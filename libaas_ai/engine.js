@@ -6,14 +6,9 @@ let avatarGroup = new THREE.Group();
 let gltfLoader = null;
 let mixer = null;
 let isInitialized = false;
-
-const modelSources = [
-    "assets/models/avatar.glb",
-    "assets/models/scene.gltf",
-    "avatar.glb"
+   const modelSources = [
+    "https://models.readyplayer.me/64f06834005c2104928e4e94.glb"
 ];
-let currentSourceIndex = 0;
-
 function init() {
     if (isInitialized) return;
     const container = document.getElementById('canvas-container');
@@ -122,12 +117,12 @@ function init() {
 
 function loadAvatar() {
     createMannequin(); // Instance placeholder while loading
-    const path = modelSources[currentSourceIndex];
+    const path = "https://models.readyplayer.me/64f06834005c2104928e4e94.glb";
     showStatus(`BOUTIQUE ARRIVING... ${currentSourceIndex + 1}/${modelSources.length}`);
 
     gltfLoader.load(path, (gltf) => {
         const model = gltf.scene || gltf.scenes[0];
-        if (!model) return;
+        if (!model) return;const path = "https://models.readyplayer.me/64f06834005c2104928e4e94.glb";
 
         model.traverse(o => {
             if (o.isMesh) {
