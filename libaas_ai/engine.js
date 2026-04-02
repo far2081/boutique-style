@@ -8,14 +8,10 @@ let mixer = null;
 let isInitialized = false;
 
 const modelSources = [
-    "assets/models/fashion_girl.glb",
-    "assets/models/scene.gltf",
-    "assets/models/avatar.glb",
-    "avatar.glb",
-    "fashion_girl.glb"
+    "assets/models/fashion_girl.glb", 
+    "./assets/models/fashion_girl.glb"
 ];
 let currentSourceIndex = 0;
-
 function init() {
     if (isInitialized) return;
     const container = document.getElementById('canvas-container');
