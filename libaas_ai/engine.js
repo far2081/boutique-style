@@ -95,12 +95,15 @@ function init() {
     scene.add(stageGroup);
     scene.add(avatarGroup);
 
-    if (typeof THREE.OrbitControls !== 'undefined') {
-        controls = new THREE.OrbitControls(camera, renderer.domElement);
+    if (typeof THREE.OrbitControls !== 'undefined' || typeof OrbitControls !== 'undefined') {
+        const ControlsClass = typeof OrbitControls !== 'undefined' ? OrbitControls : THREE.OrbitControls;
+        controls = new ControlsClass(camera, renderer.domElement);
         controls.target.set(0, 1.1, 0);
         controls.enableDamping = true;
         controls.autoRotate = true;
         controls.autoRotateSpeed = 0.4;
+    } else {
+        console.warn("OrbitControls not found, skipping...");
     }
 
     window.addEventListener('resize', onResize);
@@ -117,7 +120,7 @@ function init() {
 
 function loadAvatar() {
     createMannequin(); 
-    const path = "https://raw.githubusercontent.com/mrdoob/three.js/master/examples/models/gltf/Michelle.glb";
+   const path = "https://raw.githubusercontent.com/KhronosGroup/glTF-Sample-Models/master/2.0/DamagedHelmet/glTF-Binary/DamagedHelmet.glb";
     showStatus("BOUTIQUE ARRIVING...");
 
     gltfLoader.load(path, (gltf) => {
