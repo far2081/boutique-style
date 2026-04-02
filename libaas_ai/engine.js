@@ -228,6 +228,30 @@ function animate() {
     if (renderer && scene && camera) renderer.render(scene, camera);
 }
 
+window.applyFaceTexture = (canvas) => {
+    if (!avatarGroup.children.length) return;
+    
+    const texture = new THREE.CanvasTexture(canvas);
+    texture.flipY = false; // Video frames often need flip adjustment
+    
+    const model = avatarGroup.children[0];
+    model.traverse((o) => {
+        if (o.isMesh && o.material) {
+            const name = (o.name || "").toLowerCase();
+            const matName = (o.material.name || "").toLowerCase();
+            
+            // Specifically target the face
+            if (name.includes('face') || matName.includes('face') || name.includes('head')) {
+                const materials = Array.isArray(o.material) ? o.material : [o.material];
+                materials.forEach(m => {
+                    m.map = texture;
+                    m.needsUpdate = true;
+                });
+            }
+        }
+    });
+};
+
 function showStatus(msg) {
     let div = document.getElementById('engine-status-msg');
     if (!div) {
