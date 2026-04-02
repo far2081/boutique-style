@@ -135,6 +135,7 @@ function loadAvatar() {
             }
         });
 
+        // Scale & Position Fix (Model ko stage ke center mein laane ke liye)
         const box = new THREE.Box3().setFromObject(model);
         const size = box.getSize(new THREE.Vector3());
         const scale = 1.7 / size.y;
@@ -154,6 +155,7 @@ function loadAvatar() {
         
         clearStatus();
     }, null, (err) => {
+        console.error("Load error:", err);
         showStatus("STAGE READY");
     });
 }
