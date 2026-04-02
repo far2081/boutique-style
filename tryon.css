@@ -375,3 +375,18 @@
     background: rgba(212, 175, 55, 0.15);
     border-color: var(--gold);
 }
+
+/* Face Swap Guide */
+.face-guide-overlay {
+    pointer-events: none;
+    transition: var(--transition);
+}
+
+#capture-face-btn {
+    transition: var(--transition);
+}
+
+#capture-face-btn:hover {
+    transform: scale(1.2) rotate(-10deg);
+    filter: drop-shadow(0 0 8px var(--gold));
+}
