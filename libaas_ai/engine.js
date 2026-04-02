@@ -120,7 +120,7 @@ function init() {
 
 function loadAvatar() {
     createMannequin(); 
-   const path = "https://raw.githubusercontent.com/KhronosGroup/glTF-Sample-Models/master/2.0/DamagedHelmet/glTF-Binary/DamagedHelmet.glb";
+   const path = "https://raw.githubusercontent.com/KhronosGroup/glTF-Sample-Models/master/2.0/CesiumMan/glTF-Binary/CesiumMan.glb";
     showStatus("BOUTIQUE ARRIVING...");
 
     gltfLoader.load(path, (gltf) => {
