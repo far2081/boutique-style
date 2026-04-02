@@ -157,9 +157,8 @@ function loadAvatar() {
         const newBox = new THREE.Box3().setFromObject(model);
         const center = newBox.getCenter(new THREE.Vector3());
         
-      // Model ka size mazeed kam karein (0.6 is perfect for the frame)
-        model.scale.set(0.6, 0.6, 0.6); 
-        // Position ko stage ke bilkul upar (+0.01) rakhein
+     // Model ko mazeed chota aur frame ke andar fit karein (0.4 is very safe)
+        model.scale.set(0.7, 0.7, 0.7); 
         model.position.set(-center.x, -newBox.min.y + 0.01, -center.z);
         avatarGroup.clear();
         avatarGroup.add(model);
