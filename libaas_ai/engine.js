@@ -129,7 +129,7 @@ function loadAvatar() {
     createMannequin(); 
     
     // Sahi rasta (Path) set karein
-    const path = "fashion_girl.glb"; 
+    const path = "./fashion_girl.glb";
     
     showStatus("BOUTIQUE ARRIVING...");
 
