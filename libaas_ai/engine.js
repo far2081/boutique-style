@@ -155,30 +155,29 @@ function loadAvatar() {
             }
         });
 
-        const size = box.getSize(new THREE.Vector3());
-        if (size.y > 0 && size.y !== Infinity) {
-            const scale = 1.7 / size.y;
-            model.scale.set(scale, scale, scale);
-        }
-        
-        const newBox = new THREE.Box3();
-        model.traverse(o => { if (o.isMesh) newBox.expandByObject(o); });
-        const center = newBox.getCenter(new THREE.Vector3());
-        model.position.set(-center.x, -newBox.min.y + 0.02, -center.z);
+       // 1. FIXED SIZE (Is se sir frame ke andar rahega)
+        model.scale.set(0.7, 0.7, 0.7); 
+
+        // 2. POSITION FIX (Is se paon stage par tik jayenge)
+        const finalBox = new THREE.Box3().setFromObject(model);
+        const finalCenter = finalBox.getCenter(new THREE.Vector3());
+        model.position.set(-finalCenter.x, -finalBox.min.y + 0.01, -finalCenter.z);
 
         avatarGroup.clear();
         avatarGroup.add(model);
         
-        if (gltf.animations && gltf.animations.length > 0) {
+       if (gltf.animations && gltf.animations.length > 0) {
             mixer = new THREE.AnimationMixer(model);
             mixer.clipAction(gltf.animations[0]).play();
         }
         
         clearStatus();
-    }, null, (err) => {
+    }, undefined, (err) => {
+        console.error("Error loading model:", err);
         currentSourceIndex++;
-        if (currentSourceIndex < modelSources.length) loadAvatar();
-        else {
+        if (currentSourceIndex < modelSources.length) {
+            loadAvatar();
+        } else {
             showStatus("STAGE READY");
             setTimeout(clearStatus, 3000);
         }
