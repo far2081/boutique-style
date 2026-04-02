@@ -158,7 +158,8 @@ function loadAvatar() {
         const center = newBox.getCenter(new THREE.Vector3());
         
         // Yahan + 0.02 ko badal kar + 0.5 kar diya hai
-      model.position.set(-center.x, -newBox.min.y - 0.02, -center.z);
+    model.position.set(-center.x, -newBox.min.y - 0.75, -center.z);
+        model.scale.set(2.2, 2.2, 2.2);
         avatarGroup.clear();
         avatarGroup.add(model);
         
