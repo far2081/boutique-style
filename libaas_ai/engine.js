@@ -127,7 +127,7 @@ function init() {
 
 function loadAvatar() {
     createMannequin(); 
-  const path = "https://raw.githubusercontent.com/far2081/boutique-style/main/libaas_ai/fashion_girl.glb";
+  const path = "fashion_girl.glb";
     showStatus("BOUTIQUE ARRIVING...");
 
     gltfLoader.load(path, (gltf) => {
