@@ -747,30 +747,14 @@ document.addEventListener('click', (e) => {
         }
 
         // 3. Save to User Device (Request: "jo pic le jaey wo save ho")
-      if (e.target.closest('#capture-face-btn')) {
-        const video = document.getElementById('webcam-video');
-        if (!video || video.style.display === 'none') return;
+        const link = document.createElement('a');
+        link.download = `noorstyle_ai_trial_${new Date().getTime()}.png`;
+        link.href = captureCanvas.toDataURL('image/png');
+        link.click();
+    }
+});
 
-        const captureCanvas = document.createElement('canvas');
-        captureCanvas.width = video.videoWidth;
-        captureCanvas.height = video.videoHeight;
-        const ctx = captureCanvas.getContext('2d');
-        
-        ctx.translate(captureCanvas.width, 0);
-        ctx.scale(-1, 1);
-        ctx.drawImage(video, 0, 0, captureCanvas.width, captureCanvas.height);
-        
-        if (window.applyFaceTexture) {
-            window.applyFaceTexture(captureCanvas);
-            
-            const btn = e.target.closest('#capture-face-btn');
-            const originalColor = btn.style.color;
-            btn.style.color = '#4cd964'; 
-            setTimeout(() => btn.style.color = originalColor, 1000);
-            console.log("🛡️ Privacy Active: Face applied to model, download blocked.");
-        } // 1. window.applyFaceTexture ki bracket
-    } // 2. capture-face-btn ki bracket
-}); // 3. Global Click Listener ki closing bracket (YE SABSE ZAROORI HAI)
+
 
 
 // ── INITIALIZATION ────────────────────────────────────────────────────────
