@@ -187,7 +187,49 @@ function animate() {
     renderer.render(scene, camera);
 }
 animate();
+// ==========================================
+// 🛡️ NOORSTYLE AI: FINAL FORCE-FIX (APP.JS)
+// ==========================================
 
+// 1. DRESS CHANGE LOGIC (Arrows Connection)
+const myColors = [0x9B111E, 0x006D5B, 0xD4AF37, 0x000080, 0x007FFF];
+let myIdx = 0;
+
+window.nextDress = function() { 
+    myIdx = (myIdx + 1) % myColors.length; 
+    if(typeof dressMat !== 'undefined') { 
+        dressMat.color.setHex(myColors[myIdx]); 
+        dressMat.opacity = 1; 
+    }
+};
+
+window.prevDress = function() { 
+    myIdx = (myIdx - 1 + myColors.length) % myColors.length; 
+    if(typeof dressMat !== 'undefined') { 
+        dressMat.color.setHex(myColors[myIdx]); 
+        dressMat.opacity = 1; 
+    }
+};
+
+// 2. COMPLEXION LOGIC (Skin Tone Connection)
+window.onComplexionChange = (tone) => {
+    const tones = { 'fair': 0xFAD4B2, 'medium': 0xE6B98D, 'tan': 0xC68E5A, 'deep': 0x8D5524 };
+    if(typeof skinMat !== 'undefined') {
+        skinMat.color.setHex(tones[tone] || 0xE6B98D);
+    }
+};
+
+// 3. 🛡️ STRICT PRIVACY: BLOCK DOWNLOADS
+$(document).off('click', '#capture-face-btn').on('click', '#capture-face-btn', function(e) {
+    e.preventDefault();
+    e.stopImmediatePropagation();
+    if($('#btn-live').length) {
+        $('#btn-live').click(); 
+    }
+    return false;
+});
+
+// --- AB NICHE AAPKA PURANA SECTION 8 SHURU HOGA ---
 // 8. Backend Syncing Bridge Mock
 $('#order-look, #ai-choose').click(function() {
     const btn = $(this);
