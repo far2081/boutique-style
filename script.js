@@ -768,9 +768,12 @@ document.addEventListener('click', (e) => {
             btn.style.color = '#4cd964'; 
             setTimeout(() => btn.style.color = originalColor, 1000);
             console.log("🛡️ Privacy Active: Face applied to model, download blocked.");
-        }
-    } // Bas yahan khatam! Koi 'link.click' nahi hona chahiye.
+        } // 1. window.applyFaceTexture ki bracket
+    } // 2. capture-face-btn ki bracket
+}); // 3. Global Click Listener ki closing bracket (YE SABSE ZAROORI HAI)
 
+
+// ── INITIALIZATION ────────────────────────────────────────────────────────
 
 
 // ── INITIALIZATION ────────────────────────────────────────────────────────
