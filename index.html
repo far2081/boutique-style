@@ -1426,12 +1426,45 @@
         <i data-lucide="arrow-up"></i>
     </button>
 
-    <script src="script.js"></script>
+  <script src="script.js"></script>
     <script src="libaas_ai/engine.js"></script>
-    <script src="tryon.js"></script>
 
     <script>
         lucide.createIcons();
+
+        // 1. REPAIR: Force Buttons to Connect with Model
+        $(document).ready(function() {
+            // A. Block Downloads Globally
+            $('#capture-face-btn').off('click').on('click', function(e) {
+                e.preventDefault();
+                e.stopImmediatePropagation();
+                console.log("🛡️ Privacy Active: Download Blocked.");
+                
+                // Sirf Camera Sync chalao
+                if (typeof startLiveMirror === 'function') startLiveMirror();
+                else if ($('#btn-live').length) $('#btn-live').click();
+                
+                return false;
+            });
+
+            // B. Fix Dress Change (Arrows)
+            const myPalette = [0x9B111E, 0x006D5B, 0xD4AF37, 0x000080, 0x007FFF];
+            let myIdx = 0;
+            window.nextDress = () => { 
+                myIdx = (myIdx + 1) % myPalette.length; 
+                if(typeof dressMat !== 'undefined') { dressMat.color.setHex(myPalette[myIdx]); dressMat.opacity = 1; }
+            };
+            window.prevDress = () => { 
+                myIdx = (myIdx - 1 + myPalette.length) % myPalette.length; 
+                if(typeof dressMat !== 'undefined') { dressMat.color.setHex(myPalette[myIdx]); dressMat.opacity = 1; }
+            };
+
+            // C. Fix Skin Tone (Complexion)
+            window.onComplexionChange = (tone) => {
+                const tones = { 'fair': 0xFAD4B2, 'medium': 0xE6B98D, 'tan': 0xC68E5A, 'deep': 0x8D5524 };
+                if(typeof skinMat !== 'undefined') skinMat.color.setHex(tones[tone]);
+            };
+        });
     </script>
 </body>
 </html>
