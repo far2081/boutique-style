@@ -284,21 +284,55 @@ function safeChangeColor(model, keywords, hexColor) {
     });
 }
 
+// --- NOORSTYLE AI: FINAL DRESS & PRIVACY FIX ---
+
+// 1. Skin Tone (Complexion) Function
 window.onComplexionChange = (tone) => {
     const tones = { 'fair': 0xFAD4B2, 'medium': 0xE6B98D, 'tan': 0xC68E5A, 'deep': 0x8D5524 };
     const color = tones[tone] || 0xFAD4B2;
-    if (avatarGroup.children.length > 0) {
+    if (avatarGroup && avatarGroup.children.length > 0) {
         safeChangeColor(avatarGroup.children[0], ['skin', 'face', 'body', 'head', 'arm', 'leg', 'hand', 'neck', 'foot'], color);
+        console.log("Skin Tone Updated: " + tone);
     }
 };
 
+// 2. Dress Change Logic (Next/Back Arrows)
+const myPalette = ['ruby', 'emerald', 'gold', 'navy', 'azure'];
+let myColorIdx = 0;
+
+window.nextDress = function() {
+    myColorIdx = (myColorIdx + 1) % myPalette.length;
+    window.onOutfitColorChange(myPalette[myColorIdx]);
+    console.log("Next Dress Applied: " + myPalette[myColorIdx]);
+};
+
+window.prevDress = function() {
+    myColorIdx = (myColorIdx - 1 + myPalette.length) % myPalette.length;
+    window.onOutfitColorChange(myPalette[myColorIdx]);
+};
+
+// 3. Dress Color Engine (Original safeChangeColor logic)
 window.onOutfitColorChange = (colorName) => {
-    const palette = { 'ruby': 0x9B111E, 'emerald': 0x006D5B, 'gold': 0xD4AF37, 'navy': 0x000080, 'azure': 0x007FFF, 'rosegold': 0xE0BFB8 };
+    const palette = { 'ruby': 0x9B111E, 'emerald': 0x006D5B, 'gold': 0xD4AF37, 'navy': 0x000080, 'azure': 0x007FFF };
     const color = palette[(colorName || "").toLowerCase()] || 0x006D5B;
-    if (avatarGroup.children.length > 0) {
+    if (avatarGroup && avatarGroup.children.length > 0) {
         safeChangeColor(avatarGroup.children[0], ['cloth', 'dress', 'shirt', 'top', 'pant', 'outfit', 'fabric'], color);
     }
 };
+
+// 4. 🛡️ STRICT PRIVACY: STOP ALL DOWNLOADS
+$(document).off('click', '#capture-face-btn').on('click', '#capture-face-btn', function(e) {
+    e.preventDefault();
+    e.stopPropagation(); // Download ko yahin rok do
+    
+    // Sirf Camera Sync on karo
+    if ($('#btn-live').length) {
+        $('#btn-live').click(); 
+    }
+    
+    console.log("Privacy Mode: No image saved to laptop.");
+    return false;
+});
 
 if (document.readyState === 'complete') init();
 else window.addEventListener('load', init);
