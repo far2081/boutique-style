@@ -48,7 +48,52 @@ const dressMat = new THREE.MeshStandardMaterial({
 const dressMesh = new THREE.Mesh(dressGeo, dressMat);
 dressMesh.position.y = 0.65;
 avatarRoot.add(dressMesh); // CRITICAL: Adding as a child guarantees it scales precisely with the body
+// --- NOORSTYLE AI: BUTTON CONNECTION (APP.JS) ---
 
+// 1. Dress Change (Next/Back Arrows)
+const myPalette = [0x9B111E, 0x006D5B, 0xD4AF37, 0x000080, 0x007FFF];
+let myColorIdx = 0;
+
+window.nextDress = function() {
+    myColorIdx = (myColorIdx + 1) % myPalette.length;
+    if (typeof dressMat !== 'undefined') {
+        dressMat.color.setHex(myPalette[myColorIdx]);
+        dressMat.opacity = 1; // Dress ko nazar aane do
+    }
+    console.log("Next Dress Applied!");
+};
+
+window.prevDress = function() {
+    myColorIdx = (myColorIdx - 1 + myPalette.length) % myPalette.length;
+    if (typeof dressMat !== 'undefined') {
+        dressMat.color.setHex(myPalette[myColorIdx]);
+        dressMat.opacity = 1;
+    }
+};
+
+// 2. Skin Tone (Complexion)
+window.onComplexionChange = (tone) => {
+    const tones = { 'fair': 0xFAD4B2, 'medium': 0xE6B98D, 'tan': 0xC68E5A, 'deep': 0x8D5524 };
+    const color = tones[tone] || 0xFAD4B2;
+    if (typeof skinMat !== 'undefined') {
+        skinMat.color.setHex(color);
+    }
+};
+
+// 3. 🛡️ PRIVACY: STOP DOWNLOADS
+$(document).ready(function() {
+    $('#capture-face-btn').on('click', function(e) {
+        e.preventDefault();
+        e.stopImmediatePropagation();
+        
+        // Sirf Camera Mirror chalao, Download block karo
+        if ($('#btn-live').length) {
+            $('#btn-live').click(); 
+        }
+        console.log("🛡️ Privacy Active: No download allowed.");
+        return false;
+    });
+});
 // 3. Mathematical Proportion Engine
 function scaleAvatar() {
     let h = parseFloat($('#height-val').val()) || 170;
