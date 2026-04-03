@@ -284,26 +284,18 @@ function safeChangeColor(model, keywords, hexColor) {
     });
 }
 
-// --- NOORSTYLE AI: FINAL DRESS & PRIVACY FIX ---
+// ==========================================
+// 🛡️ NOORSTYLE AI: FINAL PRIVACY & LOGIC FIX
+// ==========================================
 
-// 1. Skin Tone (Complexion) Function
-window.onComplexionChange = (tone) => {
-    const tones = { 'fair': 0xFAD4B2, 'medium': 0xE6B98D, 'tan': 0xC68E5A, 'deep': 0x8D5524 };
-    const color = tones[tone] || 0xFAD4B2;
-    if (avatarGroup && avatarGroup.children.length > 0) {
-        safeChangeColor(avatarGroup.children[0], ['skin', 'face', 'body', 'head', 'arm', 'leg', 'hand', 'neck', 'foot'], color);
-        console.log("Skin Tone Updated: " + tone);
-    }
-};
-
-// 2. Dress Change Logic (Next/Back Arrows)
+// 1. DRESS CHANGE (Next/Back Arrows Connection)
 const myPalette = ['ruby', 'emerald', 'gold', 'navy', 'azure'];
 let myColorIdx = 0;
 
 window.nextDress = function() {
     myColorIdx = (myColorIdx + 1) % myPalette.length;
     window.onOutfitColorChange(myPalette[myColorIdx]);
-    console.log("Next Dress Applied: " + myPalette[myColorIdx]);
+    console.log("Next Style: " + myPalette[myColorIdx]);
 };
 
 window.prevDress = function() {
@@ -311,28 +303,61 @@ window.prevDress = function() {
     window.onOutfitColorChange(myPalette[myColorIdx]);
 };
 
-// 3. Dress Color Engine (Original safeChangeColor logic)
+// 2. DRESS COLOR ENGINE (Direct Model Update)
 window.onOutfitColorChange = (colorName) => {
     const palette = { 'ruby': 0x9B111E, 'emerald': 0x006D5B, 'gold': 0xD4AF37, 'navy': 0x000080, 'azure': 0x007FFF };
     const color = palette[(colorName || "").toLowerCase()] || 0x006D5B;
-    if (avatarGroup && avatarGroup.children.length > 0) {
-        safeChangeColor(avatarGroup.children[0], ['cloth', 'dress', 'shirt', 'top', 'pant', 'outfit', 'fabric'], color);
+    
+    // Engine variables (dressMat aur avatarGroup) ko target karna
+    if (typeof dressMat !== 'undefined') {
+        dressMat.color.setHex(color);
+        dressMat.opacity = 1;
+    }
+    if (typeof avatarGroup !== 'undefined' && avatarGroup.children.length > 0) {
+        if (typeof safeChangeColor === 'function') {
+            safeChangeColor(avatarGroup.children[0], ['cloth', 'dress', 'shirt', 'outfit', 'fabric'], color);
+        }
     }
 };
 
-// 4. 🛡️ STRICT PRIVACY: STOP ALL DOWNLOADS
-$(document).off('click', '#capture-face-btn').on('click', '#capture-face-btn', function(e) {
-    e.preventDefault();
-    e.stopPropagation(); // Download ko yahin rok do
+// 3. SKIN TONE (Complexion Update)
+window.onComplexionChange = (tone) => {
+    const tones = { 'fair': 0xFAD4B2, 'medium': 0xE6B98D, 'tan': 0xC68E5A, 'deep': 0x8D5524 };
+    const color = tones[tone] || 0xFAD4B2;
     
-    // Sirf Camera Sync on karo
+    if (typeof skinMat !== 'undefined') {
+        skinMat.color.setHex(color);
+    }
+    if (typeof avatarGroup !== 'undefined' && avatarGroup.children.length > 0) {
+        if (typeof safeChangeColor === 'function') {
+            safeChangeColor(avatarGroup.children[0], ['skin', 'face', 'body', 'head'], color);
+        }
+    }
+};
+
+// 4. 🛡️ STRICT PRIVACY: BLOCK ALL DOWNLOADS
+$(document).off('click', '#capture-face-btn').on('click', '#capture-face-btn', function(e) {
+    e.preventDefault(); // Browser ko download karne se roko
+    e.stopPropagation();
+    
+    // Sirf Camera Live Mirror on karo
     if ($('#btn-live').length) {
         $('#btn-live').click(); 
+    } else {
+        alert("Live Mirror is starting... Privacy Protected.");
     }
     
-    console.log("Privacy Mode: No image saved to laptop.");
+    console.log("🛡️ Privacy Shield: Download blocked successfully.");
     return false;
 });
 
+// 5. ENGINE INITIALIZATION
+if (document.readyState === 'complete') {
+    if (typeof init === 'function') init();
+} else {
+    window.addEventListener('load', () => {
+        if (typeof init === 'function') init();
+    });
+}
 if (document.readyState === 'complete') init();
 else window.addEventListener('load', init);
