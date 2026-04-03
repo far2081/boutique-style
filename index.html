@@ -1162,13 +1162,16 @@
                 </div>
                 
                 <div class="viewport-controls" style="margin-top: 20px;">
-                    <div style="display: flex; gap: 15px; background: white; padding: 10px 20px; border-radius: 30px; box-shadow: var(--shadow-sm); align-items: center;">
-                        <i data-lucide="rotate-ccw" id="rotate-overlay" title="Rotate View"></i>
-                        <i data-lucide="zoom-in" id="zoom-in-overlay" title="Zoom In"></i>
-                        <i data-lucide="zoom-out" id="zoom-out-overlay" title="Zoom Out"></i>
-                        <i data-lucide="palette" id="color-swap-overlay" title="Swap Color"></i>
-                        <div id="capture-group" style="display:none; border-left: 1px solid #ddd; padding-left: 15px; margin-left: 5px; gap: 15px; align-items: center;">
-                            <i data-lucide="camera" id="capture-face-btn" title="Capture & Apply Face" style="color: var(--gold); cursor: pointer;"></i>
+                    <div style="display: flex; gap: 15px; background: white; padding: 10px 20px; border-radius: 30px; box-shadow: var(--shadow-sm); align-items: center; justify-content: center; width: fit-content; margin: 0 auto;">
+                        <i data-lucide="rotate-ccw" id="rotate-overlay" title="Rotate View" style="cursor:pointer;"></i>
+                        <i data-lucide="zoom-in" id="zoom-in-overlay" title="Zoom In" style="cursor:pointer;"></i>
+                        <i data-lucide="zoom-out" id="zoom-out-overlay" title="Zoom Out" style="cursor:pointer;"></i>
+                        <i data-lucide="palette" id="color-swap-overlay" title="Swap Color" style="cursor:pointer;"></i>
+                        
+                        <div id="capture-group" style="display:flex; border-left: 1px solid #ddd; padding-left: 15px; margin-left: 5px; gap: 15px; align-items: center;">
+                            <i data-lucide="chevron-left" onclick="window.prevDress()" style="cursor:pointer; color: #D4AF37;"></i>
+                            <i data-lucide="chevron-right" onclick="window.nextDress()" style="cursor:pointer; color: #D4AF37;"></i>
+                            <i data-lucide="camera" id="capture-face-btn" title="Capture Face" style="color: #D4AF37; cursor: pointer;"></i>
                         </div>
                     </div>
                 </div>
