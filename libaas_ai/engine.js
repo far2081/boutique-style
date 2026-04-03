@@ -8,9 +8,9 @@ let mixer = null;
 let isInitialized = false;
 
 const modelSources = [
-    "../assets/fashion_girl.glb", 
-    "assets/fashion_girl.glb",
-    "./assets/fashion_girl.glb"
+    "fashion_girl.glb",
+    "./fashion_girl.glb",
+    "libaas_ai/fashion_girl.glb"
 ];
 let currentSourceIndex = 0;
 function init() {
