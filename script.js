@@ -775,9 +775,6 @@ document.addEventListener('click', (e) => {
 
 // ── INITIALIZATION ────────────────────────────────────────────────────────
 
-
-// ── INITIALIZATION ────────────────────────────────────────────────────────
-
 document.addEventListener('DOMContentLoaded', () => {
     initCartElements();
     initReveals();
