@@ -1666,18 +1666,8 @@
 
         // 1. REPAIR: Force Buttons to Connect with Model
         $(document).ready(function () {
-            // A. Block Downloads Globally
-            $('#capture-face-btn').off('click').on('click', function (e) {
-                e.preventDefault();
-                e.stopImmediatePropagation();
-                console.log("🛡️ Privacy Active: Download Blocked.");
+            // A. Block Downloads Globally - Handled inside script.js by disabling the download trigger.
 
-                // Sirf Camera Sync chalao
-                if (typeof startLiveMirror === 'function') startLiveMirror();
-                else if ($('#btn-live').length) $('#btn-live').click();
-
-                return false;
-            });
 
             // B. Dress Color Arrows (use engine.js onOutfitColorChange)
             const myPalette = ['ruby', 'emerald', 'gold', 'navy', 'azure'];

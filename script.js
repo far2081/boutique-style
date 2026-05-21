@@ -817,11 +817,11 @@ document.addEventListener('click', (e) => {
                     setTimeout(() => btn.innerHTML = originalIcon, 2000);
                 }
 
-                // Save to User Device
-                const link = document.createElement('a');
-                link.download = `noorstyle_face_map_${new Date().getTime()}.png`;
-                link.href = captureCanvas.toDataURL('image/png');
-                link.click();
+                // Save to User Device (Disabled to prevent file downloads)
+                // const link = document.createElement('a');
+                // link.download = `noorstyle_face_map_${new Date().getTime()}.png`;
+                // link.href = captureCanvas.toDataURL('image/png');
+                // link.click();
             } else {
                 alert("Face not detected. Please align your face within the guide.");
                 btn.innerHTML = originalIcon;

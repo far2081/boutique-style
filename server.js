@@ -1,4 +1,4 @@
-﻿const http = require('http');
+const http = require('http');
 const fs = require('fs');
 const path = require('path');
 
@@ -18,8 +18,6 @@ const MIME_TYPES = {
 };
 
 const server = http.createServer((req, res) => {
-    console.log(\ \);
-    
     let filePath = '.' + req.url;
     if (filePath === './') filePath = './index.html';
     
@@ -43,5 +41,5 @@ const server = http.createServer((req, res) => {
 });
 
 server.listen(PORT, () => {
-    console.log(Server running at http://localhost:\/);
+    console.log(`Server running at http://localhost:${PORT}/`);
 });

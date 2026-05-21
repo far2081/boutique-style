@@ -46,14 +46,17 @@ function init() {
     container.appendChild(renderer.domElement);
 
     // 2. BOOTIQUE LIGHTING (LUXURY STUDIO)
-    scene.add(new THREE.AmbientLight(0xffffff, 1.8)); // Brighter Overall Visibility
+    scene.add(new THREE.AmbientLight(0xffffff, 0.8));
 
-    const dLight = new THREE.DirectionalLight(0xffffff, 1.5); // Stronger directional light
-    dLight.position.set(2, 5, 5);
+    const dLight = new THREE.DirectionalLight(0xffffff, 2.0);
+    dLight.position.set(3, 6, 5);
     dLight.castShadow = true;
+    dLight.shadow.mapSize.width = 2048;
+    dLight.shadow.mapSize.height = 2048;
+    dLight.shadow.bias = -0.0001;
     scene.add(dLight);
 
-    const rimLight = new THREE.PointLight(0xD4AF37, 1.5, 10);
+    const rimLight = new THREE.PointLight(0xffeedd, 0.6, 10);
     rimLight.position.set(-2, 3, -2);
     scene.add(rimLight);
 
@@ -159,6 +162,26 @@ function loadAvatar() {
                 o.castShadow = true;
                 o.receiveShadow = true;
                 box.expandByObject(o);
+
+                // Initialize hand meshes as matte skin
+                if (o.name.toLowerCase().includes('hand')) {
+                    const mats = Array.isArray(o.material) ? o.material : [o.material];
+                    mats.forEach(m => {
+                        if (m.name === 'fashion_girl_details') {
+                            if (!o.isMaterialCloned) {
+                                o.material = m.clone();
+                                o.isMaterialCloned = true;
+                            }
+                             o.material.map = null;
+                             o.material.roughness = 0.9;
+                             o.material.metalness = 0.0;
+                             o.material.metalnessMap = null;
+                             o.material.roughnessMap = null;
+                             o.material.needsUpdate = true;
+                         }
+                     });
+                 }
+
                 if (o.material) {
                     const materials = Array.isArray(o.material) ? o.material : [o.material];
                     materials.forEach(m => {
@@ -166,6 +189,15 @@ function loadAvatar() {
                         m.transparent = false; // Fix invisible/transparent models
                         m.depthWrite = true;
                         m.opacity = 1;
+                        if (m.name === 'fashion_girl_main') {
+                            m.roughness = 0.9;
+                            m.metalness = 0.0;
+                            m.metalnessMap = null;
+                            m.roughnessMap = null;
+                            if (m.normalScale) {
+                                m.normalScale.set(1.8, 1.8);
+                            }
+                        }
                         m.needsUpdate = true;
                     });
                 }
@@ -257,27 +289,29 @@ function animate() {
 }
 
 window.applyFaceTexture = (canvas) => {
-    if (!avatarGroup.children.length) return;
+    window.capturedFaceCanvas = canvas;
+    if (typeof updateCompositeTexture === 'function') {
+        updateCompositeTexture();
+    } else if (avatarGroup && avatarGroup.children.length > 0) {
+        const texture = new THREE.CanvasTexture(canvas);
+        texture.flipY = false; // Video frames often need flip adjustment
+        const model = avatarGroup.children[0];
+        model.traverse((o) => {
+            if (o.isMesh && o.material) {
+                const name = (o.name || "").toLowerCase();
+                const matName = (o.material.name || "").toLowerCase();
 
-    const texture = new THREE.CanvasTexture(canvas);
-    texture.flipY = false; // Video frames often need flip adjustment
-
-    const model = avatarGroup.children[0];
-    model.traverse((o) => {
-        if (o.isMesh && o.material) {
-            const name = (o.name || "").toLowerCase();
-            const matName = (o.material.name || "").toLowerCase();
-
-            // Specifically target the face
-            if (name.includes('face') || matName.includes('face') || name.includes('head')) {
-                const materials = Array.isArray(o.material) ? o.material : [o.material];
-                materials.forEach(m => {
-                    m.map = texture;
-                    m.needsUpdate = true;
-                });
+                // Specifically target the face
+                if (name.includes('face') || matName.includes('face') || name.includes('head')) {
+                    const materials = Array.isArray(o.material) ? o.material : [o.material];
+                    materials.forEach(m => {
+                        m.map = texture;
+                        m.needsUpdate = true;
+                    });
+                }
             }
-        }
-    });
+        });
+    }
 };
 
 function showStatus(msg) {
@@ -348,23 +382,36 @@ window.onComplexionChange = (tone) => {
     const tones = { 'fair': 0xFAD4B2, 'medium': 0xE6B98D, 'tan': 0xC68E5A, 'deep': 0x8D5524 };
     const color = tones[tone] || 0xFAD4B2;
     if (typeof avatarGroup !== 'undefined' && avatarGroup.children.length > 0) {
+        const model = avatarGroup.children[0];
         if (typeof safeChangeColor === 'function') {
-            safeChangeColor(avatarGroup.children[0], ['skin', 'face', 'body', 'head'], color);
+            safeChangeColor(model, ['skin', 'face', 'body', 'head'], color);
         }
+        // Also update hands specifically
+        model.traverse(o => {
+            if (o.isMesh && o.name.toLowerCase().includes('hand')) {
+                const mats = Array.isArray(o.material) ? o.material : [o.material];
+                mats.forEach(m => {
+                    if (m.name === 'fashion_girl_details') {
+                        if (!o.isMaterialCloned) {
+                            o.material = m.clone();
+                            o.isMaterialCloned = true;
+                        }
+                        o.material.color.setHex(color);
+                        o.material.map = null;
+                        o.material.roughness = 0.9;
+                        o.material.metalness = 0.0;
+                        o.material.metalnessMap = null;
+                        o.material.roughnessMap = null;
+                        o.material.needsUpdate = true;
+                    }
+                });
+            }
+        });
     }
 };
 
-// 2. 🛡️ PRIVACY: STOP ALL DOWNLOADS (Strict Protection)
-$(document).off('click', '#capture-face-btn').on('click', '#capture-face-btn', function (e) {
-    e.preventDefault();
-    e.stopImmediatePropagation(); // Kisi bhi purane download code ko "Khatam" kar do
+// 2. 🛡️ PRIVACY: STOP ALL DOWNLOADS (Strict Protection - Handled in script.js by disabling the download trigger)
 
-    if ($('#btn-live').length) {
-        $('#btn-live').click();
-    }
-    console.log("🛡️ Privacy Active: No download allowed.");
-    return false;
-});
 
 // 3. START ENGINE
 if (document.readyState === 'complete') {

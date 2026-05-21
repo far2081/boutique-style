@@ -57,12 +57,15 @@ function init() {
     container.appendChild(renderer.domElement);
 
     // Lights
-    scene.add(new THREE.AmbientLight(0xffffff, 2.0));
-    const dir = new THREE.DirectionalLight(0xffffff, 1.5);
-    dir.position.set(2, 5, 5);
+    scene.add(new THREE.AmbientLight(0xffffff, 0.8));
+    const dir = new THREE.DirectionalLight(0xffffff, 2.0);
+    dir.position.set(3, 6, 5);
     dir.castShadow = true;
+    dir.shadow.mapSize.width = 2048;
+    dir.shadow.mapSize.height = 2048;
+    dir.shadow.bias = -0.0001;
     scene.add(dir);
-    const rim = new THREE.PointLight(0xD4AF37, 1.5, 10);
+    const rim = new THREE.PointLight(0xffeedd, 0.6, 10);
     rim.position.set(-2, 3, -2);
     scene.add(rim);
 
@@ -154,12 +157,43 @@ function loadModel() {
                 o.receiveShadow = true;
                 allMeshes.push(o);
 
+                // Initialize hand meshes as matte skin
+                if (o.name.toLowerCase().includes('hand')) {
+                    const mats = Array.isArray(o.material) ? o.material : [o.material];
+                    mats.forEach(function(m) {
+                        if (m.name === 'fashion_girl_details') {
+                            if (!o.isMaterialCloned) {
+                                o.material = m.clone();
+                                o.isMaterialCloned = true;
+                            }
+                            const tones = { fair: 0xFAD4B2, medium: 0xE6B98D, tan: 0xC68E5A, deep: 0x8D5524 };
+                            const hex   = tones[currentComplexion] || tones.fair;
+                            o.material.color.setHex(hex);
+                            o.material.map = null;
+                            o.material.roughness = 0.9;
+                            o.material.metalness = 0.0;
+                            o.material.metalnessMap = null;
+                            o.material.roughnessMap = null;
+                            o.material.needsUpdate = true;
+                        }
+                    });
+                }
+
                 const mats = Array.isArray(o.material) ? o.material : [o.material];
                 mats.forEach(function(m) {
                     m.side        = THREE.DoubleSide;
                     m.transparent = false;
                     m.depthWrite  = true;
                     m.opacity     = 1.0;
+                    if (m.name === 'fashion_girl_main') {
+                        m.roughness = 0.9;
+                        m.metalness = 0.0;
+                        m.metalnessMap = null;
+                        m.roughnessMap = null;
+                        if (m.normalScale) {
+                            m.normalScale.set(1.8, 1.8);
+                        }
+                    }
                     m.needsUpdate = true;
                 });
             });
@@ -208,13 +242,220 @@ function loadModel() {
 }
 
 // ─────────────────────────────────────────────
-//  ★ APPLY CURRENT SELECTED DRESS ★
-//  Reads dress info from the UI and applies to model
+//  ★ COMPOSITE TEXTURE AND DRESS COMPONENT ★
 // ─────────────────────────────────────────────
+
+let baseSkinImage = new Image();
+baseSkinImage.crossOrigin = "anonymous";
+baseSkinImage.src = "libaas_ai/extracted_img_3_image.png";
+baseSkinImage.onload = function() {
+    console.log("✅ baseSkinImage loaded successfully");
+    if (avatarGroup && avatarGroup.children.length > 0) {
+        updateCompositeTexture();
+    }
+};
+
+let currentDressTexture = null;
+let currentDressColor = null;
+let currentComplexion = "fair";
+
+function updateCompositeTexture() {
+    if (!baseSkinImage.complete) {
+        console.warn("⏳ baseSkinImage not loaded yet, deferring composition");
+        return;
+    }
+
+    let mainMaterial = null;
+    allMeshes.forEach(function(o) {
+        const mat = o.material;
+        if (mat) {
+            const mats = Array.isArray(mat) ? mat : [mat];
+            mats.forEach(function(m) {
+                if (m.name === 'fashion_girl_main') {
+                    mainMaterial = m;
+                }
+            });
+        }
+    });
+
+    if (!mainMaterial) {
+        console.warn("⚠️ fashion_girl_main material not found in model yet");
+        return;
+    }
+
+    let canvas = document.getElementById('composite-texture-canvas');
+    if (!canvas) {
+        canvas = document.createElement('canvas');
+        canvas.id = 'composite-texture-canvas';
+        canvas.width = 1024;
+        canvas.height = 1024;
+        canvas.style.display = 'none';
+        document.body.appendChild(canvas);
+    }
+
+    const ctx = canvas.getContext('2d');
+    ctx.drawImage(baseSkinImage, 0, 0, 1024, 1024);
+
+    const imgData = ctx.getImageData(0, 0, 1024, 1024);
+    const data = imgData.data;
+
+    const tones = {
+        fair: [250, 212, 178],
+        medium: [230, 185, 141],
+        tan: [198, 142, 90],
+        deep: [141, 85, 36]
+    };
+    const compColor = tones[currentComplexion] || tones.fair;
+
+    let dressData = null;
+    if (currentDressTexture && currentDressTexture.image) {
+        const dressImg = currentDressTexture.image;
+        if (dressImg.complete && dressImg.width > 0) {
+            const dressCanvas = document.createElement('canvas');
+            dressCanvas.width = 1024;
+            dressCanvas.height = 1024;
+            const dressCtx = dressCanvas.getContext('2d');
+            const pattern = dressCtx.createPattern(dressImg, 'repeat');
+            dressCtx.fillStyle = pattern;
+            dressCtx.fillRect(0, 0, 1024, 1024);
+            dressData = dressCtx.getImageData(0, 0, 1024, 1024).data;
+        }
+    }
+
+    let fallbackR = 0, fallbackG = 109, fallbackB = 91;
+    if (currentDressColor) {
+        const hex = COLOR_PALETTE[currentDressColor.toLowerCase()] || COLOR_PALETTE.emerald;
+        fallbackR = (hex >> 16) & 0xff;
+        fallbackG = (hex >> 8) & 0xff;
+        fallbackB = hex & 0xff;
+    }
+
+    for (let i = 0; i < data.length; i += 4) {
+        const r = data[i];
+        const g = data[i+1];
+        const b = data[i+2];
+
+        if (r < 40 && g < 40 && b < 40) {
+            continue;
+        }
+
+        const isWhite = (r > 140 && g > 140 && b > 140) && (Math.abs(r - g) < 15 && Math.abs(g - b) < 15 && Math.abs(r - b) < 15);
+        const isGreen = (g > 50) && (g - r > 20) && (g - b > 15);
+        const isPurple = (r > 50 && b > 50) && (r - g > 20) && (b - g > 20);
+
+        // Exclude warm skin highlights from white clothing classification
+        const isSkinHighlight = (r > g) && (g > b - 15) && (r - b > 10) && (r > 130);
+        const isClothing = (isWhite && !isSkinHighlight) || isGreen || isPurple;
+
+        const isSkin = ((r > 40 && g > 30 && b > 25) && (r > g) && (g > b - 20) && (r - b > 15)) || isSkinHighlight;
+
+        if (isClothing) {
+            let S = 1.0;
+            if (isWhite) {
+                S = r / 240;
+            } else if (isGreen) {
+                S = g / 170;
+            } else if (isPurple) {
+                S = (r + b) / 250;
+            }
+            S = Math.max(0.0, Math.min(1.2, S));
+
+            if (dressData) {
+                data[i]   = Math.min(255, dressData[i] * S);
+                data[i+1] = Math.min(255, dressData[i+1] * S);
+                data[i+2] = Math.min(255, dressData[i+2] * S);
+            } else {
+                data[i]   = Math.min(255, fallbackR * S);
+                data[i+1] = Math.min(255, fallbackG * S);
+                data[i+2] = Math.min(255, fallbackB * S);
+            }
+        } else if (isSkin) {
+            const L = 0.299 * r + 0.587 * g + 0.114 * b;
+            const ratio = L / 175;
+            data[i]   = Math.min(255, ratio * compColor[0]);
+            data[i+1] = Math.min(255, ratio * compColor[1]);
+            data[i+2] = Math.min(255, ratio * compColor[2]);
+        } else {
+            // Preserves eye glare, eye details, eyebrows, makeup, hair shadows, boots
+        }
+    }
+
+    ctx.putImageData(imgData, 0, 0);
+
+    // Overlay captured face if available
+    if (window.capturedFaceCanvas) {
+        try {
+            // Create a feathered oval mask offscreen
+            const maskCanvas = document.createElement('canvas');
+            maskCanvas.width = 256;
+            maskCanvas.height = 256;
+            const mCtx = maskCanvas.getContext('2d');
+            
+            // Draw a radial gradient centered at (128, 128)
+            const grad = mCtx.createRadialGradient(128, 128, 55, 128, 128, 115);
+            grad.addColorStop(0, 'rgba(0, 0, 0, 1)');
+            grad.addColorStop(0.75, 'rgba(0, 0, 0, 0.85)');
+            grad.addColorStop(1, 'rgba(0, 0, 0, 0)');
+            
+            mCtx.fillStyle = grad;
+            mCtx.save();
+            mCtx.translate(128, 128);
+            // Oval: slightly narrower horizontally (0.7) to match face shape
+            mCtx.scale(0.7, 0.95);
+            mCtx.beginPath();
+            mCtx.arc(0, 0, 128, 0, Math.PI * 2);
+            mCtx.fill();
+            mCtx.restore();
+
+            const tempCanvas = document.createElement('canvas');
+            tempCanvas.width = 256;
+            tempCanvas.height = 256;
+            const tCtx = tempCanvas.getContext('2d');
+            
+            // Draw face image
+            tCtx.drawImage(window.capturedFaceCanvas, 0, 0, 256, 256);
+            
+            // Mask it with the feathered oval
+            tCtx.globalCompositeOperation = 'destination-in';
+            tCtx.drawImage(maskCanvas, 0, 0);
+            tCtx.globalCompositeOperation = 'source-over';
+
+            // Now draw onto composite-texture-canvas
+            ctx.save();
+            // Center of face in atlas UV space: (860, 488)
+            ctx.translate(860, 488);
+            // Rotate 90 degrees CCW to match face UV orientation in fashion_girl.glb
+            ctx.rotate(-Math.PI / 2);
+            
+            // Draw the masked face centered
+            // The actual face region is approx 124x198. With padding, we scale to 160x230.
+            ctx.drawImage(tempCanvas, -230 / 2, -160 / 2, 230, 160);
+            ctx.restore();
+            console.log("👤 Captured face overlay applied to composite texture!");
+        } catch (faceErr) {
+            console.error("❌ Error drawing captured face onto composite texture:", faceErr);
+        }
+    }
+
+    if (!mainMaterial.map || !(mainMaterial.map instanceof THREE.CanvasTexture)) {
+        const canvasTex = new THREE.CanvasTexture(canvas);
+        canvasTex.flipY = false;
+        canvasTex.encoding = THREE.sRGBEncoding;
+        mainMaterial.map = canvasTex;
+    }
+    mainMaterial.map.needsUpdate = true;
+    mainMaterial.color.setHex(0xffffff);
+    mainMaterial.roughness = 0.9;
+    mainMaterial.metalness = 0.0;
+    mainMaterial.metalnessMap = null;
+    mainMaterial.roughnessMap = null;
+    mainMaterial.needsUpdate = true;
+    console.log("✅ Dress dynamic compositing applied successfully!");
+}
+
 function applyCurrentDress() {
     if (!avatarGroup || !avatarGroup.children.length) return;
     if (allMeshes.length === 0) {
-        // Rebuild mesh list if empty
         avatarGroup.children[0].traverse(function(o) {
             if (o.isMesh) allMeshes.push(o);
         });
@@ -227,7 +468,6 @@ function applyCurrentDress() {
 
     console.log('👗 Applying dress | color:', colorName, '| img:', imgSrc ? imgSrc.split('/').pop() : 'none');
 
-    // Try texture first, fallback to color
     if (imgSrc && imgSrc.length > 10 && !imgSrc.endsWith('/')) {
         applyTextureToModel(imgSrc, colorName);
     } else {
@@ -235,85 +475,30 @@ function applyCurrentDress() {
     }
 }
 
-// Apply texture image to model's OUTER/CLOTHING meshes
-// Strategy: apply to all non-tiny meshes — fashion model is mostly clothing
 function applyTextureToModel(imgSrc, colorFallback) {
     const loader = new THREE.TextureLoader();
     loader.crossOrigin = 'anonymous';
-
     loader.load(
         imgSrc,
         function(tex) {
-            tex.flipY    = false;
-            tex.encoding = THREE.sRGBEncoding;
-            tex.needsUpdate = true;
-
-            // Apply to CLOTHING meshes only (skip obvious skin by name)
-            let applied = 0;
-            allMeshes.forEach(function(o) {
-                const n = (o.name + ' ' + getMaterialName(o)).toLowerCase();
-                // Skip skin/face/hair meshes
-                const isSkin = /\b(skin|face|head|hair|eye|teeth|tongue|lip|ear|brow|lash)\b/.test(n);
-                if (isSkin) return;
-
-                const mats = Array.isArray(o.material) ? o.material : [o.material];
-                mats.forEach(function(m) {
-                    m.map   = tex;
-                    m.color.setHex(0xffffff);
-                    m.needsUpdate = true;
-                });
-                applied++;
-            });
-
-            console.log('✅ Dress texture applied to', applied, 'meshes');
-
-            // If nothing matched, try color instead
-            if (applied === 0) {
-                console.warn('⚠️ 0 meshes matched — applying color fallback');
-                applyColorToModel(colorFallback);
-            }
+            currentDressTexture = tex;
+            currentDressColor = colorFallback;
+            updateCompositeTexture();
         },
         undefined,
         function(err) {
             console.warn('⚠️ Texture load failed, using color:', colorFallback);
-            applyColorToModel(colorFallback);
+            currentDressTexture = null;
+            currentDressColor = colorFallback;
+            updateCompositeTexture();
         }
     );
 }
 
-// Apply solid color to all non-skin meshes
 function applyColorToModel(colorName) {
-    const hex = COLOR_PALETTE[(colorName || '').toLowerCase()] || COLOR_PALETTE.emerald;
-
-    let applied = 0;
-    allMeshes.forEach(function(o) {
-        const n = (o.name + ' ' + getMaterialName(o)).toLowerCase();
-        const isSkin = /\b(skin|face|head|hair|eye|teeth|tongue|lip|ear|brow|lash)\b/.test(n);
-        if (isSkin) return;
-
-        const mats = Array.isArray(o.material) ? o.material : [o.material];
-        mats.forEach(function(m) {
-            if (m.map) m.map = null; // Remove old texture
-            m.color.setHex(hex);
-            m.needsUpdate = true;
-        });
-        applied++;
-    });
-
-    // If STILL nothing (all mesh names are skin-like), apply to everything
-    if (applied === 0) {
-        console.warn('⚠️ No non-skin meshes found — applying color to ALL meshes');
-        allMeshes.forEach(function(o) {
-            const mats = Array.isArray(o.material) ? o.material : [o.material];
-            mats.forEach(function(m) {
-                m.color.setHex(hex);
-                m.needsUpdate = true;
-            });
-        });
-        applied = allMeshes.length;
-    }
-
-    console.log('🎨 Color', colorName, '(#'+hex.toString(16)+')', 'applied to', applied, 'meshes');
+    currentDressTexture = null;
+    currentDressColor = colorName;
+    updateCompositeTexture();
 }
 
 function getMaterialName(mesh) {
@@ -376,19 +561,16 @@ function clearStatus() {
 //  PUBLIC API
 // ─────────────────────────────────────────────
 
-// Called when dress card / product is selected
 window.applyBodyTexture = function(imageSrc) {
-    const card = document.querySelector('.selected-dress-card');
-    const colorName = card ? (card.getAttribute('data-color') || 'emerald') : 'emerald';
     if (allMeshes.length === 0) {
-        // Model not loaded yet — queue it
         setTimeout(function() { window.applyBodyTexture(imageSrc); }, 500);
         return;
     }
+    const card = document.querySelector('.selected-dress-card');
+    const colorName = card ? (card.getAttribute('data-color') || 'emerald') : 'emerald';
     applyTextureToModel(imageSrc, colorName);
 };
 
-// Called when color name changes (advisor/arrows)
 window.onOutfitColorChange = function(colorName) {
     if (allMeshes.length === 0) {
         setTimeout(function() { window.onOutfitColorChange(colorName); }, 500);
@@ -397,36 +579,42 @@ window.onOutfitColorChange = function(colorName) {
     applyColorToModel(colorName);
 };
 
-// Called when complexion circle clicked
 window.onComplexionChange = function(tone) {
+    currentComplexion = tone;
+    if (avatarGroup && avatarGroup.children.length > 0) {
+        updateCompositeTexture();
+    }
+
     const tones = { fair: 0xFAD4B2, medium: 0xE6B98D, tan: 0xC68E5A, deep: 0x8D5524 };
     const hex   = tones[tone] || tones.fair;
     allMeshes.forEach(function(o) {
-        const n = (o.name + ' ' + getMaterialName(o)).toLowerCase();
-        const isSkin = /\b(skin|face|head|arm|leg|hand|neck|foot|body|eye)\b/.test(n);
-        if (!isSkin) return;
-        const mats = Array.isArray(o.material) ? o.material : [o.material];
-        mats.forEach(function(m) { if (m.color) m.color.setHex(hex); });
+        if (o.name.toLowerCase().includes('hand')) {
+            const mats = Array.isArray(o.material) ? o.material : [o.material];
+            mats.forEach(function(m) {
+                if (m.name === 'fashion_girl_details') {
+                    if (!o.isMaterialCloned) {
+                        o.material = m.clone();
+                        o.isMaterialCloned = true;
+                    }
+                    o.material.color.setHex(hex);
+                    o.material.map = null;
+                    o.material.roughness = 0.9;
+                    o.material.metalness = 0.0;
+                    o.material.metalnessMap = null;
+                    o.material.roughnessMap = null;
+                    o.material.needsUpdate = true;
+                }
+            });
+        }
     });
 };
 
-// Called when webcam face captured
 window.applyFaceTexture = function(canvas) {
-    if (!allMeshes.length) return;
-    const tex = new THREE.CanvasTexture(canvas);
-    tex.flipY    = false;
-    tex.encoding = THREE.sRGBEncoding;
-    tex.anisotropy = 16;
-    allMeshes.forEach(function(o) {
-        const n = (o.name + ' ' + getMaterialName(o)).toLowerCase();
-        if (!n.includes('face') && !n.includes('head') && !n.includes('skin')) return;
-        const mats = Array.isArray(o.material) ? o.material : [o.material];
-        mats.forEach(function(m) { m.map = tex; m.color.setHex(0xffffff); m.needsUpdate = true; });
-    });
+    window.capturedFaceCanvas = canvas;
+    if (avatarGroup && avatarGroup.children.length > 0) {
+        updateCompositeTexture();
+    }
 };
 
-// ★ Main entry — called by script.js when modal opens
 window.initTryOnEngine = function() { init(); };
-
-// ★ Re-apply current dress (called externally if needed)
 window.applySelectedDress = applyCurrentDress;
