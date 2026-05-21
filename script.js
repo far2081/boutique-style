@@ -268,10 +268,13 @@ function syncGlobalProduct(productEl) {
         tryOnBtn.dataset.price = pPriceVal;
     }
 
-    if (window.onOutfitColorChange) {
+    // ★ Apply selected dress image + color onto 3D model ★
+    if (window.applyBodyTexture) {
+        window.applyBodyTexture(imgSrc);
+    } else if (window.onOutfitColorChange) {
         window.onOutfitColorChange(color);
     }
-    
+
     console.log("Global Sync: " + name + " (" + color + ")");
 }
 
@@ -459,22 +462,30 @@ document.addEventListener('click', (e) => {
             setTimeout(() => modal.classList.add('active'), 10);
             document.body.style.overflow = 'hidden';
             
-            // Initialize or resize 3D Engine now that modal (canvas) is visible
+            // Initialize 3D Engine now that modal (canvas) is visible
             setTimeout(() => {
                 if (window.initTryOnEngine) {
                     window.initTryOnEngine();
                 } else {
-                    // Fallback: just trigger resize if engine is already running
                     const resizeFunc = window.onEngineResize || (typeof onEngineResize === 'function' ? onEngineResize : null);
                     if (resizeFunc) resizeFunc();
                 }
-                
+
+                // Apply skin complexion
                 if (window.onComplexionChange) {
                     const activeToneCircle = document.querySelector('.complexion-circle.active');
                     const activeTone = (activeToneCircle && activeToneCircle.dataset) ? activeToneCircle.dataset.tone : 'fair';
                     window.onComplexionChange(activeTone);
                 }
             }, 400);
+
+            // ★ After model loads (~1s), apply selected dress image to 3D model ★
+            setTimeout(() => {
+                const selectedImg = document.querySelector('.tryon-selected-img');
+                if (selectedImg && selectedImg.src && window.applyBodyTexture) {
+                    window.applyBodyTexture(selectedImg.src);
+                }
+            }, 1200);
         }
     }
 
@@ -693,30 +704,29 @@ document.addEventListener('click', (e) => {
     if (applyBtn || profileCard) {
         const selectedImg = document.querySelector('.tryon-selected-img');
         const color = document.querySelector('.selected-dress-card')?.getAttribute('data-color') || 'emerald';
-        
-        // Apply Color to Engine
-        if (window.onOutfitColorChange) {
+
+        // ★ Apply dress image as texture to 3D model ★
+        if (selectedImg && selectedImg.src && window.applyBodyTexture) {
+            window.applyBodyTexture(selectedImg.src);
+        } else if (window.onOutfitColorChange) {
             window.onOutfitColorChange(color);
         }
 
-        // Apply Texture to Engine (Virtual Try-On Dress Mapping)
-        if (selectedImg && window.applyBodyTexture) {
-            window.applyBodyTexture(selectedImg.src);
+        // Apply skin complexion
+        if (window.onComplexionChange) {
+            const activeTone = document.querySelector('.complexion-circle.active');
+            window.onComplexionChange(activeTone ? activeTone.dataset.tone : 'fair');
         }
 
+        // Visual feedback on button
         if (applyBtn) {
-            const h = parseFloat(document.getElementById('height-val')?.value || 170);
-            const w = parseFloat(document.getElementById('weight-val')?.value || 65);
-            if (typeof updateBody === 'function') {
-                updateBody(h, w);
-                applyBtn.innerText = "Applied!";
-                setTimeout(() => {
-                    applyBtn.innerText = "Save Profile & Select";
-                    const advisorTab = document.querySelector('.tryon-tab[data-tab="advisor"]');
-                    if (advisorTab) advisorTab.click();
-                }, 1000);
-            }
-            if (typeof onEngineResize === 'function') onEngineResize();
+            const origText = applyBtn.innerText;
+            applyBtn.innerText = "✓ Dress Applied!";
+            applyBtn.style.background = "linear-gradient(135deg,#006D5B,#00a080)";
+            setTimeout(() => {
+                applyBtn.innerText = origText;
+                applyBtn.style.background = "";
+            }, 1500);
         }
     }
 
