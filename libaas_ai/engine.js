@@ -1,37 +1,27 @@
-// libaas_ai/engine.js - INTERNAL AI FOLDER STUDIO v24.0
-// fashion_girl.glb is at: libaas_ai/fashion_girl.glb (relative to index.html root)
+// libaas_ai/engine.js - INTERNAL AI FOLDER STUDIO v25.0
+// fashion_girl.glb path: libaas_ai/fashion_girl.glb (relative to index.html)
 
 let scene, camera, renderer, controls, clock;
-let avatarGroup = null;
-let gltfLoader = null;
-let mixer = null;
+let avatarGroup   = null;
+let gltfLoader    = null;
+let mixer         = null;
 let isInitialized = false;
-let initRetryTimer = null;
-
-// Track all mesh materials for smart dress application
-let clothingMeshes = [];   // meshes that are clothing/outfit
-let skinMeshes    = [];    // meshes that are skin/face/body
+let initRetryTimer= null;
+let allMeshes     = [];  // Every mesh in the model
 
 const MODEL_PATH = "libaas_ai/fashion_girl.glb";
 
-// ─────────────────────────────────────────────
-//  SKIN vs CLOTHING keyword classifier
-// ─────────────────────────────────────────────
-const SKIN_KEYWORDS    = ['skin','face','head','arm','leg','hand','neck','foot','body','eye','teeth','mouth','hair','lash','brow','lip','tongue','ear'];
-const CLOTH_KEYWORDS   = ['cloth','dress','shirt','top','pant','skirt','outfit','fabric','coat','jacket','sleeve','collar','cuff','hem','belt','shoe','boot','heel','bag','jewelry','jewel','necklace','bangle','dupatta','chunni','kameez','shalwar','lehenga','saree','gharara','frills','lace','embroidery','zari'];
-
-function classifyMesh(name, matName) {
-    const n = (name + ' ' + matName).toLowerCase();
-    // If clearly skin — don't touch
-    if (SKIN_KEYWORDS.some(k => n.includes(k))) return 'skin';
-    // If clearly clothing — apply dress
-    if (CLOTH_KEYWORDS.some(k => n.includes(k))) return 'cloth';
-    // Unknown — treat as clothing (safe default for fashion model)
-    return 'cloth';
-}
+const COLOR_PALETTE = {
+    ruby    : 0x9B111E,
+    emerald : 0x006D5B,
+    gold    : 0xD4AF37,
+    navy    : 0x000080,
+    azure   : 0x007FFF,
+    rosegold: 0xE0BFB8
+};
 
 // ─────────────────────────────────────────────
-//  MAIN INIT
+//  INIT — called when tryon modal opens
 // ─────────────────────────────────────────────
 function init() {
     const container = document.getElementById('canvas-container');
@@ -39,8 +29,9 @@ function init() {
 
     const w = container.clientWidth  || container.offsetWidth;
     const h = container.clientHeight || container.offsetHeight;
+
     if (w < 10 || h < 10) {
-        console.warn('⏳ canvas size zero, retrying in 150ms...');
+        console.warn('⏳ canvas zero-size, retry in 150ms...');
         clearTimeout(initRetryTimer);
         initRetryTimer = setTimeout(init, 150);
         return;
@@ -48,34 +39,32 @@ function init() {
 
     if (isInitialized) { onResize(); return; }
 
-    console.log('🚀 Engine INIT —', w, '×', h);
+    console.log('🚀 Engine INIT', w, '×', h);
     isInitialized = true;
-
     container.innerHTML = '';
 
-    clock = new THREE.Clock();
-    scene = new THREE.Scene();
+    clock    = new THREE.Clock();
+    scene    = new THREE.Scene();
     scene.background = new THREE.Color(0x111111);
 
     camera = new THREE.PerspectiveCamera(45, w / h, 0.1, 100);
     camera.position.set(0, 1.4, 4.2);
 
-    renderer = new THREE.WebGLRenderer({ antialias: true, alpha: false });
+    renderer = new THREE.WebGLRenderer({ antialias: true });
     renderer.setSize(w, h);
     renderer.setPixelRatio(window.devicePixelRatio || 1);
     renderer.shadowMap.enabled = true;
-    renderer.shadowMap.type = THREE.PCFSoftShadowMap;
     container.appendChild(renderer.domElement);
 
-    // Lighting
-    scene.add(new THREE.AmbientLight(0xffffff, 1.8));
-    const dirLight = new THREE.DirectionalLight(0xffffff, 1.5);
-    dirLight.position.set(2, 5, 5);
-    dirLight.castShadow = true;
-    scene.add(dirLight);
-    const rimLight = new THREE.PointLight(0xD4AF37, 1.5, 10);
-    rimLight.position.set(-2, 3, -2);
-    scene.add(rimLight);
+    // Lights
+    scene.add(new THREE.AmbientLight(0xffffff, 2.0));
+    const dir = new THREE.DirectionalLight(0xffffff, 1.5);
+    dir.position.set(2, 5, 5);
+    dir.castShadow = true;
+    scene.add(dir);
+    const rim = new THREE.PointLight(0xD4AF37, 1.5, 10);
+    rim.position.set(-2, 3, -2);
+    scene.add(rim);
 
     buildStage();
 
@@ -85,12 +74,12 @@ function init() {
     if (typeof THREE.OrbitControls !== 'undefined') {
         controls = new THREE.OrbitControls(camera, renderer.domElement);
         controls.target.set(0, 1.1, 0);
-        controls.enableDamping = true;
-        controls.dampingFactor = 0.05;
-        controls.autoRotate = true;
+        controls.enableDamping  = true;
+        controls.dampingFactor  = 0.05;
+        controls.autoRotate     = true;
         controls.autoRotateSpeed = 0.5;
-        controls.enablePan = false;
-        controls.enableZoom = false;
+        controls.enablePan    = false;
+        controls.enableZoom   = false;
         controls.enableRotate = false;
     }
 
@@ -106,11 +95,6 @@ function init() {
 // ─────────────────────────────────────────────
 function buildStage() {
     const g = new THREE.Group();
-
-    g.add(Object.assign(new THREE.Mesh(
-        new THREE.CylinderGeometry(0.85, 0.9, 0.1, 64),
-        new THREE.MeshStandardMaterial({ color: 0x2a2a2a, roughness: 0.4, metalness: 0.5 })
-    ), { position: { x: 0, y: -0.05, z: 0 }, receiveShadow: true }));
 
     const base = new THREE.Mesh(
         new THREE.CylinderGeometry(0.85, 0.9, 0.1, 64),
@@ -132,7 +116,7 @@ function buildStage() {
         new THREE.TorusGeometry(0.82, 0.022, 32, 100),
         new THREE.MeshStandardMaterial({
             color: 0xC5A017, metalness: 0.9, roughness: 0.15,
-            emissive: 0xD4AF37, emissiveIntensity: 0.15
+            emissive: 0xD4AF37, emissiveIntensity: 0.2
         })
     );
     ring.rotation.x = Math.PI / 2;
@@ -144,17 +128,15 @@ function buildStage() {
 }
 
 // ─────────────────────────────────────────────
-//  LOAD fashion_girl.glb
+//  LOAD GLB
 // ─────────────────────────────────────────────
 function loadModel() {
     if (typeof THREE.GLTFLoader === 'undefined') {
         showStatus('GLTFLoader missing'); return;
     }
-
     gltfLoader = new THREE.GLTFLoader();
+    allMeshes  = [];
     showStatus('BOUTIQUE ARRIVING...');
-    clothingMeshes = [];
-    skinMeshes     = [];
 
     gltfLoader.load(
         MODEL_PATH,
@@ -163,38 +145,33 @@ function loadModel() {
             clearStatus();
 
             const model = gltf.scene || gltf.scenes[0];
-            if (!model) { console.error('No scene in GLB'); return; }
+            if (!model) return;
 
-            // Classify every mesh and fix materials
+            // Fix all materials + collect meshes
             model.traverse(function(o) {
                 if (!o.isMesh) return;
-                o.castShadow = true;
+                o.castShadow    = true;
                 o.receiveShadow = true;
+                allMeshes.push(o);
 
                 const mats = Array.isArray(o.material) ? o.material : [o.material];
                 mats.forEach(function(m) {
-                    m.side = THREE.DoubleSide;
+                    m.side        = THREE.DoubleSide;
                     m.transparent = false;
                     m.depthWrite  = true;
                     m.opacity     = 1.0;
                     m.needsUpdate = true;
                 });
-
-                const matName = mats.length > 0 ? (mats[0].name || '') : '';
-                const type = classifyMesh(o.name, matName);
-                console.log('🔍 Mesh:', o.name, '| Mat:', matName, '| Class:', type);
-
-                if (type === 'cloth') {
-                    clothingMeshes.push(o);
-                } else {
-                    skinMeshes.push(o);
-                }
             });
 
-            console.log('👗 Clothing meshes:', clothingMeshes.length, '| Skin meshes:', skinMeshes.length);
+            console.log('🧩 Total meshes in model:', allMeshes.length);
+            allMeshes.forEach(function(o) {
+                const mName = Array.isArray(o.material) ? o.material[0].name : o.material.name;
+                console.log('   Mesh:', o.name, '| Mat:', mName);
+            });
 
-            // Auto-scale
-            const box = new THREE.Box3().setFromObject(model);
+            // Auto-scale to ~1.75 units tall
+            const box  = new THREE.Box3().setFromObject(model);
             const size = box.getSize(new THREE.Vector3());
             const scale = size.y > 0.01 ? 1.75 / size.y : 1.0;
             model.scale.set(scale, scale, scale);
@@ -212,133 +189,141 @@ function loadModel() {
             if (gltf.animations && gltf.animations.length > 0) {
                 mixer = new THREE.AnimationMixer(model);
                 mixer.clipAction(gltf.animations[0]).play();
+                console.log('🎬 Animation playing');
             }
 
-            // ★ AUTO-APPLY selected dress as soon as model loads ★
-            setTimeout(applySelectedDress, 500);
+            // ★ Apply selected dress right after load ★
+            setTimeout(applyCurrentDress, 600);
         },
         function onProgress(xhr) {
-            if (xhr.lengthComputable) {
+            if (xhr.lengthComputable)
                 showStatus('LOADING ' + Math.round(xhr.loaded / xhr.total * 100) + '%');
-            }
         },
         function onError(err) {
-            console.error('❌ Failed to load:', MODEL_PATH, err);
-            showStatus('MODEL ERROR — check console');
+            console.error('❌ Model load error:', err);
+            showStatus('MODEL ERROR');
             setTimeout(clearStatus, 4000);
         }
     );
 }
 
 // ─────────────────────────────────────────────
-//  ★ APPLY SELECTED DRESS TO MODEL ★
-//  Reads the currently selected dress image from
-//  .tryon-selected-img and applies it as a texture
-//  to all clothing meshes on the 3D model.
+//  ★ APPLY CURRENT SELECTED DRESS ★
+//  Reads dress info from the UI and applies to model
 // ─────────────────────────────────────────────
-function applySelectedDress() {
-    if (!avatarGroup || avatarGroup.children.length === 0) return;
+function applyCurrentDress() {
+    if (!avatarGroup || !avatarGroup.children.length) return;
+    if (allMeshes.length === 0) {
+        // Rebuild mesh list if empty
+        avatarGroup.children[0].traverse(function(o) {
+            if (o.isMesh) allMeshes.push(o);
+        });
+    }
 
-    // Get the selected dress image
-    const selectedImg = document.querySelector('.tryon-selected-img');
-    const imgSrc = selectedImg ? selectedImg.src : null;
-
-    // Get the selected color
-    const card = document.querySelector('.selected-dress-card');
+    const card     = document.querySelector('.selected-dress-card');
     const colorName = card ? (card.getAttribute('data-color') || 'emerald') : 'emerald';
+    const imgEl    = document.querySelector('.tryon-selected-img');
+    const imgSrc   = imgEl ? imgEl.src : null;
 
-    console.log('👗 Applying dress — img:', imgSrc, '| color:', colorName);
+    console.log('👗 Applying dress | color:', colorName, '| img:', imgSrc ? imgSrc.split('/').pop() : 'none');
 
-    if (imgSrc && !imgSrc.includes('undefined') && !imgSrc.includes('null')) {
-        // Apply dress IMAGE as texture
-        applyDressTexture(imgSrc, colorName);
+    // Try texture first, fallback to color
+    if (imgSrc && imgSrc.length > 10 && !imgSrc.endsWith('/')) {
+        applyTextureToModel(imgSrc, colorName);
     } else {
-        // Fallback: apply color only
-        applyDressColor(colorName);
+        applyColorToModel(colorName);
     }
 }
 
-// Apply dress image as texture to all clothing meshes
-function applyDressTexture(imgSrc, colorNameFallback) {
+// Apply texture image to model's OUTER/CLOTHING meshes
+// Strategy: apply to all non-tiny meshes — fashion model is mostly clothing
+function applyTextureToModel(imgSrc, colorFallback) {
     const loader = new THREE.TextureLoader();
+    loader.crossOrigin = 'anonymous';
+
     loader.load(
         imgSrc,
-        function(texture) {
-            texture.flipY = false;
-            texture.encoding = THREE.sRGBEncoding;
-            texture.wrapS = THREE.ClampToEdgeWrapping;
-            texture.wrapT = THREE.ClampToEdgeWrapping;
-            texture.needsUpdate = true;
+        function(tex) {
+            tex.flipY    = false;
+            tex.encoding = THREE.sRGBEncoding;
+            tex.needsUpdate = true;
 
-            // If we have classified clothing meshes, use them
-            const targets = clothingMeshes.length > 0
-                ? clothingMeshes
-                : getAllClothMeshes();
+            // Apply to CLOTHING meshes only (skip obvious skin by name)
+            let applied = 0;
+            allMeshes.forEach(function(o) {
+                const n = (o.name + ' ' + getMaterialName(o)).toLowerCase();
+                // Skip skin/face/hair meshes
+                const isSkin = /\b(skin|face|head|hair|eye|teeth|tongue|lip|ear|brow|lash)\b/.test(n);
+                if (isSkin) return;
 
-            if (targets.length === 0) {
-                console.warn('⚠️ No clothing meshes found — applying color fallback');
-                applyDressColor(colorNameFallback);
-                return;
-            }
-
-            targets.forEach(function(o) {
                 const mats = Array.isArray(o.material) ? o.material : [o.material];
                 mats.forEach(function(m) {
-                    m.map = texture;
-                    m.color.setHex(0xffffff); // Let texture show true colors
-                    m.transparent = false;
+                    m.map   = tex;
+                    m.color.setHex(0xffffff);
                     m.needsUpdate = true;
                 });
+                applied++;
             });
 
-            console.log('✅ Dress texture applied to', targets.length, 'meshes');
+            console.log('✅ Dress texture applied to', applied, 'meshes');
+
+            // If nothing matched, try color instead
+            if (applied === 0) {
+                console.warn('⚠️ 0 meshes matched — applying color fallback');
+                applyColorToModel(colorFallback);
+            }
         },
         undefined,
         function(err) {
-            console.warn('⚠️ Dress texture load failed, using color:', colorNameFallback, err);
-            applyDressColor(colorNameFallback);
+            console.warn('⚠️ Texture load failed, using color:', colorFallback);
+            applyColorToModel(colorFallback);
         }
     );
 }
 
-// Color-only fallback for clothing meshes
-function applyDressColor(colorName) {
-    const palette = {
-        ruby: 0x9B111E, emerald: 0x006D5B, gold: 0xD4AF37,
-        navy: 0x000080, azure: 0x007FFF, rosegold: 0xE0BFB8
-    };
-    const hex = palette[(colorName || '').toLowerCase()] || 0x006D5B;
+// Apply solid color to all non-skin meshes
+function applyColorToModel(colorName) {
+    const hex = COLOR_PALETTE[(colorName || '').toLowerCase()] || COLOR_PALETTE.emerald;
 
-    const targets = clothingMeshes.length > 0
-        ? clothingMeshes
-        : getAllClothMeshes();
+    let applied = 0;
+    allMeshes.forEach(function(o) {
+        const n = (o.name + ' ' + getMaterialName(o)).toLowerCase();
+        const isSkin = /\b(skin|face|head|hair|eye|teeth|tongue|lip|ear|brow|lash)\b/.test(n);
+        if (isSkin) return;
 
-    targets.forEach(function(o) {
         const mats = Array.isArray(o.material) ? o.material : [o.material];
         mats.forEach(function(m) {
-            if (m.map) { m.map = null; } // Remove any old texture
+            if (m.map) m.map = null; // Remove old texture
             m.color.setHex(hex);
             m.needsUpdate = true;
         });
+        applied++;
     });
 
-    console.log('🎨 Dress color applied:', colorName, 'to', targets.length, 'meshes');
+    // If STILL nothing (all mesh names are skin-like), apply to everything
+    if (applied === 0) {
+        console.warn('⚠️ No non-skin meshes found — applying color to ALL meshes');
+        allMeshes.forEach(function(o) {
+            const mats = Array.isArray(o.material) ? o.material : [o.material];
+            mats.forEach(function(m) {
+                m.color.setHex(hex);
+                m.needsUpdate = true;
+            });
+        });
+        applied = allMeshes.length;
+    }
+
+    console.log('🎨 Color', colorName, '(#'+hex.toString(16)+')', 'applied to', applied, 'meshes');
 }
 
-// Fallback: search all meshes in model by keywords
-function getAllClothMeshes() {
-    const result = [];
-    if (!avatarGroup || !avatarGroup.children.length) return result;
-    avatarGroup.children[0].traverse(function(o) {
-        if (!o.isMesh) return;
-        const type = classifyMesh(o.name, o.material ? (Array.isArray(o.material) ? o.material[0].name : o.material.name) : '');
-        if (type === 'cloth') result.push(o);
-    });
-    return result;
+function getMaterialName(mesh) {
+    if (!mesh.material) return '';
+    if (Array.isArray(mesh.material)) return mesh.material.map(function(m){return m.name||'';}).join(' ');
+    return mesh.material.name || '';
 }
 
 // ─────────────────────────────────────────────
-//  ANIMATE LOOP
+//  ANIMATE
 // ─────────────────────────────────────────────
 function animate() {
     requestAnimationFrame(animate);
@@ -368,26 +353,18 @@ function onResize() {
 }
 
 // ─────────────────────────────────────────────
-//  STATUS OVERLAY
+//  STATUS
 // ─────────────────────────────────────────────
 function showStatus(msg) {
     let el = document.getElementById('engine-status-msg');
     if (!el) {
         el = document.createElement('div');
         el.id = 'engine-status-msg';
-        el.style.cssText = [
-            'position:absolute','top:20px','left:50%',
-            'transform:translateX(-50%)',
-            'color:#D4AF37',
-            'font-family:"Montserrat",sans-serif',
-            'font-size:9px','letter-spacing:3px',
-            'text-transform:uppercase','z-index:1000',
-            'font-weight:700','pointer-events:none'
-        ].join(';');
+        el.style.cssText = 'position:absolute;top:16px;left:50%;transform:translateX(-50%);color:#D4AF37;font-family:"Montserrat",sans-serif;font-size:9px;letter-spacing:3px;text-transform:uppercase;z-index:1000;font-weight:700;pointer-events:none;white-space:nowrap';
         const c = document.getElementById('canvas-container');
         if (c) c.appendChild(el);
     }
-    el.textContent = msg;
+    el.textContent  = msg;
     el.style.display = 'block';
 }
 function clearStatus() {
@@ -396,70 +373,60 @@ function clearStatus() {
 }
 
 // ─────────────────────────────────────────────
-//  PUBLIC API — called from script.js / index.html
+//  PUBLIC API
 // ─────────────────────────────────────────────
 
-// Called when complexion circle is clicked
-window.onComplexionChange = function(tone) {
-    const tones = { fair: 0xFAD4B2, medium: 0xE6B98D, tan: 0xC68E5A, deep: 0x8D5524 };
-    const color = tones[tone] || 0xFAD4B2;
-    const targets = skinMeshes.length > 0 ? skinMeshes : getAllSkinMeshes();
-    targets.forEach(function(o) {
-        const mats = Array.isArray(o.material) ? o.material : [o.material];
-        mats.forEach(function(m) { if (m.color) m.color.setHex(color); });
-    });
-};
-
-function getAllSkinMeshes() {
-    const result = [];
-    if (!avatarGroup || !avatarGroup.children.length) return result;
-    avatarGroup.children[0].traverse(function(o) {
-        if (!o.isMesh) return;
-        const type = classifyMesh(o.name, o.material ? (Array.isArray(o.material) ? o.material[0].name : o.material.name) : '');
-        if (type === 'skin') result.push(o);
-    });
-    return result;
-}
-
-// Called when outfit color / dress changes — applies dress image + color
-window.onOutfitColorChange = function(colorName) {
-    applyDressColor(colorName);
-};
-
-// ★ MAIN: Called when a new dress is selected (from script.js syncGlobalProduct / applyBtn)
-window.applySelectedDress = applySelectedDress;
-
-// Called with dress image URL directly
-window.applyBodyTexture = function(imageSource) {
+// Called when dress card / product is selected
+window.applyBodyTexture = function(imageSrc) {
     const card = document.querySelector('.selected-dress-card');
     const colorName = card ? (card.getAttribute('data-color') || 'emerald') : 'emerald';
-    applyDressTexture(imageSource, colorName);
+    if (allMeshes.length === 0) {
+        // Model not loaded yet — queue it
+        setTimeout(function() { window.applyBodyTexture(imageSrc); }, 500);
+        return;
+    }
+    applyTextureToModel(imageSrc, colorName);
 };
 
-// Face texture (webcam capture)
-window.applyFaceTexture = function(canvas) {
-    if (!avatarGroup || !avatarGroup.children.length) return;
-    const texture = new THREE.CanvasTexture(canvas);
-    texture.flipY = false;
-    texture.encoding = THREE.sRGBEncoding;
-    texture.anisotropy = 16;
-    const targets = skinMeshes.length > 0 ? skinMeshes : getAllSkinMeshes();
-    targets.forEach(function(o) {
-        const name = (o.name || '').toLowerCase();
-        if (name.includes('face') || name.includes('head')) {
-            const mats = Array.isArray(o.material) ? o.material : [o.material];
-            mats.forEach(function(m) {
-                m.map = texture;
-                if (m.color) m.color.setHex(0xffffff);
-                m.needsUpdate = true;
-            });
-        }
+// Called when color name changes (advisor/arrows)
+window.onOutfitColorChange = function(colorName) {
+    if (allMeshes.length === 0) {
+        setTimeout(function() { window.onOutfitColorChange(colorName); }, 500);
+        return;
+    }
+    applyColorToModel(colorName);
+};
+
+// Called when complexion circle clicked
+window.onComplexionChange = function(tone) {
+    const tones = { fair: 0xFAD4B2, medium: 0xE6B98D, tan: 0xC68E5A, deep: 0x8D5524 };
+    const hex   = tones[tone] || tones.fair;
+    allMeshes.forEach(function(o) {
+        const n = (o.name + ' ' + getMaterialName(o)).toLowerCase();
+        const isSkin = /\b(skin|face|head|arm|leg|hand|neck|foot|body|eye)\b/.test(n);
+        if (!isSkin) return;
+        const mats = Array.isArray(o.material) ? o.material : [o.material];
+        mats.forEach(function(m) { if (m.color) m.color.setHex(hex); });
     });
 };
 
-// ─────────────────────────────────────────────
-//  ENTRY POINT — called by script.js when modal opens
-// ─────────────────────────────────────────────
-window.initTryOnEngine = function() {
-    init();
+// Called when webcam face captured
+window.applyFaceTexture = function(canvas) {
+    if (!allMeshes.length) return;
+    const tex = new THREE.CanvasTexture(canvas);
+    tex.flipY    = false;
+    tex.encoding = THREE.sRGBEncoding;
+    tex.anisotropy = 16;
+    allMeshes.forEach(function(o) {
+        const n = (o.name + ' ' + getMaterialName(o)).toLowerCase();
+        if (!n.includes('face') && !n.includes('head') && !n.includes('skin')) return;
+        const mats = Array.isArray(o.material) ? o.material : [o.material];
+        mats.forEach(function(m) { m.map = tex; m.color.setHex(0xffffff); m.needsUpdate = true; });
+    });
 };
+
+// ★ Main entry — called by script.js when modal opens
+window.initTryOnEngine = function() { init(); };
+
+// ★ Re-apply current dress (called externally if needed)
+window.applySelectedDress = applyCurrentDress;
