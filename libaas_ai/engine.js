@@ -512,28 +512,24 @@ function applyCurrentDress() {
 function applyTextureToModel(imgSrc, colorFallback) {
     if (imgSrc instanceof THREE.Texture) {
         const texture = imgSrc;
-        texture.encoding = THREE.sRGBEncoding;
-        
-        let mainMaterial = null;
-        allMeshes.forEach(function(o) {
-            const mat = o.material;
-            if (mat) {
-                const mats = Array.isArray(mat) ? mat : [mat];
-                mats.forEach(function(m) {
-                    if (m.name === 'fashion_girl_main') {
-                        mainMaterial = m;
+        if (!model) {
+            console.warn("⚠️ Model not loaded yet to apply texture");
+            return;
+        }
+
+        model.traverse((child) => {
+            if (child.isMesh && child.material) {
+                const mats = Array.isArray(child.material) ? child.material : [child.material];
+                mats.forEach(m => {
+                    if (m && m.name && m.name.includes("fashion_girl_main")) {
+                        m.map = texture;
+                        m.needsUpdate = true;
                     }
                 });
             }
         });
-        
-        if (mainMaterial) {
-            mainMaterial.map = texture;
-            mainMaterial.needsUpdate = true;
-            console.log("✅ Applied composite texture directly to model material 'fashion_girl_main'");
-        } else {
-            console.warn("⚠️ fashion_girl_main material not found to apply texture");
-        }
+
+        console.log("🎨 Texture applied to model");
         return;
     }
 
