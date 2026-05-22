@@ -883,3 +883,30 @@ window.runFaceTracking = async function(video) {
     }
     process();
 };
+
+window.applyLiveFace = function(x, y, size) {
+    const canvas = document.createElement("canvas");
+    const ctx = canvas.getContext("2d", { willReadFrequently: true });
+
+    canvas.width = 512;
+    canvas.height = 512;
+
+    const base = new Image();
+    base.src = "/assets/base.png";
+
+    const video = document.getElementById("video");
+
+    base.onload = () => {
+        ctx.drawImage(base, 0, 0);
+
+        // 👤 LIVE FACE FROM CAMERA
+        ctx.globalAlpha = 0.95;
+        ctx.drawImage(video, x - size/2, y - size/2, size, size);
+        ctx.globalAlpha = 1.0;
+
+        const texture = new THREE.CanvasTexture(canvas);
+        texture.needsUpdate = true;
+
+        applyTextureToModel(texture);
+    };
+};
