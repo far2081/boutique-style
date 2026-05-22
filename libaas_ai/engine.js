@@ -1049,12 +1049,15 @@ faceMesh.onResults((results) => {
 
     const width = Math.abs(right.x - left.x) * 512;
 
-    if (typeof applyLiveFace === "function") {
-        applyLiveFace(x, y, width);
-    } else if (typeof window.applyLiveFace === "function") {
-        window.applyLiveFace(x, y, width);
+    const card = document.querySelector('.selected-dress-card');
+    const color = card ? (card.getAttribute('data-color') || 'emerald') : 'emerald';
+
+    if (typeof applyFullLiveLook === "function") {
+        applyFullLiveLook(color, x, y, width);
+    } else if (typeof window.applyFullLiveLook === "function") {
+        window.applyFullLiveLook(color, x, y, width);
     } else {
-        console.warn("applyLiveFace is not defined yet!");
+        console.warn("applyFullLiveLook is not defined yet!");
     }
 });
 
@@ -1066,7 +1069,7 @@ window.runFaceTracking = async function(video) {
     process();
 };
 
-window.applyLiveFace = function(x, y, size) {
+window.applyFullLiveLook = function(color, x, y, size) {
     const canvas = document.createElement("canvas");
     const ctx = canvas.getContext("2d", { willReadFrequently: true });
 
@@ -1074,21 +1077,26 @@ window.applyLiveFace = function(x, y, size) {
     canvas.height = 512;
 
     const base = new Image();
-    base.src = "/assets/base.png";
-
+    const outfit = new Image();
     const video = document.getElementById("video");
 
+    base.src = "/assets/base.png";
+    outfit.src = `/assets/outfits/${color}_casual.png`;
+
     base.onload = () => {
-        ctx.drawImage(base, 0, 0);
+        outfit.onload = () => {
+            ctx.drawImage(base, 0, 0);
 
-        // 👤 LIVE FACE FROM CAMERA
-        ctx.globalAlpha = 0.95;
-        ctx.drawImage(video, x - size/2, y - size/2, size, size);
-        ctx.globalAlpha = 1.0;
+            // 👤 face
+            ctx.drawImage(video, x - size/2, y - size/2, size, size);
 
-        const texture = new THREE.CanvasTexture(canvas);
-        texture.needsUpdate = true;
+            // 👗 clothes
+            ctx.drawImage(outfit, 0, 0);
 
-        applyTextureToModel(texture);
+            const texture = new THREE.CanvasTexture(canvas);
+            texture.needsUpdate = true;
+
+            applyTextureToModel(texture);
+        };
     };
 };
