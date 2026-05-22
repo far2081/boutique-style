@@ -509,47 +509,24 @@ function applyCurrentDress() {
     }
 }
 
-function applyTextureToModel(imgSrc, colorFallback) {
-    if (imgSrc instanceof THREE.Texture) {
-        const texture = imgSrc;
-        if (!model) {
-            console.warn("⚠️ Model not loaded yet to apply texture");
-            return;
+function applyTextureToModel(texture) {
+    if (!model) return;
+    
+    model.traverse((child) => {
+        if (child.isMesh) {
+            // Safe array check to prevent silent crashes
+            const mats = Array.isArray(child.material) ? child.material : [child.material];
+            mats.forEach(m => {
+                if (m && m.name && m.name.includes("fashion_girl_main")) {
+                    m.map = texture;
+                    m.needsUpdate = true;
+                    m.side = THREE.DoubleSide;
+                }
+            });
         }
+    });
 
-        model.traverse((child) => {
-            if (child.isMesh && child.material) {
-                const mats = Array.isArray(child.material) ? child.material : [child.material];
-                mats.forEach(m => {
-                    if (m && m.name && m.name.includes("fashion_girl_main")) {
-                        m.map = texture;
-                        m.needsUpdate = true;
-                    }
-                });
-            }
-        });
-
-        console.log("🎨 Texture applied to model");
-        return;
-    }
-
-    const loader = new THREE.TextureLoader();
-    loader.crossOrigin = 'anonymous';
-    loader.load(
-        imgSrc,
-        function(tex) {
-            currentDressTexture = tex;
-            currentDressColor = colorFallback;
-            updateCompositeTexture();
-        },
-        undefined,
-        function(err) {
-            console.warn('⚠️ Texture load failed, using color:', colorFallback);
-            currentDressTexture = null;
-            currentDressColor = colorFallback;
-            updateCompositeTexture();
-        }
-    );
+    console.log("🎨 Full texture applied to avatar");
 }
 
 function applyColorToModel(colorName) {

@@ -391,16 +391,23 @@ async function updateCompositeTexture(basePath, outfitPath) {
 window.updateCompositeTexture = updateCompositeTexture;
 
 function applyTextureToModel(texture) {
+    if (!model) return;
+
     model.traverse((child) => {
         if (child.isMesh) {
-            if (child.material.name.includes("fashion_girl_main")) {
-                child.material.map = texture;
-                child.material.needsUpdate = true;
-            }
+            // Safe array check to prevent silent crashes
+            const mats = Array.isArray(child.material) ? child.material : [child.material];
+            mats.forEach(m => {
+                if (m && m.name && m.name.includes("fashion_girl_main")) {
+                    m.map = texture;
+                    m.needsUpdate = true;
+                    m.side = THREE.DoubleSide;
+                }
+            });
         }
     });
 
-    console.log("🎨 Texture applied to model");
+    console.log("🎨 Full texture applied to avatar");
 }
 window.applyTextureToModel = applyTextureToModel;
 
