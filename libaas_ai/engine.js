@@ -992,13 +992,19 @@ window.initTryOnEngine = function() { init(); };
 window.applySelectedDress = applyCurrentDress;
 
 window.captureFace = function(videoElement) {
-    const canvas = document.createElement('canvas');
-    const ctx = canvas.getContext('2d');
+    const canvas = document.createElement("canvas");
+    const ctx = canvas.getContext("2d");
 
     canvas.width = 256;
     canvas.height = 256;
 
     ctx.drawImage(videoElement, 0, 0, 256, 256);
 
-    return canvas.toDataURL('image/png');
+    return canvas.toDataURL("image/png");
+};
+
+window.startCamera = async function(video) {
+    const stream = await navigator.mediaDevices.getUserMedia({ video: true });
+    video.srcObject = stream;
+    await video.play();
 };
