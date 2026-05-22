@@ -642,7 +642,9 @@ async function applyFaceToTexture(baseTexturePath, faceImagePath, outfitPath) {
         ctx.drawImage(baseImg, 0, 0);
 
         // 👤 FACE OVERLAY (adjust position حسب model)
+        ctx.globalAlpha = 0.95;
         ctx.drawImage(faceImg, 180, 40, 120, 120);
+        ctx.globalAlpha = 1.0;
 
         // 👗 clothes
         ctx.drawImage(outfitImg, 0, 0);
