@@ -833,6 +833,14 @@ document.addEventListener('click', (e) => {
 
         faceMesh.send({ image: video });
     }
+
+    // Trigger Face Photo Upload
+    if (e.target.closest('#upload-face-btn')) {
+        const input = document.getElementById('upload-face-input');
+        if (input) {
+            input.click();
+        }
+    }
 });
 
 
@@ -1014,6 +1022,79 @@ document.addEventListener('DOMContentLoaded', () => {
                     if (closeBtn) closeBtn.click();
                 }, 2000);
             }, 1500);
+        });
+    }
+
+    // Face Photo Upload change handler
+    const uploadInput = document.getElementById('upload-face-input');
+    if (uploadInput) {
+        uploadInput.addEventListener('change', (e) => {
+            const file = e.target.files[0];
+            if (!file || !faceMesh) return;
+
+            const btn = document.getElementById('upload-face-btn');
+            const originalIcon = btn ? btn.innerHTML : '';
+            if (btn) btn.innerHTML = '<i class="fa fa-spinner fa-spin" style="color: #D4AF37;"></i>';
+
+            const reader = new FileReader();
+            reader.onload = (event) => {
+                const img = new Image();
+                img.onload = () => {
+                    faceMesh.onResults((results) => {
+                        const captureCanvas = document.createElement('canvas');
+                        captureCanvas.width = 512;
+                        captureCanvas.height = 512;
+                        const ctx = captureCanvas.getContext('2d');
+
+                        if (results.multiFaceLandmarks && results.multiFaceLandmarks.length > 0) {
+                            const landmarks = results.multiFaceLandmarks[0];
+
+                            // Calculate bounding box for the face to crop accurately
+                            let minX = 1, minY = 1, maxX = 0, maxY = 0;
+                            landmarks.forEach(p => {
+                                if (p.x < minX) minX = p.x;
+                                if (p.y < minY) minY = p.y;
+                                if (p.x > maxX) maxX = p.x;
+                                if (p.y > maxY) maxY = p.y;
+                            });
+
+                            const width = maxX - minX;
+                            const height = maxY - minY;
+                            const centerX = minX + width / 2;
+                            const centerY = minY + height / 2;
+                            const size = Math.max(width, height) * 1.5;
+
+                            const sX = (centerX - size / 2) * img.width;
+                            const sY = (centerY - size / 2) * img.height;
+                            const sSize = size * Math.max(img.width, img.height);
+
+                            // Draw crop face directly (no mirror scale for uploads)
+                            ctx.drawImage(img, sX, sY, sSize, sSize, 0, 0, captureCanvas.width, captureCanvas.height);
+
+                            if (window.applyFaceTexture) {
+                                window.applyFaceTexture(captureCanvas);
+                                if (btn) {
+                                    btn.innerHTML = '<i class="fa fa-check" style="color:#4cd964"></i>';
+                                    setTimeout(() => btn.innerHTML = originalIcon, 2000);
+                                }
+                            }
+                        } else {
+                            alert("Face not detected. Please upload a clear portrait image.");
+                            if (btn) btn.innerHTML = originalIcon;
+                        }
+
+                        // Clean up listener
+                        faceMesh.onResults(() => {});
+                    });
+
+                    faceMesh.send({ image: img });
+                };
+                img.src = event.target.result;
+            };
+            reader.readAsDataURL(file);
+            
+            // Reset value so user can upload the same image again if needed
+            e.target.value = '';
         });
     }
 
