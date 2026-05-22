@@ -269,30 +269,28 @@ let currentDressColor = null;
 let currentComplexion = "fair";
 
 async function updateCompositeTexture(basePath, outfitPath) {
-    if (basePath && outfitPath) {
-        const canvas = document.createElement("canvas");
-        const ctx = canvas.getContext("2d");
+    const canvas = document.createElement("canvas");
+    const ctx = canvas.getContext("2d");
 
-        try {
-            const baseImg = await loadImageSafe(basePath);
-            const outfitImg = await loadImageSafe(outfitPath);
+    try {
+        const baseImg = await loadImageSafe(basePath);
+        const outfitImg = await loadImageSafe(outfitPath);
 
-            canvas.width = baseImg.width;
-            canvas.height = baseImg.height;
+        canvas.width = baseImg.width;
+        canvas.height = baseImg.height;
 
-            ctx.drawImage(baseImg, 0, 0);
-            ctx.drawImage(outfitImg, 0, 0);
+        ctx.drawImage(baseImg, 0, 0);
+        ctx.drawImage(outfitImg, 0, 0);
 
-            const texture = new THREE.CanvasTexture(canvas);
-            texture.needsUpdate = true;
+        const texture = new THREE.CanvasTexture(canvas);
+        texture.needsUpdate = true;
 
-            applyTextureToModel(texture);
+        applyTextureToModel(texture);
 
-        } catch (err) {
-            console.warn("⚠️ Texture update skipped (image missing)", err);
-        }
-        return;
+    } catch (err) {
+        console.warn("⚠️ Texture update skipped (image missing)", err);
     }
+}
 
     if (!baseSkinImage.complete) {
         console.warn("⏳ baseSkinImage not loaded yet, deferring composition");
@@ -649,12 +647,13 @@ window.applyBodyTexture = function(imageSrc) {
     applyTextureToModel(imageSrc, colorName);
 };
 
-window.onOutfitColorChange = function(colorName) {
-    if (allMeshes.length === 0) {
-        setTimeout(function() { window.onOutfitColorChange(colorName); }, 500);
-        return;
-    }
-    applyColorToModel(colorName);
+window.onOutfitColorChange = async function(color) {
+    console.log("👗 Applying dress:", color);
+
+    const baseImage = "/assets/base.png"; // MUST EXIST
+    const outfitImage = `/assets/outfits/${color}_casual.png`;
+
+    await updateCompositeTexture(baseImage, outfitImage);
 };
 
 window.onComplexionChange = function(tone) {

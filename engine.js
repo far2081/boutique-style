@@ -391,20 +391,12 @@ async function updateCompositeTexture(basePath, outfitPath) {
 window.updateCompositeTexture = updateCompositeTexture;
 
 function applyTextureToModel(texture) {
-    if (!model) {
-        console.warn("⚠️ Model not loaded yet to apply texture");
-        return;
-    }
-
     model.traverse((child) => {
-        if (child.isMesh && child.material) {
-            const mats = Array.isArray(child.material) ? child.material : [child.material];
-            mats.forEach(m => {
-                if (m && m.name && m.name.includes("fashion_girl_main")) {
-                    m.map = texture;
-                    m.needsUpdate = true;
-                }
-            });
+        if (child.isMesh) {
+            if (child.material.name.includes("fashion_girl_main")) {
+                child.material.map = texture;
+                child.material.needsUpdate = true;
+            }
         }
     });
 
@@ -668,7 +660,7 @@ function safeChangeColor(model, keywords, hexColor) {
 // ==========================================
 
 // 1. DRESS & SKIN ENGINE (Connecting Buttons)
-const myPalette = ['ruby', 'emerald', 'gold', 'navy', 'azure'];
+const myPalette = ['ruby', 'emerald', 'gold', 'navy', 'azure', 'black'];
 let myColorIdx = 0;
 
 window.nextDress = function () {
@@ -681,14 +673,13 @@ window.prevDress = function () {
     window.onOutfitColorChange(myPalette[myColorIdx]);
 };
 
-window.onOutfitColorChange = (colorName) => {
-    const palette = { 'ruby': 0x9B111E, 'emerald': 0x006D5B, 'gold': 0xD4AF37, 'navy': 0x000080, 'azure': 0x007FFF };
-    const color = palette[(colorName || "").toLowerCase()] || 0x006D5B;
-    if (typeof avatarGroup !== 'undefined' && avatarGroup.children.length > 0) {
-        if (typeof safeChangeColor === 'function') {
-            safeChangeColor(avatarGroup.children[0], ['cloth', 'dress', 'shirt', 'outfit', 'fabric'], color);
-        }
-    }
+window.onOutfitColorChange = async function(color) {
+    console.log("👗 Applying dress:", color);
+
+    const baseImage = "/assets/base.png"; // MUST EXIST
+    const outfitImage = `/assets/outfits/${color}_casual.png`;
+
+    await updateCompositeTexture(baseImage, outfitImage);
 };
 
 window.onComplexionChange = (tone) => {
