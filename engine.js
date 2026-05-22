@@ -668,12 +668,11 @@ function applyAIDressToModel(imageUrl) {
   textureLoader.crossOrigin = 'anonymous';
   textureLoader.load(imageUrl, (texture) => {
     texture.encoding = THREE.sRGBEncoding;
-    const targetModel = model || window.model;
-    if (!targetModel) {
-      console.error("❌ model not found, cannot apply AI dress");
+    if (!model) {
+      console.error("Model not loaded yet!");
       return;
     }
-    targetModel.traverse((child) => {
+    model.traverse((child) => {
       if (child.isMesh) {
         // 🔥 first remove old map
         if (child.material && child.material.map) {
