@@ -663,10 +663,10 @@ async function applyFaceToTexture(baseTexturePath, faceImagePath, outfitPath) {
 }
 
 window.applyFullLook = async function(color) {
-    const base = "/assets/base.png";
+    const base = "assets/base.png";
     // 👇 AI generated یا uploaded face
-    const face = "/assets/face.png";
-    const outfit = `/assets/outfits/${color}_casual.png`;
+    const face = "assets/face.png";
+    const outfit = `assets/outfits/${color}_casual.png`;
 
     await applyFaceToTexture(base, face, outfit);
 };
@@ -1096,8 +1096,8 @@ window.applyFullLiveLook = async function(color, x, y, size) {
     const video = document.getElementById("video");
     if (!video) return;
 
-    const base = await getCachedImage("/assets/base.png");
-    const outfit = await getCachedImage(`/assets/outfits/${color}_casual.png`);
+    const base = await getCachedImage("assets/base.png");
+    const outfit = await getCachedImage(`assets/outfits/${color}_casual.png`);
 
     liveCtx.clearRect(0, 0, 512, 512);
     liveCtx.drawImage(base, 0, 0);
