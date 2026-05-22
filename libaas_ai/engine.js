@@ -649,14 +649,55 @@ window.applyBodyTexture = function(imageSrc) {
     applyTextureToModel(imageSrc, colorName);
 };
 
-window.onOutfitColorChange = function(colorName) {
+async function applyFaceToTexture(baseTexturePath, faceImagePath, outfitPath) {
+    const canvas = document.createElement("canvas");
+    const ctx = canvas.getContext("2d", { willReadFrequently: true });
+
+    try {
+        const baseImg = await loadImageSafe(baseTexturePath);
+        const faceImg = await loadImageSafe(faceImagePath);
+        const outfitImg = await loadImageSafe(outfitPath);
+
+        canvas.width = baseImg.width;
+        canvas.height = baseImg.height;
+
+        // 🧍 base body
+        ctx.drawImage(baseImg, 0, 0);
+
+        // 👤 FACE OVERLAY (adjust position حسب model)
+        ctx.drawImage(faceImg, 180, 40, 120, 120);
+
+        // 👗 clothes
+        ctx.drawImage(outfitImg, 0, 0);
+
+        const texture = new THREE.CanvasTexture(canvas);
+        texture.flipY = false;
+        texture.needsUpdate = true;
+
+        applyTextureToModel(texture);
+
+        console.log("🔥 Face + Outfit applied!");
+
+    } catch (err) {
+        console.error("❌ Face pipeline failed:", err);
+    }
+}
+
+window.applyFullLook = async function(color) {
+    const base = "/assets/base.png";
+    // 👇 AI generated یا uploaded face
+    const face = "/assets/face.png";
+    const outfit = `/assets/outfits/${color}_casual.png`;
+
+    await applyFaceToTexture(base, face, outfit);
+};
+
+window.onOutfitColorChange = async function(colorName) {
     if (allMeshes.length === 0) {
         setTimeout(function() { window.onOutfitColorChange(colorName); }, 500);
         return;
     }
-    console.log("👗 Applying dress:", colorName);
-    const outfitImage = `/assets/outfits/${colorName}_casual.png`;
-    applyTextureToModel(outfitImage, colorName);
+    await window.applyFullLook(colorName);
 };
 
 window.onComplexionChange = function(tone) {
