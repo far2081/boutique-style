@@ -49,6 +49,10 @@ function init() {
 
     container.appendChild(renderer.domElement);
 
+    window.renderer = renderer;
+    window.scene    = scene;
+    window.camera   = camera;
+
     // 2. BOOTIQUE LIGHTING (LUXURY STUDIO)
     scene.add(new THREE.AmbientLight(0xffffff, 0.8));
 

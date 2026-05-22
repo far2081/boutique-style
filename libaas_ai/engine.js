@@ -60,6 +60,10 @@ function init() {
     renderer.shadowMap.enabled = true;
     container.appendChild(renderer.domElement);
 
+    window.renderer = renderer;
+    window.scene    = scene;
+    window.camera   = camera;
+
     // Lights
     scene.add(new THREE.AmbientLight(0xffffff, 0.8));
     const dir = new THREE.DirectionalLight(0xffffff, 2.0);
