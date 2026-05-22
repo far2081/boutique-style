@@ -861,6 +861,9 @@ window.removeAIVirtualTryOn = function() {
 };
 
 function applyAIDressToModel(imageUrl) {
+  if (typeof window.removeAIVirtualTryOn === 'function') {
+    window.removeAIVirtualTryOn();
+  }
   const textureLoader = new THREE.TextureLoader();
   textureLoader.crossOrigin = 'anonymous';
   textureLoader.load(imageUrl, (texture) => {

@@ -657,6 +657,9 @@ window.onComplexionChange = (tone) => {
 // 2. 🛡️ PRIVACY: STOP ALL DOWNLOADS (Strict Protection - Handled in script.js by disabling the download trigger)
 
 function applyAIDressToModel(imageUrl) {
+  if (typeof window.removeAIVirtualTryOn === 'function') {
+    window.removeAIVirtualTryOn();
+  }
   const textureLoader = new THREE.TextureLoader();
   textureLoader.crossOrigin = 'anonymous';
   textureLoader.load(imageUrl, (texture) => {

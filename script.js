@@ -1234,10 +1234,15 @@ async function triggerAIVirtualTryOn(dressImgUrl, color) {
             }
         } else {
             // Apply the photorealistic AI virtual try-on result
-            if (window.applyAIVirtualTryOnResult) {
-                window.applyAIVirtualTryOnResult(result.resultUrl);
+            const imageUrl = result.resultUrl || (result.output && result.output[0]);
+            console.log("AI IMAGE:", imageUrl);
+            
+            if (window.applyAIDressToModel) {
+                window.applyAIDressToModel(imageUrl);
+            } else if (window.applyAIVirtualTryOnResult) {
+                window.applyAIVirtualTryOnResult(imageUrl);
             } else if (window.applyBodyTexture) {
-                window.applyBodyTexture(result.resultUrl);
+                window.applyBodyTexture(imageUrl);
             }
         }
     } catch (err) {
