@@ -826,3 +826,15 @@ window.startCamera = async function(video) {
     video.srcObject = stream;
     await video.play();
 };
+
+window.startLiveTryOn = async function() {
+    const video = document.getElementById("video");
+    await window.startCamera(video);
+    if (typeof runFaceTracking === "function") {
+        runFaceTracking(video);
+    } else if (typeof window.runFaceTracking === "function") {
+        window.runFaceTracking(video);
+    } else {
+        console.warn("runFaceTracking is not defined yet!");
+    }
+};
