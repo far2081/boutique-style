@@ -1069,34 +1069,52 @@ window.runFaceTracking = async function(video) {
     process();
 };
 
-window.applyFullLiveLook = function(color, x, y, size) {
-    const canvas = document.createElement("canvas");
-    const ctx = canvas.getContext("2d", { willReadFrequently: true });
+const liveCanvas = document.createElement("canvas");
+liveCanvas.width = 512;
+liveCanvas.height = 512;
+const liveCtx = liveCanvas.getContext("2d", { willReadFrequently: true });
+const liveTexture = new THREE.CanvasTexture(liveCanvas);
+liveTexture.flipY = false;
 
-    canvas.width = 512;
-    canvas.height = 512;
+const cachedImages = {};
+function getCachedImage(src) {
+    return new Promise((resolve) => {
+        if (cachedImages[src] && cachedImages[src].complete) {
+            resolve(cachedImages[src]);
+        } else if (cachedImages[src]) {
+            cachedImages[src].addEventListener('load', () => resolve(cachedImages[src]));
+        } else {
+            const img = new Image();
+            cachedImages[src] = img;
+            img.onload = () => resolve(img);
+            img.src = src;
+        }
+    });
+}
 
-    const base = new Image();
-    const outfit = new Image();
+window.applyFullLiveLook = async function(color, x, y, size) {
     const video = document.getElementById("video");
+    if (!video) return;
 
-    base.src = "/assets/base.png";
-    outfit.src = `/assets/outfits/${color}_casual.png`;
+    const base = await getCachedImage("/assets/base.png");
+    const outfit = await getCachedImage(`/assets/outfits/${color}_casual.png`);
 
-    base.onload = () => {
-        outfit.onload = () => {
-            ctx.drawImage(base, 0, 0);
+    liveCtx.clearRect(0, 0, 512, 512);
+    liveCtx.drawImage(base, 0, 0);
 
-            // 👤 face
-            ctx.drawImage(video, x - size/2, y - size/2, size, size);
+    // 👤 face
+    liveCtx.globalAlpha = 0.95;
+    liveCtx.drawImage(video, x - size/2, y - size/2, size, size);
+    liveCtx.globalAlpha = 1.0;
 
-            // 👗 clothes
-            ctx.drawImage(outfit, 0, 0);
+    // 👗 clothes
+    liveCtx.drawImage(outfit, 0, 0);
 
-            const texture = new THREE.CanvasTexture(canvas);
-            texture.needsUpdate = true;
+    liveTexture.needsUpdate = true;
 
-            applyTextureToModel(texture);
-        };
-    };
+    // Only apply the material map once, Three.js will auto-update the GPU
+    if (!window.liveTextureApplied) {
+        applyTextureToModel(liveTexture);
+        window.liveTextureApplied = true;
+    }
 };
