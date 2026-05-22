@@ -344,12 +344,30 @@ window.applyFaceTexture = (canvas) => {
     }
 };
 
+function loadImageSafe(src) {
+    return new Promise((resolve, reject) => {
+        const img = new Image();
+        img.crossOrigin = "anonymous";
+
+        img.onload = () => {
+            console.log("✅ Image loaded:", src);
+            resolve(img);
+        };
+
+        img.onerror = (err) => {
+            console.error("❌ Image failed:", src, err);
+            reject(err);
+        };
+
+        // cache busting (410/404 fix)
+        img.src = src.includes('?') ? (src + "&v=" + Date.now()) : (src + "?v=" + Date.now());
+    });
+}
+window.loadImageSafe = loadImageSafe;
+
 // Queue-based flood fill background keyer with smooth alpha feathering
 function removeBackground(imageUrl, callback) {
-    const img = new Image();
-    img.crossOrigin = "anonymous";
-    img.src = imageUrl;
-    img.onload = function() {
+    loadImageSafe(imageUrl).then(function(img) {
         const w = img.width;
         const h = img.height;
         
@@ -470,14 +488,13 @@ function removeBackground(imageUrl, callback) {
         finalCtx.globalCompositeOperation = 'source-over';
         
         callback(finalCanvas);
-    };
-    img.onerror = function(err) {
+    }).catch(function(err) {
         console.error("❌ Failed to load AI Try-On image for background removal:", err);
         const fallbackCanvas = document.createElement('canvas');
         fallbackCanvas.width = 768;
         fallbackCanvas.height = 1024;
         callback(fallbackCanvas);
-    };
+    });
 }
 
 window.applyAIVirtualTryOnResult = function(resultUrl) {
