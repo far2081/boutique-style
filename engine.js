@@ -838,3 +838,24 @@ window.startLiveTryOn = async function() {
         console.warn("runFaceTracking is not defined yet!");
     }
 };
+
+const faceMesh = new FaceMesh({
+    locateFile: (file) => {
+        return `https://cdn.jsdelivr.net/npm/@mediapipe/face_mesh/${file}`;
+    }
+});
+
+faceMesh.setOptions({
+    maxNumFaces: 1,
+    refineLandmarks: true,
+    minDetectionConfidence: 0.5,
+    minTrackingConfidence: 0.5
+});
+
+window.runFaceTracking = async function(video) {
+    async function process() {
+        await faceMesh.send({ image: video });
+        requestAnimationFrame(process);
+    }
+    process();
+};
