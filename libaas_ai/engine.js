@@ -1021,20 +1021,20 @@ window.startLiveTryOn = async function() {
     }
 };
 
-const faceMesh = new FaceMesh({
+const liveFaceMesh = new FaceMesh({
     locateFile: (file) => {
         return `https://cdn.jsdelivr.net/npm/@mediapipe/face_mesh/${file}`;
     }
 });
 
-faceMesh.setOptions({
+liveFaceMesh.setOptions({
     maxNumFaces: 1,
     refineLandmarks: true,
     minDetectionConfidence: 0.5,
     minTrackingConfidence: 0.5
 });
 
-faceMesh.onResults((results) => {
+liveFaceMesh.onResults((results) => {
     if (!results.multiFaceLandmarks || !results.multiFaceLandmarks.length) return;
 
     const landmarks = results.multiFaceLandmarks[0];
@@ -1063,7 +1063,7 @@ faceMesh.onResults((results) => {
 
 window.runFaceTracking = async function(video) {
     async function process() {
-        await faceMesh.send({ image: video });
+        await liveFaceMesh.send({ image: video });
         requestAnimationFrame(process);
     }
     process();
