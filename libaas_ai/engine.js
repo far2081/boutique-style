@@ -268,7 +268,32 @@ let currentDressTexture = null;
 let currentDressColor = null;
 let currentComplexion = "fair";
 
-function updateCompositeTexture() {
+async function updateCompositeTexture(basePath, outfitPath) {
+    if (basePath && outfitPath) {
+        const canvas = document.createElement("canvas");
+        const ctx = canvas.getContext("2d");
+
+        try {
+            const baseImg = await loadImageSafe(basePath);
+            const outfitImg = await loadImageSafe(outfitPath);
+
+            canvas.width = baseImg.width;
+            canvas.height = baseImg.height;
+
+            ctx.drawImage(baseImg, 0, 0);
+            ctx.drawImage(outfitImg, 0, 0);
+
+            const texture = new THREE.CanvasTexture(canvas);
+            texture.needsUpdate = true;
+
+            applyTextureToModel(texture);
+
+        } catch (err) {
+            console.warn("⚠️ Texture update skipped (image missing)", err);
+        }
+        return;
+    }
+
     if (!baseSkinImage.complete) {
         console.warn("⏳ baseSkinImage not loaded yet, deferring composition");
         return;
@@ -485,6 +510,33 @@ function applyCurrentDress() {
 }
 
 function applyTextureToModel(imgSrc, colorFallback) {
+    if (imgSrc instanceof THREE.Texture) {
+        const texture = imgSrc;
+        texture.encoding = THREE.sRGBEncoding;
+        
+        let mainMaterial = null;
+        allMeshes.forEach(function(o) {
+            const mat = o.material;
+            if (mat) {
+                const mats = Array.isArray(mat) ? mat : [mat];
+                mats.forEach(function(m) {
+                    if (m.name === 'fashion_girl_main') {
+                        mainMaterial = m;
+                    }
+                });
+            }
+        });
+        
+        if (mainMaterial) {
+            mainMaterial.map = texture;
+            mainMaterial.needsUpdate = true;
+            console.log("✅ Applied composite texture directly to model material 'fashion_girl_main'");
+        } else {
+            console.warn("⚠️ fashion_girl_main material not found to apply texture");
+        }
+        return;
+    }
+
     const loader = new THREE.TextureLoader();
     loader.crossOrigin = 'anonymous';
     loader.load(
@@ -915,6 +967,8 @@ function applyAIDressToModel(imageUrl) {
   });
 }
 window.applyAIDressToModel = applyAIDressToModel;
+window.updateCompositeTexture = updateCompositeTexture;
+window.applyTextureToModel = applyTextureToModel;
 
 window.initTryOnEngine = function() { init(); };
 window.applySelectedDress = applyCurrentDress;

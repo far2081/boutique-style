@@ -365,6 +365,72 @@ function loadImageSafe(src) {
 }
 window.loadImageSafe = loadImageSafe;
 
+async function updateCompositeTexture(basePath, outfitPath) {
+    const canvas = document.createElement("canvas");
+    const ctx = canvas.getContext("2d");
+
+    try {
+        const baseImg = await loadImageSafe(basePath);
+        const outfitImg = await loadImageSafe(outfitPath);
+
+        canvas.width = baseImg.width;
+        canvas.height = baseImg.height;
+
+        ctx.drawImage(baseImg, 0, 0);
+        ctx.drawImage(outfitImg, 0, 0);
+
+        const texture = new THREE.CanvasTexture(canvas);
+        texture.needsUpdate = true;
+
+        applyTextureToModel(texture);
+
+    } catch (err) {
+        console.warn("⚠️ Texture update skipped (image missing)", err);
+    }
+}
+window.updateCompositeTexture = updateCompositeTexture;
+
+function applyTextureToModel(texture) {
+    if (texture instanceof THREE.Texture) {
+        texture.encoding = THREE.sRGBEncoding;
+        
+        let mainMaterial = null;
+        if (model) {
+            model.traverse((o) => {
+                if (o.isMesh && o.material) {
+                    const mats = Array.isArray(o.material) ? o.material : [o.material];
+                    mats.forEach(m => {
+                        if (m.name === 'fashion_girl_main') {
+                            mainMaterial = m;
+                        }
+                    });
+                }
+            });
+        }
+        
+        if (mainMaterial) {
+            mainMaterial.map = texture;
+            mainMaterial.needsUpdate = true;
+            console.log("✅ Applied composite texture directly to model material 'fashion_girl_main'");
+        } else {
+            console.warn("⚠️ fashion_girl_main material not found to apply texture, trying all meshes");
+            if (model) {
+                model.traverse((o) => {
+                    if (o.isMesh && o.material) {
+                        const mats = Array.isArray(o.material) ? o.material : [o.material];
+                        mats.forEach(m => {
+                            m.map = texture;
+                            m.needsUpdate = true;
+                        });
+                    }
+                });
+            }
+        }
+    }
+}
+window.applyTextureToModel = applyTextureToModel;
+
+
 // Queue-based flood fill background keyer with smooth alpha feathering
 function removeBackground(imageUrl, callback) {
     loadImageSafe(imageUrl).then(function(img) {
