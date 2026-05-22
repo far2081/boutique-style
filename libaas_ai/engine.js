@@ -268,40 +268,28 @@ let currentDressTexture = null;
 let currentDressColor = null;
 let currentComplexion = "fair";
 
-const compositeCanvas = document.createElement("canvas");
-const compositeCtx = compositeCanvas.getContext("2d");
-let compositeTexture = null;
-
 async function updateCompositeTexture(basePath, outfitPath) {
     if (basePath && outfitPath) {
+        const canvas = document.createElement("canvas");
+        const ctx = canvas.getContext("2d");
+
         try {
-            const [baseImg, outfitImg] = await Promise.all([
-                loadImageSafe(basePath),
-                loadImageSafe(outfitPath)
-            ]);
+            const baseImg = await loadImageSafe(basePath);
+            const outfitImg = await loadImageSafe(outfitPath);
 
-            compositeCanvas.width = baseImg.width;
-            compositeCanvas.height = baseImg.height;
+            canvas.width = baseImg.width;
+            canvas.height = baseImg.height;
 
-            compositeCtx.clearRect(0, 0, compositeCanvas.width, compositeCanvas.height);
-            compositeCtx.drawImage(baseImg, 0, 0);
-            compositeCtx.drawImage(outfitImg, 0, 0);
+            ctx.drawImage(baseImg, 0, 0);
+            ctx.drawImage(outfitImg, 0, 0);
 
-            if (!compositeTexture) {
-                compositeTexture = new THREE.CanvasTexture(compositeCanvas);
-                compositeTexture.flipY = false;
-                if (typeof THREE.SRGBColorSpace !== 'undefined') {
-                    compositeTexture.colorSpace = THREE.SRGBColorSpace;
-                } else {
-                    compositeTexture.encoding = THREE.sRGBEncoding;
-                }
-            }
+            const texture = new THREE.CanvasTexture(canvas);
+            texture.needsUpdate = true;
 
-            compositeTexture.needsUpdate = true;
-            applyTextureToModel(compositeTexture);
+            applyTextureToModel(texture);
 
         } catch (err) {
-            console.error("⚠️ Texture update failed:", err);
+            console.warn("⚠️ Texture update skipped (image missing)", err);
         }
         return;
     }
@@ -661,15 +649,14 @@ window.applyBodyTexture = function(imageSrc) {
     applyTextureToModel(imageSrc, colorName);
 };
 
-window.onOutfitColorChange = async function(colorName) {
+window.onOutfitColorChange = function(colorName) {
     if (allMeshes.length === 0) {
         setTimeout(function() { window.onOutfitColorChange(colorName); }, 500);
         return;
     }
     console.log("👗 Applying dress:", colorName);
-    const baseImage = "/assets/base.png";
     const outfitImage = `/assets/outfits/${colorName}_casual.png`;
-    await updateCompositeTexture(baseImage, outfitImage);
+    applyTextureToModel(outfitImage, colorName);
 };
 
 window.onComplexionChange = function(tone) {
