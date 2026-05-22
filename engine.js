@@ -852,6 +852,30 @@ faceMesh.setOptions({
     minTrackingConfidence: 0.5
 });
 
+faceMesh.onResults((results) => {
+    if (!results.multiFaceLandmarks || !results.multiFaceLandmarks.length) return;
+
+    const landmarks = results.multiFaceLandmarks[0];
+
+    // 👇 nose + forehead points
+    const nose = landmarks[1];
+    const left = landmarks[234];
+    const right = landmarks[454];
+
+    const x = nose.x * 512;
+    const y = nose.y * 512;
+
+    const width = Math.abs(right.x - left.x) * 512;
+
+    if (typeof applyLiveFace === "function") {
+        applyLiveFace(x, y, width);
+    } else if (typeof window.applyLiveFace === "function") {
+        window.applyLiveFace(x, y, width);
+    } else {
+        console.warn("applyLiveFace is not defined yet!");
+    }
+});
+
 window.runFaceTracking = async function(video) {
     async function process() {
         await faceMesh.send({ image: video });
