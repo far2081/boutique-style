@@ -705,9 +705,13 @@ document.addEventListener('click', (e) => {
         const selectedImg = document.querySelector('.tryon-selected-img');
         const color = document.querySelector('.selected-dress-card')?.getAttribute('data-color') || 'emerald';
 
-        // ★ Apply dress image as texture to 3D model ★
-        if (selectedImg && selectedImg.src && window.applyBodyTexture) {
-            window.applyBodyTexture(selectedImg.src);
+        // ★ Apply dress image as texture to 3D model via AI Virtual Try-On ★
+        if (selectedImg && selectedImg.src) {
+            if (typeof triggerAIVirtualTryOn === 'function') {
+                triggerAIVirtualTryOn(selectedImg.src, color);
+            } else if (window.applyBodyTexture) {
+                window.applyBodyTexture(selectedImg.src);
+            }
         } else if (window.onOutfitColorChange) {
             window.onOutfitColorChange(color);
         }
@@ -1100,4 +1104,153 @@ document.addEventListener('DOMContentLoaded', () => {
 
     console.log("%cDesigned & Developed by Farhana Aamir", "color: #D4AF37; font-weight: bold; font-size: 16px;");
 });
+
+// Helper: Convert any image URL to a base64 encoded data URL
+function imageToBase64(url) {
+    return new Promise((resolve, reject) => {
+        const img = new Image();
+        img.crossOrigin = 'anonymous';
+        img.src = url;
+        img.onload = () => {
+            const canvas = document.createElement('canvas');
+            canvas.width = img.width;
+            canvas.height = img.height;
+            const ctx = canvas.getContext('2d');
+            ctx.drawImage(img, 0, 0);
+            resolve(canvas.toDataURL('image/png'));
+        };
+        img.onerror = () => reject(new Error('Failed to load image: ' + url));
+    });
+}
+
+// Helper: Composite the user's captured face onto the standard full-body model avatar
+function getCompositeHumanImage() {
+    return new Promise((resolve) => {
+        const canvas = document.createElement('canvas');
+        canvas.width = 768; // Standard vertical aspect ratio for Try-On
+        canvas.height = 1024;
+        const ctx = canvas.getContext('2d');
+        
+        const baseBody = new Image();
+        baseBody.crossOrigin = "anonymous";
+        baseBody.src = "assets/avatar_fair.png"; // standard body image
+        baseBody.onload = () => {
+            ctx.drawImage(baseBody, 0, 0, 768, 1024);
+            
+            if (window.capturedFaceCanvas) {
+                ctx.save();
+                // Create a feathered oval mask centered in a 256x256 offscreen region
+                const faceMask = document.createElement('canvas');
+                faceMask.width = 256;
+                faceMask.height = 256;
+                const mCtx = faceMask.getContext('2d');
+                const grad = mCtx.createRadialGradient(128, 128, 60, 128, 128, 120);
+                grad.addColorStop(0, 'rgba(0, 0, 0, 1)');
+                grad.addColorStop(0.85, 'rgba(0, 0, 0, 0.85)');
+                grad.addColorStop(1, 'rgba(0, 0, 0, 0)');
+                mCtx.fillStyle = grad;
+                
+                mCtx.save();
+                mCtx.translate(128, 128);
+                mCtx.scale(0.8, 1.05); // Oval ratio to blend perfectly on avatar's head
+                mCtx.beginPath();
+                mCtx.arc(0, 0, 120, 0, Math.PI * 2);
+                mCtx.fill();
+                mCtx.restore();
+                
+                const faceTemp = document.createElement('canvas');
+                faceTemp.width = 256;
+                faceTemp.height = 256;
+                const tCtx = faceTemp.getContext('2d');
+                tCtx.drawImage(window.capturedFaceCanvas, 0, 0, 256, 256);
+                tCtx.globalCompositeOperation = 'destination-in';
+                tCtx.drawImage(faceMask, 0, 0);
+                tCtx.globalCompositeOperation = 'source-over';
+                
+                // Draw face onto base avatar's head coordinates
+                // avatar_fair.png head is centered at X=384, Y=180.
+                ctx.drawImage(faceTemp, 384 - 150 / 2, 100, 150, 175);
+                ctx.restore();
+            }
+            resolve(canvas.toDataURL('image/png'));
+        };
+        baseBody.onerror = () => {
+            if (window.capturedFaceCanvas) {
+                resolve(window.capturedFaceCanvas.toDataURL('image/png'));
+            } else {
+                resolve(null);
+            }
+        };
+    });
+}
+
+// Trigger AI Virtual Try-On API flow
+async function triggerAIVirtualTryOn(dressImgUrl, color) {
+    const loadingOverlay = document.getElementById('loading-overlay');
+    if (loadingOverlay) {
+        loadingOverlay.style.display = 'flex';
+        const loadingText = loadingOverlay.querySelector('h2');
+        if (loadingText) loadingText.innerText = "AI STYLIST DRAFTING YOUR ENSEMBLE...";
+    }
+    
+    try {
+        const garmentImage = await imageToBase64(dressImgUrl);
+        let humanImage;
+        if (window.capturedFaceCanvas) {
+            humanImage = await getCompositeHumanImage();
+        } else {
+            humanImage = await imageToBase64("assets/avatar_fair.png");
+        }
+        
+        if (!humanImage) {
+            throw new Error("Failed to load base human template image.");
+        }
+        
+        const loadingText = loadingOverlay ? loadingOverlay.querySelector('h2') : null;
+        if (loadingText) loadingText.innerText = "GENERATING REALISTIC TRY-ON (AI RUNNING)...";
+        
+        const response = await fetch('/api/tryon', {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json'
+            },
+            body: JSON.stringify({ humanImage, garmentImage })
+        });
+        
+        const result = await response.json();
+        if (!response.ok || result.error) {
+            throw new Error(result.error || `HTTP error ${response.status}`);
+        }
+        
+        console.log("AI Try-On Result URL:", result.resultUrl);
+        
+        if (result.status === 'mocked') {
+            console.log("Mocked AI try-on complete (falling back to client-side 3D textures)");
+            if (window.applyBodyTexture) {
+                window.applyBodyTexture(dressImgUrl);
+            }
+            if (window.removeAIVirtualTryOn) {
+                window.removeAIVirtualTryOn();
+            }
+        } else {
+            // Apply the photorealistic AI virtual try-on result
+            if (window.applyAIVirtualTryOnResult) {
+                window.applyAIVirtualTryOnResult(result.resultUrl);
+            } else if (window.applyBodyTexture) {
+                window.applyBodyTexture(result.resultUrl);
+            }
+        }
+    } catch (err) {
+        console.error("AI Virtual Try-On Failed:", err);
+        alert("AI Virtual Try-On error: " + err.message + "\n\nFalling back to client-side 3D textures.");
+        if (window.applyBodyTexture) {
+            window.applyBodyTexture(dressImgUrl);
+        }
+        if (window.removeAIVirtualTryOn) {
+            window.removeAIVirtualTryOn();
+        }
+    } finally {
+        if (loadingOverlay) loadingOverlay.style.display = 'none';
+    }
+}
 

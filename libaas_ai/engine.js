@@ -8,6 +8,9 @@ let mixer         = null;
 let isInitialized = false;
 let initRetryTimer= null;
 let allMeshes     = [];  // Every mesh in the model
+let aiBillboardMesh = null;
+let targetBone = null;
+let originalMeshesState = [];
 
 const MODEL_PATH = "libaas_ai/fashion_girl.glb";
 
@@ -515,6 +518,27 @@ function animate() {
     const delta = clock ? clock.getDelta() : 0.016;
     if (mixer)    mixer.update(delta);
     if (controls) controls.update();
+    
+    // Update AI Try-On billboard position and rotation if active
+    if (aiBillboardMesh) {
+        if (targetBone) {
+            const pos = new THREE.Vector3();
+            targetBone.getWorldPosition(pos);
+            // Calibrate position based on bone (pelvis/spine) world coordinates
+            aiBillboardMesh.position.set(pos.x, pos.y - 0.12, pos.z);
+        } else if (avatarGroup && avatarGroup.children.length > 0) {
+            // Fallback: track the root of the avatar model
+            const pos = new THREE.Vector3();
+            avatarGroup.children[0].getWorldPosition(pos);
+            aiBillboardMesh.position.set(pos.x, pos.y + 0.92, pos.z);
+        }
+        
+        // Orient billboard to face camera (billboarding)
+        if (camera) {
+            aiBillboardMesh.lookAt(camera.position);
+        }
+    }
+    
     if (scene) {
         const ring = scene.getObjectByName('goldRing');
         if (ring) ring.rotation.z += 0.004;
@@ -613,6 +637,224 @@ window.applyFaceTexture = function(canvas) {
     window.capturedFaceCanvas = canvas;
     if (avatarGroup && avatarGroup.children.length > 0) {
         updateCompositeTexture();
+    }
+};
+
+// Queue-based flood fill background keyer with smooth alpha feathering
+function removeBackground(imageUrl, callback) {
+    const img = new Image();
+    img.crossOrigin = "anonymous";
+    img.src = imageUrl;
+    img.onload = function() {
+        const w = img.width;
+        const h = img.height;
+        
+        // 1. Draw image to canvas
+        const canvas = document.createElement('canvas');
+        canvas.width = w;
+        canvas.height = h;
+        const ctx = canvas.getContext('2d');
+        ctx.drawImage(img, 0, 0);
+        
+        const imgData = ctx.getImageData(0, 0, w, h);
+        const data = imgData.data;
+        
+        // 2. Perform queue-based flood-fill to find background pixels
+        // Target background color is the top-left corner color
+        const targetR = data[0];
+        const targetG = data[1];
+        const targetB = data[2];
+        
+        const visited = new Uint8Array(w * h);
+        const queue = [];
+        
+        // Helper to push to queue and mark visited
+        function enqueue(x, y) {
+            const idx = y * w + x;
+            if (!visited[idx]) {
+                visited[idx] = 1;
+                queue.push(idx);
+            }
+        }
+        
+        // Seed queue from the borders (top, bottom, left, right edges)
+        for (let x = 0; x < w; x++) {
+            enqueue(x, 0);
+            enqueue(x, h - 1);
+        }
+        for (let y = 0; y < h; y++) {
+            enqueue(0, y);
+            enqueue(w - 1, y);
+        }
+        
+        const colorTolerance = 35; // Euclidean distance threshold
+        
+        let qHead = 0;
+        while (qHead < queue.length) {
+            const idx = queue[qHead++];
+            const x = idx % w;
+            const y = Math.floor(idx / w);
+            
+            // Check neighbors (4-connectivity)
+            const neighbors = [
+                {x: x + 1, y: y},
+                {x: x - 1, y: y},
+                {x: x, y: y + 1},
+                {x: x, y: y - 1}
+            ];
+            
+            for (let i = 0; i < neighbors.length; i++) {
+                const nx = neighbors[i].x;
+                const ny = neighbors[i].y;
+                if (nx >= 0 && nx < w && ny >= 0 && ny < h) {
+                    const nIdx = ny * w + nx;
+                    if (!visited[nIdx]) {
+                        const nr = data[nIdx * 4];
+                        const ng = data[nIdx * 4 + 1];
+                        const nb = data[nIdx * 4 + 2];
+                        
+                        const dist = Math.sqrt(
+                            (nr - targetR) * (nr - targetR) +
+                            (ng - targetG) * (ng - targetG) +
+                            (nb - targetB) * (nb - targetB)
+                        );
+                        
+                        if (dist < colorTolerance) {
+                            visited[nIdx] = 1;
+                            queue.push(nIdx);
+                        }
+                    }
+                }
+            }
+        }
+        
+        // 3. Create the binary mask canvas
+        const maskCanvas = document.createElement('canvas');
+        maskCanvas.width = w;
+        maskCanvas.height = h;
+        const maskCtx = maskCanvas.getContext('2d');
+        const maskImgData = maskCtx.createImageData(w, h);
+        const maskData = maskImgData.data;
+        
+        for (let i = 0; i < visited.length; i++) {
+            if (visited[i]) {
+                maskData[i * 4]     = 0;
+                maskData[i * 4 + 1] = 0;
+                maskData[i * 4 + 2] = 0;
+                maskData[i * 4 + 3] = 0;
+            } else {
+                maskData[i * 4]     = 0;
+                maskData[i * 4 + 1] = 0;
+                maskData[i * 4 + 2] = 0;
+                maskData[i * 4 + 3] = 255;
+            }
+        }
+        maskCtx.putImageData(maskImgData, 0, 0);
+        
+        // 4. Create final canvas and composite with blurred mask to feather the edges
+        const finalCanvas = document.createElement('canvas');
+        finalCanvas.width = w;
+        finalCanvas.height = h;
+        const finalCtx = finalCanvas.getContext('2d');
+        
+        finalCtx.filter = 'blur(4px)';
+        finalCtx.drawImage(maskCanvas, 0, 0);
+        finalCtx.filter = 'none';
+        
+        finalCtx.globalCompositeOperation = 'source-in';
+        finalCtx.drawImage(img, 0, 0);
+        finalCtx.globalCompositeOperation = 'source-over';
+        
+        callback(finalCanvas);
+    };
+    img.onerror = function(err) {
+        console.error("❌ Failed to load AI Try-On image for background removal:", err);
+        const fallbackCanvas = document.createElement('canvas');
+        fallbackCanvas.width = 768;
+        fallbackCanvas.height = 1024;
+        callback(fallbackCanvas);
+    };
+}
+
+window.applyAIVirtualTryOnResult = function(resultUrl) {
+    console.log("⚡ Applying AI try-on billboard overlay for:", resultUrl);
+    window.removeAIVirtualTryOn();
+    
+    removeBackground(resultUrl, function(transparentCanvas) {
+        if (!isInitialized || !scene) {
+            console.error("⛔ Engine is not initialized, cannot apply billboard.");
+            return;
+        }
+        
+        const texture = new THREE.CanvasTexture(transparentCanvas);
+        texture.encoding = THREE.sRGBEncoding;
+        
+        const material = new THREE.MeshStandardMaterial({
+            map: texture,
+            transparent: true,
+            side: THREE.DoubleSide,
+            roughness: 0.8,
+            metalness: 0.1,
+            alphaTest: 0.05
+        });
+        
+        const geometry = new THREE.PlaneGeometry(0.95, 1.85);
+        aiBillboardMesh = new THREE.Mesh(geometry, material);
+        aiBillboardMesh.name = "aiBillboardOverlay";
+        aiBillboardMesh.castShadow = true;
+        aiBillboardMesh.receiveShadow = true;
+        
+        targetBone = null;
+        if (avatarGroup && avatarGroup.children.length > 0) {
+            avatarGroup.children[0].traverse(function(node) {
+                if (node.isBone && (node.name.toLowerCase().includes('spine') || node.name.toLowerCase().includes('hips') || node.name.toLowerCase().includes('pelvis'))) {
+                    if (!targetBone || node.name.toLowerCase().includes('spine')) {
+                        targetBone = node;
+                    }
+                }
+            });
+        }
+        
+        if (targetBone) {
+            console.log("🎯 Found skeleton bone to track:", targetBone.name);
+        }
+        
+        scene.add(aiBillboardMesh);
+        
+        originalMeshesState = [];
+        avatarGroup.traverse(function(node) {
+            if (node.isMesh) {
+                originalMeshesState.push({
+                    mesh: node,
+                    visible: node.visible
+                });
+                node.visible = false;
+            }
+        });
+        
+        console.log(`🙈 Hiding ${originalMeshesState.length} body meshes for billboard try-on.`);
+    });
+};
+
+window.removeAIVirtualTryOn = function() {
+    if (aiBillboardMesh) {
+        scene.remove(aiBillboardMesh);
+        if (aiBillboardMesh.geometry) aiBillboardMesh.geometry.dispose();
+        if (aiBillboardMesh.material) {
+            if (aiBillboardMesh.material.map) aiBillboardMesh.material.map.dispose();
+            aiBillboardMesh.material.dispose();
+        }
+        aiBillboardMesh = null;
+    }
+    
+    targetBone = null;
+    
+    if (originalMeshesState.length > 0) {
+        originalMeshesState.forEach(function(state) {
+            state.mesh.visible = state.visible;
+        });
+        originalMeshesState = [];
+        console.log("👀 Restored 3D model meshes visibility.");
     }
 };
 
