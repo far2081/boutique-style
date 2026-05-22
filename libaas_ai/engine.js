@@ -152,6 +152,7 @@ function loadModel() {
 
             const model = gltf.scene || gltf.scenes[0];
             if (!model) return;
+            window.model = model; // Expose model globally for integration
 
             // Fix all materials + collect meshes
             model.traverse(function(o) {
