@@ -9,6 +9,7 @@ let isInitialized = false;
 let aiBillboardMesh = null;
 let targetBone = null;
 let originalMeshesState = [];
+let model = null;
 
 const modelSources = [
     "libaas_ai/fashion_girl.glb", // Primary Root
@@ -156,7 +157,7 @@ function loadAvatar() {
 
     gltfLoader.load(path, (gltf) => {
         console.log(`✅ Model Loaded Successfully (Root): ${path}`);
-        const model = gltf.scene || gltf.scenes[0];
+        model = gltf.scene || gltf.scenes[0];
         if (!model) return;
         window.model = model; // Expose model globally for integration
 
@@ -655,6 +656,37 @@ window.onComplexionChange = (tone) => {
 
 // 2. 🛡️ PRIVACY: STOP ALL DOWNLOADS (Strict Protection - Handled in script.js by disabling the download trigger)
 
+function applyAIDressToModel(imageUrl) {
+  const textureLoader = new THREE.TextureLoader();
+  textureLoader.crossOrigin = 'anonymous';
+  textureLoader.load(imageUrl, (texture) => {
+    texture.encoding = THREE.sRGBEncoding;
+    const targetModel = model || window.model;
+    if (!targetModel) {
+      console.error("❌ model not found, cannot apply AI dress");
+      return;
+    }
+    targetModel.traverse((child) => {
+      if (child.isMesh) {
+        // 🔥 first remove old map
+        if (child.material && child.material.map) {
+          child.material.map.dispose();
+        }
+
+        child.material = new THREE.MeshStandardMaterial({
+          map: texture,
+          transparent: true,
+          side: THREE.DoubleSide
+        });
+
+        child.material.needsUpdate = true;
+      }
+    });
+
+    console.log("✅ AI Dress Applied on FULL MODEL");
+  });
+}
+window.applyAIDressToModel = applyAIDressToModel;
 
 // 3. START ENGINE
 if (document.readyState === 'complete') {
