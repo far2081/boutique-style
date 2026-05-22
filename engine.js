@@ -806,3 +806,15 @@ if (document.readyState === 'complete') {
 }
 if (document.readyState === 'complete') init();
 else window.addEventListener('load', init);
+
+window.captureFace = function(videoElement) {
+    const canvas = document.createElement('canvas');
+    const ctx = canvas.getContext('2d');
+
+    canvas.width = 256;
+    canvas.height = 256;
+
+    ctx.drawImage(videoElement, 0, 0, 256, 256);
+
+    return canvas.toDataURL('image/png');
+};
