@@ -500,10 +500,22 @@ function applyCurrentDress() {
     const imgEl    = document.querySelector('.tryon-selected-img');
     const imgSrc   = imgEl ? imgEl.src : null;
 
-    console.log('👗 Applying dress | color:', colorName, '| img:', imgSrc ? imgSrc.split('/').pop() : 'none');
+    console.log('👗 Applying dress | color:', colorName, '| img:', imgSrc);
 
     if (imgSrc && imgSrc.length > 10 && !imgSrc.endsWith('/')) {
-        applyTextureToModel(imgSrc, colorName);
+        const s = imgSrc.toLowerCase();
+        const isCatalog = s.includes('assets/pret.png') || 
+                          s.includes('assets/products/') || 
+                          s.includes('assets/p1.png') || 
+                          s.includes('assets/p2.png') || 
+                          s.includes('assets/p3.png') || 
+                          s.includes('assets/p4.png') || 
+                          s.includes('assets/p5.png');
+        if (isCatalog) {
+            window.applyFullLook(colorName);
+        } else {
+            applyTextureToModel(imgSrc);
+        }
     } else {
         applyColorToModel(colorName);
     }
@@ -511,6 +523,20 @@ function applyCurrentDress() {
 
 function applyTextureToModel(texture) {
     if (!model) return;
+    
+    if (typeof texture === 'string') {
+        console.log("📥 Loading texture from URL:", texture);
+        const textureLoader = new THREE.TextureLoader();
+        textureLoader.crossOrigin = 'anonymous';
+        textureLoader.load(texture, (tex) => {
+            tex.encoding = THREE.sRGBEncoding;
+            tex.flipY = false;
+            applyTextureToModel(tex);
+        }, undefined, (err) => {
+            console.error("❌ Failed to load texture:", texture, err);
+        });
+        return;
+    }
     
     model.traverse((child) => {
         if (child.isMesh) {
@@ -611,11 +637,6 @@ function clearStatus() {
     const el = document.getElementById('engine-status-msg');
     if (el) el.style.display = 'none';
 }
-
-// ─────────────────────────────────────────────
-//  PUBLIC API
-// ─────────────────────────────────────────────
-
 window.applyBodyTexture = function(imageSrc) {
     if (allMeshes.length === 0) {
         setTimeout(function() { window.applyBodyTexture(imageSrc); }, 500);
@@ -623,7 +644,22 @@ window.applyBodyTexture = function(imageSrc) {
     }
     const card = document.querySelector('.selected-dress-card');
     const colorName = card ? (card.getAttribute('data-color') || 'emerald') : 'emerald';
-    applyTextureToModel(imageSrc, colorName);
+    
+    if (imageSrc) {
+        const s = imageSrc.toLowerCase();
+        const isCatalog = s.includes('assets/pret.png') || 
+                          s.includes('assets/products/') || 
+                          s.includes('assets/p1.png') || 
+                          s.includes('assets/p2.png') || 
+                          s.includes('assets/p3.png') || 
+                          s.includes('assets/p4.png') || 
+                          s.includes('assets/p5.png');
+        if (isCatalog) {
+            window.applyFullLook(colorName);
+            return;
+        }
+    }
+    applyTextureToModel(imageSrc);
 };
 
 async function applyFaceToTexture(baseTexturePath, faceImagePath, outfitPath) {
